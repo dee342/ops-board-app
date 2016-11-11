@@ -1,0 +1,43 @@
+<!--/* Modal window view for adding special position for a person. */-->
+
+<form id="modal" name="modal" class="container-fluid" novalidate="true" centered-modal="true">
+    <!-- novalidate disables HTML5 native validation -->
+    <div th:include="views/modals/fragments/modal-header :: header" th:remove="tag"></div>
+    <div class="modal-body" ng-show="showContent">
+        
+        <div class="new-code">
+           <div class="row .row-centered" style="margin-left: 130px; padding-bottom:10px;">
+          
+                    <label class="col-md-5 text-right" style="line-height: 33px;">Chart Volunteers</label>
+                    <div class="col-md-2 text-left">
+                        <input type="text" id="volunteer" name="volunteer" class="form-control" ng-model="opData.chartVolunteers" maxlength="2" />
+                    </div>
+                 
+           </div>
+            <div class="row .row-centered" style="margin-left: 130px; padding-bottom:10px;">
+                <label class="col-md-5 text-right" style="line-height: 33px;">Mandatory Chart</label>
+                <div class="col-md-2 text-left">
+                    <input type="text" id="mandatory" name="mandatory" class="form-control" ng-model="opData.mandatoryChart" maxlength="2" />
+                </div>
+            </div>
+
+             <div class="row .row-centered" style="margin-left: 130px; padding-bottom:10px;">
+                <label class="col-md-5 text-right" style="line-height: 33px;">Vacation Volunteers</label>
+                <div class="col-md-2 text-left">
+                    <input type="text" id="vacation" name="remarks" class="form-control" ng-model="opData.vacationVolunteers" maxlength="2" />
+                </div>
+            </div>
+
+           
+        </div>
+        <div class="row">
+            <div th:include="views/modals/fragments/modal-client-errors :: client-errors" th:remove="tag"></div>
+        </div>
+        <div class="row">
+            <div th:include="views/modals/fragments/modal-server-errors :: server-errors" th:remove="tag"></div>
+        </div>
+    </div>
+    <div th:include="views/modals/fragments/modal-footer :: footer" th:remove="tag"></div>
+    <div th:include="views/modals/fragments/modal-exceptions :: exceptions" th:remove="tag"></div>
+    <div th:include="views/modals/fragments/modal-processing :: processing" th:remove="tag"></div>
+</form>

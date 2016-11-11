@@ -1,0 +1,35 @@
+<form id="modal-task-assignment" name="modal" class="edit-task-modal form-horizontal" novalidate="true" centered-modal="true">
+    <!-- novalidate disables HTML5 native validation -->
+    <div class="modal-header modal-header-override">
+       <h4>Select Assignment Type</h4>
+    </div>
+
+    <div class="modal-body modal-body-override" ng-show="showContent">
+        <div class="asnradio" ng-repeat="aType in assignmentTypes">
+            <div class="radiodiv">
+                <span class="radioinput">
+                    <input id="{{ aType.name }}" name="assignmentType" type="radio" class="customRadio" value="{{ aType.id }}" ng-model="opData.assignmentType"  />
+                </span>
+
+                <label for="{{ aType.name }}" class="radiolabel">
+                    {{ aType.name }}
+                </label>
+
+                <div class="clear"></div>
+
+            </div>
+        </div>
+
+        <div class="clear"></div>
+
+        <div class="modal-embedded-errors" ng-show="opData.clientErrors.length &gt; 0">
+            <alert type="none">
+                <ul>
+                    <li ng-repeat="error in opData.clientErrors">{{::error.message}}</li>
+                </ul>
+            </alert>
+        </div>
+
+    </div>
+    <div th:include="views/modals/fragments/modal-footer :: footer" th:remove="tag"></div>
+</form>

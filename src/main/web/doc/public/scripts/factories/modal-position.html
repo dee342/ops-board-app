@@ -1,0 +1,55 @@
+<!DOCTYPE html><html lang="en"><head><title>public\scripts\factories\modal-position</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../../"><meta name="groc-document-path" content="public\scripts\factories\modal-position"><meta name="groc-project-path" content="public\scripts\factories\modal-position.js"><link rel="stylesheet" type="text/css" media="all" href="../../../assets/style.css"><script type="text/javascript" src="../../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">public\scripts\factories\modal-position.js</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="hljs-pi">'use strict'</span>;
+
+angular
+  .module(<span class="hljs-string">'dsny-center-modal'</span>)
+  .factory(
+    <span class="hljs-string">'positionModal'</span>, [<span class="hljs-string">'$document'</span>, <span class="hljs-string">'$window'</span>,
+      <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($document, $window)</span> </span>{
+        <span class="hljs-keyword">var</span> _isCurScrOnMultiMonitor = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+          <span class="hljs-comment">//currently checking only two monitors</span>
+          <span class="hljs-keyword">var</span> wd = $<span class="hljs-built_in">window</span>.outerWidth ? $<span class="hljs-built_in">window</span>.outerWidth : $<span class="hljs-built_in">document</span>.body.offsetWidth,
+            x = $<span class="hljs-built_in">window</span>.screenX || $<span class="hljs-built_in">window</span>.screenLeft,
+            left = $<span class="hljs-built_in">window</span>.screen.availLeft || <span class="hljs-number">0</span>,
+            pos = x &gt; $<span class="hljs-built_in">window</span>.screen.width ? x - left : x;
+
+          <span class="hljs-keyword">return</span> (pos + wd) &gt; $<span class="hljs-built_in">window</span>.screen.width;
+        };
+        <span class="hljs-keyword">var</span> _getRelWinPos = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+
+          <span class="hljs-keyword">var</span> wd = $<span class="hljs-built_in">window</span>.outerWidth ? $<span class="hljs-built_in">window</span>.outerWidth : $<span class="hljs-built_in">document</span>.body.offsetWidth,
+            x = $<span class="hljs-built_in">window</span>.screenX || $<span class="hljs-built_in">window</span>.screenLeft,
+            sWd = $<span class="hljs-built_in">window</span>.screen.width,
+            rWd = (x + wd - sWd);
+          <span class="hljs-comment">//100 accounting for scroll bars. Its 65 on u/chrome doesnt have to be accurate. </span>
+          <span class="hljs-keyword">if</span> (rWd &gt; <span class="hljs-built_in">Math</span>.round(wd / <span class="hljs-number">2</span>) + <span class="hljs-number">100</span>) <span class="hljs-keyword">return</span> {
+            pos: <span class="hljs-string">'R'</span>,
+            wd: rWd
+          };
+          <span class="hljs-keyword">return</span> {
+            pos: <span class="hljs-string">'L'</span>,
+            wd: rWd
+          };
+        };
+        <span class="hljs-keyword">return</span> {
+          getPosition: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(win, el)</span> </span>{
+            <span class="hljs-keyword">var</span> wd = $<span class="hljs-built_in">window</span>.outerWidth ? $<span class="hljs-built_in">window</span>.outerWidth : $<span class="hljs-built_in">document</span>.body.offsetWidth,
+              left;
+            <span class="hljs-keyword">if</span> (!_isCurScrOnMultiMonitor()) {
+              <span class="hljs-keyword">return</span> {
+                left: <span class="hljs-built_in">Math</span>.round((wd - el.width()) / <span class="hljs-number">2</span>)
+              }
+            };
+            <span class="hljs-keyword">var</span> relPos = _getRelWinPos();
+            <span class="hljs-keyword">if</span> (relPos.pos === <span class="hljs-string">'L'</span>) {
+              left = <span class="hljs-built_in">Math</span>.round((wd - relPos.wd - el.width()) / <span class="hljs-number">2</span>);
+            } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (relPos.pos === <span class="hljs-string">'R'</span>) {
+              <span class="hljs-keyword">var</span> lWd = wd - relPos.wd;
+              left = <span class="hljs-built_in">Math</span>.round((relPos.wd - el.width()) / <span class="hljs-number">2</span>) + lWd;
+            }
+            <span class="hljs-keyword">return</span> {
+              left: left
+            };
+          }
+        };
+    }
+  ]);</div></div></div></div></body></html>

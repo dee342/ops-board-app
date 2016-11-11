@@ -1,0 +1,11 @@
+<div id="modal" class="container-fluid" centered-modal="true">
+	<div th:include="views/modals/fragments/modal-header :: header" th:remove="tag"></div>
+	<div class="modal-body">
+		<div class="row">
+			<label class="col-md-12 text-center confirmation">
+				The truck is still working down and will remain in Available/Unassigned, Relay or Rollover. Please change the working down to 'No' in order to move the truck to down group.
+			</label>
+		</div>
+	</div>
+	<div th:include="views/modals/fragments/modal-footer :: footer" th:remove="tag"></div>
+</div>

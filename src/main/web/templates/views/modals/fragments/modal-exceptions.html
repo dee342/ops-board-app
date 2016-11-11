@@ -1,0 +1,14 @@
+<!--/* Thymeleaf fragment to errors thrown by the server. */-->
+
+<div th:fragment="exceptions">
+	<div class="modal-footer" ng-show="showError">
+		<alert type="none">
+		<ul class="list-unstyled text-center">
+			<li ng-repeat="error in opData.errors"><span ng-bind-html="error.message"></span></li>
+		</ul>
+		</alert>
+		<div class="text-right">
+			<button class="btn btn-primary" id="errorButton" ng-click="exit()">Ok</button>
+		</div>
+	</div>
+</div>

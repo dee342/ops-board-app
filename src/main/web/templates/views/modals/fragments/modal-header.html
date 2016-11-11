@@ -1,0 +1,14 @@
+<!--/* Thymeleaf fragment to display a header with title and entity reference. */-->
+
+<div th:fragment="header">
+	<div class="modal-header" ng-class="opData.headerType == 'striped' ? 'modal-header-striped' :  ''">
+		<div class="row">
+			<div class="col-md-7 action">
+				<h4>{{opData.titleAction}}</h4>
+			</div>
+			<div class="col-md-5 text-right entity-id">
+				<h4>{{opData.titleEntity}}</h4>
+			</div>
+		</div>
+	</div>
+</div>

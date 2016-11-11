@@ -1,0 +1,37 @@
+<!DOCTYPE html><html lang="en"><head><title>public\scripts\services\ops-board-interval</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../../"><meta name="groc-document-path" content="public\scripts\services\ops-board-interval"><meta name="groc-project-path" content="public\scripts\services\ops-board-interval.js"><link rel="stylesheet" type="text/css" media="all" href="../../../assets/style.css"><script type="text/javascript" src="../../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">public\scripts\services\ops-board-interval.js</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="hljs-pi">'use strict'</span>;
+
+<span class="hljs-comment">//will extend this service later</span>
+<span class="hljs-comment">//currently it will just redigest if specified condition is met</span>
+
+angular.module(<span class="hljs-string">'OpsBoard'</span>)
+  .service(
+    <span class="hljs-string">'OpsBoardInterval'</span>,
+    <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($rootScope, $interval)</span> </span>{
+      <span class="hljs-keyword">var</span> toDoList = [];
+
+      <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">execute</span><span class="hljs-params">()</span> </span>{
+        <span class="hljs-keyword">var</span> check = <span class="hljs-literal">false</span>;
+        <span class="hljs-keyword">if</span> (toDoList.length) {
+          <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; toDoList.length; i++) {
+            <span class="hljs-keyword">if</span> (<span class="hljs-built_in">Object</span>.prototype.toString.call(toDoList[i]) === <span class="hljs-string">'[object Function]'</span>) {
+              <span class="hljs-keyword">if</span> (toDoList[i]()) check = <span class="hljs-literal">true</span>;
+            }
+          }
+          <span class="hljs-keyword">if</span> (check &amp;&amp; $rootScope.$$phase !== <span class="hljs-string">'$digest'</span>) {
+            $rootScope.$apply();
+          }
+        }
+      }
+
+
+      $interval(execute, <span class="hljs-number">60000</span>);
+
+      <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">addToDoList</span><span class="hljs-params">(fn)</span> </span>{
+        toDoList.push(fn);
+      }
+
+      <span class="hljs-keyword">return</span> {
+        addToDoList: addToDoList
+      }
+
+    });</div></div></div></div></body></html>

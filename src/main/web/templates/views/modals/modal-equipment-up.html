@@ -1,0 +1,56 @@
+<!--/* Modal window view for upping a piece of equipment. */-->
+
+<form id="modal" name="modal" class="form-horizontal container-fluid" novalidate="true" centered-modal="true">
+  <div th:include="views/modals/fragments/modal-header :: header" th:remove="tag"></div>
+  <div class="modal-body" ng-show="showContent">
+    <div class="row">
+      <label class="col-md-3 text-right">Type:</label> 
+      <div class="col-md-3 text-left">{{::opData.equipmentType}}</div>
+      <label class="col-md-3 text-right">Owner:</label> 
+      <div class="col-md-3 text-left">{{::opData.owner}}</div>
+    </div>
+    <div class="row">
+      <label class="col-md-3 text-right">Current Location:</label>
+      <div class="col-md-3 text-left">{{::opData.currentLocation}}</div>
+      <label class="col-md-3 text-right">License:</label>
+      <div class="col-md-3 text-left">{{::opData.license}}</div>
+    </div>
+
+    <fieldset>
+      <legend>Set Up Detail</legend>
+      <div class="row">
+				<label class="col-md-4 text-right">Mechanic<i class="fa fa-asterisk"></i>:</label>
+				<div class="col-md-6 text-left">
+					<input class="input form-control" type="text" ng-model="opData.mechanic" placeholder="Mechanic" ng-class="{'submitted' : submitted}" ng-required="true" input-focus="" />
+				</div>
+			</div>
+			<div class="row">
+				<label class="col-md-4 text-right">Reporter<i class="fa fa-asterisk"></i>:</label>
+				<div class="col-md-6 text-left">
+					<input type="text" ng-model="opData.reporter" placeholder="Reporter" class="input form-control" ng-class="{'submitted' : submitted}" ng-required="true" />
+				</div>
+			</div>
+			<div class="row">
+				<label class="col-md-4 text-right">Date:</label>
+				<div class="col-md-6 text-left">
+					<input type="text" class="input form-control" name="date" ng-model="opData.dt1" id="dt1" ng-readonly="true" value="{{::opData.dt1}}" />
+				</div>
+			</div>
+			<div class="row">
+				<label class="col-md-4 text-right">Time<i class="fa fa-asterisk"></i>:</label>
+				<div class="col-md-6 text-left">
+					<timepicker class="timepicker" ng-model="opData.time1" show-meridian="false"></timepicker>
+				</div>
+			</div>
+	  </fieldset>
+    <div class="row">
+      <div th:include="views/modals/fragments/modal-client-errors :: client-errors" th:remove="tag"></div>
+    </div>
+     <div class="row">
+      		<div th:include="views/modals/fragments/modal-server-errors :: server-errors" th:remove="tag"></div>
+     </div>
+  </div>
+  <div th:include="views/modals/fragments/modal-footer :: footer" th:remove="tag"></div>
+   <div th:include="views/modals/fragments/modal-exceptions :: exceptions" th:remove="tag"></div>
+  <div th:include="views/modals/fragments/modal-processing :: processing" th:remove="tag"></div>
+ </form>

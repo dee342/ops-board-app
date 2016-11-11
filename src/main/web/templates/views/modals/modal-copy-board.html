@@ -1,0 +1,35 @@
+<!--/* Modal window view for copying board*/-->
+
+<form id="modal" name="modal" class="form-horizontal container-fluid" novalidate="true" centered-modal="true">
+  <div th:include="views/modals/fragments/modal-header :: header" th:remove="tag"></div>
+  <div class="modal-body" ng-show="showContent">
+    <div class="reason">
+	    <fieldset>
+	        <legend>Copy Board</legend> 
+				<div class="row"> 
+				<label class="col-md-4 text-right">Copy To:</label>
+			<div class="col-md-6 text-left">
+				<p class="input-group date-picker">
+					<input type="text" class="form-control" date-disabled="datepickers.disabled(date)" datepicker-popup="MM/dd/yyyy" ng-model="opData.copyBoardTo" is-open="datepickers.startDateOpened" ng-readonly="true" ng-required="true" ng-change="onChange()" min-date="minDate" show-button-bar="false"/>
+					<span class="input-group-btn">
+						<button type="button" class="btn btn-default" ng-click="open($event,'startDateOpened')">
+						<i class="glyphicon glyphicon-calendar"></i>
+						</button>
+					</span>
+				</p>
+			</div>
+		</div>
+			<div class="row">
+      			<div th:include="views/modals/fragments/modal-client-errors :: client-errors" th:remove="tag"></div>
+    		</div>
+    		 <div class="row">
+      			<div th:include="views/modals/fragments/modal-server-errors :: server-errors" th:remove="tag"></div>
+      		</div>
+    		<div class="spacer10"></div>
+	    </fieldset>
+	  </div>
+  </div>
+  <div th:include="views/modals/fragments/modal-footer :: footer" th:remove="tag"></div>
+   <div th:include="views/modals/fragments/modal-exceptions :: exceptions" th:remove="tag"></div>
+  <div th:include="views/modals/fragments/modal-processing :: processing" th:remove="tag"></div>
+</form>

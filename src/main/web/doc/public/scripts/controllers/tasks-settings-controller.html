@@ -1,0 +1,575 @@
+<!DOCTYPE html><html lang="en"><head><title>public\scripts\controllers\tasks-settings-controller</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../../"><meta name="groc-document-path" content="public\scripts\controllers\tasks-settings-controller"><meta name="groc-project-path" content="public\scripts\controllers\tasks-settings-controller.js"><link rel="stylesheet" type="text/css" media="all" href="../../../assets/style.css"><script type="text/javascript" src="../../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">public\scripts\controllers\tasks-settings-controller.js</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="hljs-pi">'use strict'</span>;
+
+angular.module(<span class="hljs-string">'OpsBoard'</span>)
+  .controller(<span class="hljs-string">'TasksSettingsCtrl'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($scope, $filter, $modal, $log, $controller, $rootScope, OpsBoardRepository, InfoService, UUIDGenerator, ClientSideError, UtilityService)</span> </span>{
+
+    $scope.shiftData = OpsBoardRepository.getShiftData();
+    $scope.categoryData = OpsBoardRepository.getCategoryData();
+    $scope.equipment = OpsBoardRepository.getEquipment();
+    $scope.personnel = OpsBoardRepository.getPersonnel();
+    $scope.sortedCategoryData= $scope.categoryData.sort(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(a, b)</span></span>{
+       <span class="hljs-keyword">return</span> a.sequence-b.sequence
+    });
+
+    $scope.getCounter = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+      <span class="hljs-keyword">var</span> arr = [];
+      <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt;= <span class="hljs-number">99</span>; i++) {
+        arr.push(i);
+      }
+      <span class="hljs-keyword">return</span> arr;
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">sorterPriceAsc</span><span class="hljs-params">(a,b)</span> </span>{
+        <span class="hljs-keyword">return</span> <span class="hljs-built_in">parseInt</span>(a[<span class="hljs-string">'sequence'</span>]) - <span class="hljs-built_in">parseInt</span>(b[<span class="hljs-string">'sequence'</span>]);
+    }
+
+    $scope.counter = $scope.getCounter();
+
+    $scope.getCategory = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(category)</span> </span>{
+      <span class="hljs-keyword">return</span> (category.id, category);
+    }
+    $scope.getCategoryData = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+      <span class="hljs-keyword">return</span> OpsBoardRepository.getCategoryData();
+    }
+    $scope.pushShift = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(locationId, selectedShift)</span> </span>{
+      <span class="hljs-keyword">if</span> (!selectedShift) <span class="hljs-keyword">return</span>;
+      <span class="hljs-keyword">var</span> locationShiftId = UUIDGenerator.uuid();
+      <span class="hljs-keyword">var</span> s = $scope.shiftData[selectedShift.shiftId];
+      <span class="hljs-keyword">var</span> shift = InfoService.getShiftInfo(locationShiftId, s);
+      <span class="hljs-keyword">var</span> locationShiftIdOfExistingShift;
+      <span class="hljs-keyword">var</span> shiftExists = <span class="hljs-literal">false</span>;
+      <span class="hljs-built_in">Object</span>.keys($scope.tasks.locations[locationId].locationShifts).forEach(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(key)</span></span>{
+        <span class="hljs-keyword">if</span>($scope.tasks.locations[locationId].locationShifts[key].shift.id == shift.shift.id){
+          shiftExists = <span class="hljs-literal">true</span>;
+          locationShiftIdOfExistingShift = key;
+        }
+      });
+      <span class="hljs-keyword">if</span>(!shiftExists){
+        $scope.tasks.locations[locationId].locationShifts[locationShiftId] = shift;
+          OpsBoardRepository.addShift(locationShiftId, locationId, selectedShift.shiftId);
+      }
+    }
+
+    $scope.clearSpecificLocation = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(locationId)</span></span>{
+      $scope.tasks.locations[locationId].locationShifts={};
+      $rootScope.$broadcast(<span class="hljs-string">'UNASSIGNED-PERSON'</span>);
+      OpsBoardRepository.clearSpecificLocation(locationId);
+    }
+    $scope.removeShift = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(locationId, locationShiftId, shiftId)</span></span>{
+      <span class="hljs-keyword">delete</span> $scope.tasks.locations[locationId].locationShifts[locationShiftId];
+      $rootScope.$broadcast(<span class="hljs-string">'UNASSIGNED-PERSON'</span>);
+      OpsBoardRepository.removeShift(locationShiftId, locationId, shiftId);
+    }
+
+    $scope.removeCategory = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(locationId, locationShiftId, shiftCategoryId, categoryId, shiftId)</span></span>{
+      <span class="hljs-keyword">delete</span> $scope.tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId];
+      $rootScope.$broadcast(<span class="hljs-string">'UNASSIGNED-PERSON'</span>);
+      OpsBoardRepository.removeCategory(locationId, locationShiftId, shiftCategoryId, categoryId, shiftId);
+    }
+
+    $scope.$watch(<span class="hljs-string">'category.category.id'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(newValue, oldValue)</span></span>{
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"Oldvalue:"</span>+oldValue);
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"newValue:"</span>+newValue)
+    });
+
+    $scope.getMatchedCategory = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(name,categoryData)</span></span>{
+        <span class="hljs-keyword">var</span> category ;
+        <span class="hljs-keyword">for</span>(<span class="hljs-keyword">var</span> i=<span class="hljs-number">0</span>; i&lt; categoryData.length; i++){
+          <span class="hljs-keyword">if</span>(categoryData[i].name == name){
+            category= categoryData[i];
+            <span class="hljs-keyword">break</span>;
+          }
+        }
+        <span class="hljs-keyword">return</span> category;
+       }
+
+
+
+    $scope.updateCategoryModalPopUp = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(locationId, category, shiftId)</span></span>{
+
+      <span class="hljs-keyword">if</span> (UtilityService.numberOfObjectsInCollection(category.subcategoryTasks) &gt; <span class="hljs-number">0</span> ){
+        <span class="hljs-keyword">var</span> showModalPopUp = <span class="hljs-literal">false</span>;
+        <span class="hljs-keyword">if</span>(category.modalPopUp === <span class="hljs-literal">undefined</span>){
+          category.modalPopUp = [];
+          category.modalPopUp.push({
+            locationId: locationId,
+                categoryId: category.category.id,
+                shiftId: shiftId,
+            });
+          showModalPopUp = <span class="hljs-literal">true</span>;
+        }
+        <span class="hljs-keyword">else</span>{
+          <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; category.modalPopUp.length; i++) {
+                <span class="hljs-keyword">var</span> obj = category.modalPopUp[i];
+                <span class="hljs-keyword">if</span> (obj.locationId == locationId &amp;&amp; obj.categoryId == category.category.id &amp;&amp; obj.shiftId == shiftId ){
+                  showModalPopUp = <span class="hljs-literal">false</span>;
+                }
+                <span class="hljs-keyword">else</span>{
+                category.modalPopUp.push({
+                locationId: locationId,
+                    categoryId: category.category.id,
+                    shiftId: shiftId,
+                });
+              showModalPopUp = <span class="hljs-literal">true</span>;
+                }
+            }
+        }
+
+        <span class="hljs-keyword">if</span> (showModalPopUp){
+          $scope.opData = {
+          titleAction : <span class="hljs-string">'Replace Category'</span>,
+          cancelButtonText: <span class="hljs-string">'No'</span>,
+          submitButtonText: <span class="hljs-string">'Yes'</span>,
+          };
+
+          $scope.passPreValidation = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+          <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>
+          }
+          $scope.submitted = <span class="hljs-literal">false</span>;
+          $scope.operation = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(success, error)</span> </span>{
+              $scope.submitted = <span class="hljs-literal">true</span>;
+              $scope.opData.clientErrors = [];
+              $scope.opData.serverErrors = [];
+              success();
+            };
+          <span class="hljs-keyword">var</span> modalInstance = $modal.open({
+          templateUrl : appPathStart + <span class="hljs-string">'/views/modals/modal-category-switches'</span>,
+          controller : <span class="hljs-string">'ModalCtrl'</span>,
+          backdrop : <span class="hljs-string">'static'</span>,
+          resolve : {
+              data : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+            	  <span class="hljs-keyword">return</span> [$scope.opData];
+                  }
+          },
+          scope : $scope
+          });
+          modalInstance.result.then(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(selectedItem)</span> </span>{
+        	  $scope.selected = selectedItem;
+        	  
+            }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+              $log.info(<span class="hljs-string">'Modal dismissed at: '</span> + <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>());
+            });
+      }
+      }
+    }
+
+    $scope.updateCategory = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(locationId, locationShiftId, shiftCategoryId, oldCategoryId, shiftId, category, newCategoryId)</span></span>{
+        <span class="hljs-keyword">var</span> oldCategory = $scope.tasks.locations[locationId].locationShifts[locationShiftId].addedCategories[shiftCategoryId];
+        <span class="hljs-keyword">var</span> categoryData = $scope.categoryData;
+        <span class="hljs-keyword">var</span> newCategory, catData;
+        <span class="hljs-keyword">for</span>(<span class="hljs-keyword">var</span> i=<span class="hljs-number">0</span>; i&lt; categoryData.length; i++){
+          <span class="hljs-keyword">if</span>(categoryData[i].id == oldCategoryId){
+            <span class="hljs-keyword">if</span>(oldCategoryId == newCategoryId){
+              <span class="hljs-keyword">if</span>(oldCategory.id == categoryData[i].id &amp;&amp; oldCategory.name != categoryData[i].name){
+                oldCategory =  $scope.getMatchedCategory(oldCategory.name,categoryData);
+              }
+            }
+            <span class="hljs-keyword">break</span>;
+          }
+        }
+
+        <span class="hljs-keyword">for</span>(<span class="hljs-keyword">var</span> i=<span class="hljs-number">0</span>; i&lt; categoryData.length; i++){
+          <span class="hljs-keyword">if</span>(categoryData[i].id == newCategoryId){
+            category.allsubcategoryTasks = categoryData[i].subcategories;
+            newCategory = categoryData[i];
+            catData = angular.copy(InfoService.getCategoryInfo(shiftCategoryId, categoryData[i]));
+            <span class="hljs-keyword">break</span>;
+          }
+        }
+
+        $scope.tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].category = newCategory;
+        OpsBoardRepository.updateCategory(locationId, shiftId, locationShiftId, shiftCategoryId, oldCategory, newCategory);
+
+    };
+
+   $scope.categoryFilter = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span> </span>{
+     <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(item)</span> </span>{
+       <span class="hljs-keyword">var</span> found = <span class="hljs-literal">false</span>;
+       <span class="hljs-keyword">if</span> (data.category.category !== <span class="hljs-literal">undefined</span>){
+          <span class="hljs-keyword">if</span> (data.category.category.id == item.id) <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+
+
+          <span class="hljs-keyword">if</span> (data.shift.shiftCategories !== <span class="hljs-literal">undefined</span>){
+             <span class="hljs-built_in">Object</span>.keys(data.shift.shiftCategories).forEach(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(key)</span> </span>{
+
+               <span class="hljs-keyword">if</span> (data.shift.shiftCategories[key].category !== <span class="hljs-literal">undefined</span>){
+                  <span class="hljs-keyword">if</span> (item.id == data.shift.shiftCategories[key].category.id) found = <span class="hljs-literal">true</span>;
+               }
+
+
+
+          })
+
+        }
+        <span class="hljs-keyword">if</span> (!found) <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+       }
+
+
+     }
+   }
+
+    $scope.updateSubCategory = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(subcategory, locationId, locationShiftId, shiftCategoryId, categoryId, shiftId)</span> </span>{
+      <span class="hljs-keyword">var</span> found = <span class="hljs-literal">false</span>;
+      <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; $scope.categoryData.length &amp;&amp; !found; i++) {
+        <span class="hljs-keyword">if</span> ($scope.categoryData[i].id == categoryId &amp;&amp; subcategory) {
+          <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> j = <span class="hljs-number">0</span>; j &lt; $scope.categoryData[i].subcategories.length &amp;&amp; !found; j++) {
+            <span class="hljs-keyword">if</span> ($scope.categoryData[i].subcategories[j].id == subcategory.id) {
+              <span class="hljs-keyword">if</span> (subcategory.selected) {
+                <span class="hljs-keyword">var</span> subcategoryTaskId = UUIDGenerator.uuid(),
+                  subcategoryTasks = $scope.tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].subcategoryTasks;
+                subcategoryTasks[subcategoryTaskId] = angular.copy(InfoService.getSubcategoryInfo(subcategoryTaskId,
+                    $scope.categoryData[i].subcategories[j], $scope.tasks.locations[locationId].location.sections)); <span class="hljs-comment">//angular.copy($scope.categoryData[i].subcategories[j]);</span>
+                <span class="hljs-keyword">if</span> (subcategoryTasks[subcategoryTaskId].subcategory.containsSections) {
+                  OpsBoardRepository.addSubcategory(locationShiftId, shiftCategoryId, subcategoryTaskId, locationId, shiftId, categoryId, subcategory.id, <span class="hljs-literal">true</span>, <span class="hljs-literal">null</span>);
+                } <span class="hljs-keyword">else</span> {
+                  <span class="hljs-keyword">var</span> taskId = UUIDGenerator.uuid();
+                  subcategoryTasks[subcategoryTaskId].tasks = {}
+                  subcategoryTasks[subcategoryTaskId].tasks[taskId] = angular.copy(InfoService.getTaskInfo(taskId));
+                  OpsBoardRepository.addSubcategory(locationShiftId, shiftCategoryId, subcategoryTaskId, locationId, shiftId, categoryId, subcategory.id, <span class="hljs-literal">false</span>, taskId);
+                }
+                found = <span class="hljs-literal">true</span>;
+              } <span class="hljs-keyword">else</span> { <span class="hljs-comment">// When subcategory is unselected</span>
+                <span class="hljs-keyword">var</span> subcategoryTaskId = $scope.tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].addedSubcategories[subcategory.id.toString()];
+                <span class="hljs-keyword">if</span> (!subcategory.containsSections) {
+                  <span class="hljs-keyword">delete</span> $scope.tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].subcategoryTasks[subcategoryTaskId];
+                  OpsBoardRepository.removeSubcategory(locationShiftId, shiftCategoryId, subcategoryTaskId, locationId, shiftId, categoryId, subcategory.id, <span class="hljs-literal">true</span>, <span class="hljs-literal">null</span>);
+                } <span class="hljs-keyword">else</span>{
+                  <span class="hljs-keyword">delete</span> $scope.tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].subcategoryTasks[subcategoryTaskId];
+                  OpsBoardRepository.removeSubcategory(locationShiftId, shiftCategoryId, subcategoryTaskId, locationId, shiftId, categoryId, subcategory.id, <span class="hljs-literal">false</span>, taskId);
+                }
+              }
+            }
+          }
+        }
+      }
+      $scope.updateScroll()
+    }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><pre><code>$scope.updateSection = function (subcategory, section) {
+  if(section.selected) {
+    subcategory.sections[section.id] = InfoService.getSectionInfo(section);
+  } else {
+    delete subcategory.sections[section.id]
+  }
+}</code></pre></div></div><div class="code"><div class="wrapper">    $scope.updateTasks = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(numOfTasks, subcategory, locationId, locationShiftId, shiftCategoryId, subcategoryTaskId, categoryId, shiftId, subcategoryId, section)</span> </span>{
+
+      <span class="hljs-keyword">if</span> (subcategory.subcategory.containsSections) {
+        <span class="hljs-keyword">var</span> oldTasks = <span class="hljs-number">0</span>,
+          originalSection;
+        <span class="hljs-built_in">Object</span>.keys(subcategory.sections).forEach(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(sectionId)</span> </span>{
+          <span class="hljs-keyword">if</span> (subcategory.sections[sectionId] &amp;&amp; subcategory.sections[sectionId].section &amp;&amp; subcategory.sections[sectionId].section.id === section.id) {
+            oldTasks = <span class="hljs-built_in">Object</span>.keys(subcategory.sections[sectionId].tasks).length;
+            originalSection = subcategory.sections[sectionId];
+          }
+        })
+        <span class="hljs-keyword">if</span> (!originalSection) {
+          $scope.addSection(numOfTasks, subcategory, locationId, locationShiftId, shiftCategoryId, subcategoryTaskId, categoryId, shiftId, subcategoryId, section)
+        } <span class="hljs-keyword">else</span> {
+          <span class="hljs-keyword">var</span> sectionPartialTaskNum=<span class="hljs-number">0</span>;
+           <span class="hljs-keyword">var</span> subSection=subcategory.sections[originalSection.id];
+           <span class="hljs-built_in">Object</span>.keys(subSection.tasks).forEach(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(taskId)</span> </span>{
+               <span class="hljs-keyword">var</span> sectionSubTask=subSection.tasks[taskId];
+               <span class="hljs-keyword">if</span>((sectionSubTask.linkedTaskChildId&amp;&amp;sectionSubTask.linkedTaskChildId!=<span class="hljs-literal">null</span>)||
+                      (sectionSubTask.linkedTaskParentId&amp;&amp;sectionSubTask.linkedTaskParentId!=<span class="hljs-literal">null</span>)){
+                sectionPartialTaskNum++;
+                 
+               }
+             })
+   
+          
+          <span class="hljs-keyword">if</span> (numOfTasks === <span class="hljs-number">0</span> &amp;&amp; sectionPartialTaskNum===<span class="hljs-number">0</span>) {
+            $scope.removeSection(subcategory, locationId, locationShiftId, shiftCategoryId, subcategoryTaskId, categoryId, shiftId, subcategoryId, section, originalSection);
+          } <span class="hljs-keyword">else</span> {
+            <span class="hljs-keyword">if</span> (numOfTasks &gt; oldTasks) {
+              $scope.addTasksToSection(numOfTasks-oldTasks, subcategory, locationId, locationShiftId, shiftCategoryId, subcategoryTaskId, categoryId, shiftId, subcategoryId, section, originalSection);
+            } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (numOfTasks &lt; oldTasks) {
+              <span class="hljs-keyword">if</span>(numOfTasks&lt;sectionPartialTaskNum){
+                numOfTasks=sectionPartialTaskNum;
+              }             
+              $scope.removeTasksFromSection(oldTasks, numOfTasks, subcategory, locationId, locationShiftId, shiftCategoryId, subcategoryTaskId, categoryId, shiftId, subcategoryId, section, originalSection);
+            }
+          }
+        }
+      } <span class="hljs-keyword">else</span> {
+        <span class="hljs-keyword">var</span> oldTasks = <span class="hljs-built_in">Object</span>.keys(subcategory.tasks).length;
+        subcategory.numOfTasks = numOfTasks;
+        <span class="hljs-keyword">if</span> (numOfTasks &gt; oldTasks) {
+          $scope.addTasks(numOfTasks-oldTasks, subcategory, locationId, locationShiftId, shiftCategoryId, subcategoryTaskId, categoryId, shiftId, subcategoryId);
+        } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (numOfTasks &lt; oldTasks) {
+          <span class="hljs-keyword">var</span> partialTaskNum=<span class="hljs-number">0</span>;
+           <span class="hljs-built_in">Object</span>.keys(subcategory.tasks).forEach(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(taskId)</span> </span>{
+             <span class="hljs-keyword">var</span> subTask=subcategory.tasks[taskId];
+             <span class="hljs-keyword">if</span>((subTask.linkedTaskChildId&amp;&amp;subTask.linkedTaskChildId!=<span class="hljs-literal">null</span>)||
+                    (subTask.linkedTaskParentId&amp;&amp;subTask.linkedTaskParentId!=<span class="hljs-literal">null</span>)){
+               partialTaskNum++;
+               
+             }
+           })
+          <span class="hljs-keyword">if</span>(numOfTasks&lt;partialTaskNum){
+            numOfTasks=partialTaskNum;
+          }
+          $scope.removeTasks(oldTasks, numOfTasks, subcategory, locationId, locationShiftId, shiftCategoryId, subcategoryTaskId, categoryId, shiftId, subcategoryId);
+        }
+      }
+      $scope.updateScroll()
+    }
+
+    $scope.removeSection = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(subcategory, locationId, locationShiftId, shiftCategoryId, subcategoryTaskId, categoryId, shiftId, subcategoryId, section, originalSection)</span> </span>{
+      <span class="hljs-keyword">var</span> sectionTaskId = originalSection.id;
+      <span class="hljs-built_in">Object</span>.keys(originalSection.tasks).forEach(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(taskId)</span> </span>{
+        <span class="hljs-keyword">var</span> e = originalSection.tasks[taskId].assignedEquipment,
+          p1 = originalSection.tasks[taskId].assignedPerson1,
+          p2 = originalSection.tasks[taskId].assignedPerson2;
+        <span class="hljs-keyword">if</span> (e &amp;&amp; e.id) {
+          <span class="hljs-keyword">if</span>($scope.equipment[e.id] != <span class="hljs-literal">null</span>){
+          $scope.equipment[e.id].state = <span class="hljs-string">'Available'</span>;
+          }
+        }
+        <span class="hljs-keyword">if</span> (p1 &amp;&amp; p1.id){
+          <span class="hljs-keyword">if</span>($scope.personnel[p1.id] != <span class="hljs-literal">null</span>){
+            $scope.personnel[p1.id].state = <span class="hljs-string">'Available'</span>;
+          }
+        }
+        <span class="hljs-keyword">if</span> (p2 &amp;&amp; p2.id){
+          <span class="hljs-keyword">if</span>($scope.personnel[p2.id] != <span class="hljs-literal">null</span>){
+            $scope.personnel[p2.id].state = <span class="hljs-string">'Available'</span>;
+          }
+        }
+      });
+      <span class="hljs-keyword">delete</span> subcategory.sections[originalSection.id]
+      OpsBoardRepository.removeSection(locationShiftId, shiftCategoryId, subcategoryTaskId, sectionTaskId, locationId, shiftId, categoryId, subcategoryId, section.id)
+
+    }
+
+    $scope.addSection = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(numOfTasks, subcategory, locationId, locationShiftId, shiftCategoryId, subcategoryTaskId, categoryId, shiftId, subcategoryId, section)</span> </span>{
+      <span class="hljs-keyword">var</span> sectionExists = <span class="hljs-literal">false</span>,
+        sectionTaskIdOfExistingSection,
+        sectionTaskId = UUIDGenerator.uuid(),
+        sectionTask = InfoService.getSectionInfo(sectionTaskId, numOfTasks, section);
+        <span class="hljs-built_in">Object</span>.keys($scope.tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].subcategoryTasks[subcategoryTaskId].sections).forEach(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(key)</span></span>{
+          <span class="hljs-keyword">if</span>($scope.tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].subcategoryTasks[subcategoryTaskId].sections[key].section.id == section.id){
+            sectionExists = <span class="hljs-literal">true</span>;
+            sectionTaskIdOfExistingSection = key;
+          }
+        });
+        <span class="hljs-keyword">if</span>(!sectionExists){
+          subcategory.sections[sectionTaskId] = sectionTask;
+          <span class="hljs-keyword">var</span> taskIds = [];
+            <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; numOfTasks; i++) {
+              <span class="hljs-keyword">var</span> taskId = UUIDGenerator.uuid();
+              taskIds.push(taskId);
+              subcategory.sections[sectionTaskId].tasks[taskId] = InfoService.getTaskInfo(taskId);
+              subcategory.sections[sectionTaskId].tasks[taskId].sequence = i+<span class="hljs-number">1</span>;
+            }
+          OpsBoardRepository.addSection(locationShiftId, shiftCategoryId, subcategoryTaskId, sectionTaskId, taskIds, locationId, shiftId, categoryId, subcategoryId, section.id);
+        }
+    }
+
+    $scope.removeTasksFromSection = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(oldTasks, numOfTasks, subcategory, locationId, locationShiftId, shiftCategoryId, subcategoryTaskId, categoryId, shiftId, subcategoryId, section, originalSection)</span> </span>{
+      <span class="hljs-keyword">var</span> bottomArr = [],
+        taskIdsToBeDeleted = [],
+        sectionTaskId = originalSection.id,
+        toBeDeleted = oldTasks - numOfTasks;
+      <span class="hljs-built_in">Object</span>.keys(originalSection.tasks).forEach(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(taskId)</span> </span>{
+        <span class="hljs-keyword">var</span> filterTask=originalSection.tasks[taskId];
+        <span class="hljs-keyword">if</span>(!((filterTask.linkedTaskChildId&amp;&amp;filterTask.linkedTaskChildId!=<span class="hljs-literal">null</span>)||
+           (filterTask.linkedTaskParentId&amp;&amp;filterTask.linkedTaskParentId!=<span class="hljs-literal">null</span>))){
+        <span class="hljs-keyword">var</span> seq = originalSection.tasks[taskId].sequence;
+        <span class="hljs-keyword">if</span> (bottomArr.length &lt; toBeDeleted) {
+          taskIdsToBeDeleted.push(taskId);
+          bottomArr.push(seq);
+        } <span class="hljs-keyword">else</span> {
+          <span class="hljs-keyword">var</span> k = bottomArr.indexOf(<span class="hljs-built_in">Math</span>.min.apply(<span class="hljs-built_in">Math</span>, bottomArr));
+          <span class="hljs-keyword">if</span> (bottomArr[k] &lt; seq)  {
+            bottomArr[k] = seq;
+            taskIdsToBeDeleted[k] = taskId;
+          }
+        }
+      }
+      })
+      <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; taskIdsToBeDeleted.length; i++) {
+        <span class="hljs-keyword">var</span> taskIdToBeDeleted = taskIdsToBeDeleted[i];
+        <span class="hljs-keyword">var</span> e = originalSection.tasks[taskIdsToBeDeleted[i]].assignedEquipment,
+          p1 = originalSection.tasks[taskIdsToBeDeleted[i]].assignedPerson1,
+          p2 = originalSection.tasks[taskIdsToBeDeleted[i]].assignedPerson2;
+        <span class="hljs-keyword">if</span> (e &amp;&amp; e.id) {
+          <span class="hljs-keyword">if</span>($scope.equipment[e.id] != <span class="hljs-literal">null</span>){
+          $scope.equipment[e.id].state = <span class="hljs-string">'Available'</span>;
+          }
+        }
+        <span class="hljs-keyword">if</span> (p1 &amp;&amp; p1.id){
+          <span class="hljs-keyword">if</span>($scope.personnel[p1.id] != <span class="hljs-literal">null</span>){
+            $scope.personnel[p1.id].state = <span class="hljs-string">'Available'</span>;
+          }
+        }
+        <span class="hljs-keyword">if</span> (p2 &amp;&amp; p2.id){
+          <span class="hljs-keyword">if</span>($scope.personnel[p2.id] != <span class="hljs-literal">null</span>){
+            $scope.personnel[p2.id].state = <span class="hljs-string">'Available'</span>;
+          }
+        }
+        <span class="hljs-keyword">delete</span> section.tasks[taskIdToBeDeleted]
+      }
+      OpsBoardRepository.removeTasks(locationShiftId, shiftCategoryId, subcategoryTaskId, numOfTasks, locationId, shiftId, categoryId, subcategoryId, <span class="hljs-literal">true</span>, sectionTaskId, section.id)
+    }
+
+     $scope.addTasksToSection = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(numOfTasks, subcategory, locationId, locationShiftId, shiftCategoryId, subcategoryTaskId, categoryId, shiftId, subcategoryId, section, originalSection)</span> </span>{
+      <span class="hljs-keyword">if</span> (!subcategory.sections[originalSection.id].tasks) subcategory.sections[originalSection.id].tasks = {};
+      <span class="hljs-keyword">var</span> sectionTaskId = originalSection.id;
+      <span class="hljs-keyword">var</span> sequence = <span class="hljs-number">1</span>,key;
+    <span class="hljs-keyword">for</span>(key <span class="hljs-keyword">in</span> subcategory.sections[sectionTaskId].tasks){
+      <span class="hljs-keyword">if</span>(!subcategory.sections[sectionTaskId].tasks[key][<span class="hljs-string">'sequence'</span>]){
+        subcategory.sections[sectionTaskId].tasks[key][<span class="hljs-string">'sequence'</span>] = sequence;
+      }<span class="hljs-keyword">else</span>{
+        sequence = subcategory.sections[sectionTaskId].tasks[key][<span class="hljs-string">'sequence'</span>];
+        subcategory.sections[sectionTaskId].tasks[key].sequence = sequence;
+      }
+      sequence++;
+    }
+      <span class="hljs-keyword">var</span> taskIds = [];
+      <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; numOfTasks; i++) {
+        <span class="hljs-keyword">var</span> taskId = UUIDGenerator.uuid();
+        taskIds.push(taskId);
+        subcategory.sections[sectionTaskId].tasks[taskId] = InfoService.getTaskInfo(taskId);
+        subcategory.sections[sectionTaskId].tasks[taskId][<span class="hljs-string">'sequence'</span>] = sequence;
+        sequence++;
+      }
+      OpsBoardRepository.addTask(locationShiftId, shiftCategoryId, subcategoryTaskId, taskIds, locationId, shiftId, categoryId, subcategoryId, <span class="hljs-literal">true</span>, sectionTaskId, section.id);
+    }
+
+    $scope.addTasks = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(numOfTasks, subcategory, locationId, locationShiftId, shiftCategoryId, subcategoryTaskId, categoryId, shiftId, subcategoryId)</span> </span>{</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><pre><code>  var taskIds = [];
+  for (var i = 0; i &lt; numOfTasks; i++) {
+    var taskId = UUIDGenerator.uuid();
+    taskIds.push(taskId);
+    subcategory.tasks[taskId] = InfoService.getTaskInfo(taskId);
+  }
+  OpsBoardRepository.addTask(locationShiftId, shiftCategoryId, subcategoryTaskId, taskIds, locationId, shiftId, categoryId, subcategoryId, false, null, null)</code></pre></div></div><div class="code"><div class="wrapper">    <span class="hljs-keyword">var</span> sequence = <span class="hljs-number">1</span>,key;
+    <span class="hljs-keyword">for</span>(key <span class="hljs-keyword">in</span> subcategory.tasks){
+      <span class="hljs-keyword">if</span>(!subcategory.tasks[key][<span class="hljs-string">'sequence'</span>]){
+        subcategory.tasks[key][<span class="hljs-string">'sequence'</span>] = sequence;
+      }<span class="hljs-keyword">else</span>{
+        sequence = subcategory.tasks[key][<span class="hljs-string">'sequence'</span>];
+        subcategory.tasks[key].sequence = sequence;
+      }
+      sequence++;
+    }
+    <span class="hljs-keyword">var</span> taskIds = [];
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; numOfTasks; i++) {
+      <span class="hljs-keyword">var</span> taskId = UUIDGenerator.uuid();
+      taskIds.push(taskId);
+      subcategory.tasks[taskId] = InfoService.getTaskInfo(taskId);
+      subcategory.tasks[taskId][<span class="hljs-string">'sequence'</span>] = sequence;
+      sequence++;
+    }
+    OpsBoardRepository.addTask(locationShiftId, shiftCategoryId, subcategoryTaskId, taskIds, locationId, shiftId, categoryId, subcategoryId, <span class="hljs-literal">false</span>, <span class="hljs-literal">null</span>, <span class="hljs-literal">null</span>);
+    }
+
+    $scope.removeTasks = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(oldTasks, numOfTasks, subcategory, locationId, locationShiftId, shiftCategoryId, subcategoryTaskId, categoryId, shiftId, subcategoryId)</span> </span>{
+      <span class="hljs-keyword">var</span> bottomArr = [],
+        taskIdsToBeDeleted = [],
+        toBeDeleted = oldTasks - numOfTasks;
+      <span class="hljs-built_in">Object</span>.keys(subcategory.tasks).forEach(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(taskId)</span> </span>{
+        <span class="hljs-keyword">var</span> filterTask=subcategory.tasks[taskId];
+        <span class="hljs-keyword">if</span>(!((filterTask.linkedTaskChildId&amp;&amp;filterTask.linkedTaskChildId!=<span class="hljs-literal">null</span>)||
+          (filterTask.linkedTaskParentId&amp;&amp;filterTask.linkedTaskParentId!=<span class="hljs-literal">null</span>))){
+        <span class="hljs-keyword">var</span> seq = subcategory.tasks[taskId].sequence;
+        <span class="hljs-keyword">if</span> (bottomArr.length &lt; toBeDeleted) {
+          taskIdsToBeDeleted.push(taskId);
+          bottomArr.push(seq);
+        } <span class="hljs-keyword">else</span> {
+          <span class="hljs-keyword">var</span> k = bottomArr.indexOf(<span class="hljs-built_in">Math</span>.min.apply(<span class="hljs-built_in">Math</span>, bottomArr));
+          <span class="hljs-keyword">if</span> (bottomArr[k] &lt; seq)  {
+            bottomArr[k] = seq;
+            taskIdsToBeDeleted[k] = taskId;
+          }
+        }
+      }
+      })
+      <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; taskIdsToBeDeleted.length; i++) {
+          <span class="hljs-keyword">var</span> taskIdToBeDeleted = taskIdsToBeDeleted[i];
+        <span class="hljs-keyword">var</span> e = subcategory.tasks[taskIdToBeDeleted].assignedEquipment,
+          p1 = subcategory.tasks[taskIdToBeDeleted].assignedPerson1,
+          p2 = subcategory.tasks[taskIdToBeDeleted].assignedPerson2;
+        <span class="hljs-keyword">if</span> (e &amp;&amp; e.id) {
+          <span class="hljs-keyword">if</span>($scope.equipment[e.id] != <span class="hljs-literal">null</span>){
+          $scope.equipment[e.id].state = <span class="hljs-string">'Available'</span>;
+          }
+        }
+        <span class="hljs-keyword">if</span> (p1 &amp;&amp; p1.id){
+          <span class="hljs-keyword">if</span>($scope.personnel[p1.id] != <span class="hljs-literal">null</span>){
+            $scope.personnel[p1.id].state = <span class="hljs-string">'Available'</span>;
+          }
+        }
+        <span class="hljs-keyword">if</span> (p2 &amp;&amp; p2.id){
+          <span class="hljs-keyword">if</span>($scope.personnel[p2.id] != <span class="hljs-literal">null</span>){
+            $scope.personnel[p2.id].state = <span class="hljs-string">'Available'</span>;
+          }
+        }
+        <span class="hljs-keyword">delete</span> subcategory.tasks[taskIdToBeDeleted]
+      }
+      OpsBoardRepository.removeTasks(locationShiftId, shiftCategoryId, subcategoryTaskId, numOfTasks, locationId, shiftId, categoryId, subcategoryId, <span class="hljs-literal">false</span>, <span class="hljs-literal">null</span>, <span class="hljs-literal">null</span>)
+    }
+    $scope.addCategory = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(shift, locationId, locationShiftId)</span> </span>{
+      <span class="hljs-keyword">if</span> (!shift) <span class="hljs-keyword">return</span>;
+      <span class="hljs-keyword">var</span> catData,
+        found = <span class="hljs-literal">false</span>,
+        shiftCategoryId = UUIDGenerator.uuid();
+      <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> j = <span class="hljs-number">0</span>; j &lt; $scope.categoryData.length; j++) {
+        <span class="hljs-keyword">if</span> (!$scope.tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories) {
+          catData = angular.copy(InfoService.getCategoryInfo(shiftCategoryId, $scope.categoryData[j])); <span class="hljs-comment">//angular.copy($scope.categoryData[j], catData);</span>
+          <span class="hljs-keyword">break</span>;
+        } <span class="hljs-keyword">else</span> {
+          <span class="hljs-keyword">var</span> shiftCategories = $scope.tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories,
+            found = <span class="hljs-literal">false</span>;
+          <span class="hljs-built_in">Object</span>.keys(shiftCategories).forEach(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(key)</span> </span>{
+            <span class="hljs-keyword">if</span> (shiftCategories[key].category.id == $scope.categoryData[j].id) found = <span class="hljs-literal">true</span>;
+          })
+          <span class="hljs-keyword">if</span> (!found) {
+            catData = angular.copy(InfoService.getCategoryInfo(shiftCategoryId, $scope.categoryData[j])); <span class="hljs-comment">//angular.copy($scope.categoryData[j], catData);</span>
+            <span class="hljs-keyword">break</span>;
+          }
+        }
+      }
+      <span class="hljs-keyword">if</span> (!catData) <span class="hljs-keyword">return</span>; <span class="hljs-comment">//Will disable add category button here;</span>
+      <span class="hljs-keyword">var</span> shiftCategories = $scope.tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories;
+      <span class="hljs-keyword">if</span> (!shiftCategories) shiftCategories = {};
+      <span class="hljs-keyword">var</span> categoryExists = <span class="hljs-literal">false</span>,
+      idOfExistingCategory;
+
+     <span class="hljs-built_in">Object</span>.keys(shiftCategories).forEach(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(key)</span></span>{
+       <span class="hljs-keyword">if</span>(shiftCategories[key].category.id == catData.id){
+         categoryExists = <span class="hljs-literal">true</span>;
+         idOfExistingCategory = key;
+       }
+     });
+     <span class="hljs-keyword">if</span>(!categoryExists){
+       shiftCategories[shiftCategoryId] = catData;
+         OpsBoardRepository.addCategory(locationShiftId, shiftCategoryId, locationId, shift.shift.id, catData.category.id)
+     }
+      $scope.updateScroll()
+    }
+
+    $scope.updateScroll = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+      $(<span class="hljs-string">'.scroller'</span>).perfectScrollbar(<span class="hljs-string">'update'</span>)
+    }
+
+    <span class="hljs-keyword">var</span> locals = {
+      $scope: $scope,
+      $filter: $filter,
+      $modal: $modal,
+      $log: $log,
+      OpsBoardRepository: OpsBoardRepository,
+      ClientSideError: ClientSideError
+    }
+
+    $controller(<span class="hljs-string">'AddShift'</span>, locals);
+
+  <span class="hljs-keyword">var</span> locals = {
+      $scope: $scope,
+      $filter: $filter,
+      $modal: $modal,
+      $log: $log,
+      OpsBoardRepository: OpsBoardRepository,
+      ClientSideError: ClientSideError
+    }
+
+    $controller(<span class="hljs-string">'MultiRoutes'</span>, locals);
+  });</div></div></div></div></body></html>

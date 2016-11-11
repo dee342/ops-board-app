@@ -1,0 +1,74 @@
+<!--/* Modal window view for adding special position for a person. */--> 
+
+<form id="modal" name="modal" class="container-fluid" novalidate="true" centered-modal="true">
+	<!-- novalidate disables HTML5 native validation -->
+	<div th:include="views/modals/fragments/modal-header :: header" th:remove="tag"></div>
+	<div class="modal-body" ng-show="showContent">
+	<div class="row font-size-14px">
+      <label class="col-md-3 text-right">Civil Service Title:</label> 
+      <div class="col-md-3 text-left">{{::person.civilServiceTitle}}</div>
+      <label class="col-md-3 text-right">Reference No:</label> 
+      <div class="col-md-3 text-left">{{::person.referenceNum}}</div>
+    </div>
+    <div class="row font-size-14px">
+      <label class="col-md-3 text-right">Payroll Location:</label>
+      <div class="col-md-3 text-left">{{::person.homeLocation}}</div>
+    </div>
+     <div class="new-code">
+      <div class="spacer10"></div>
+      <fieldset>
+        <legend>{{::opData.legend}}</legend> 
+		<div class="row">
+			<label class="col-md-4 text-right">Special Position<i class="fa fa-asterisk"></i>:</label>
+			<div class="col-md-6 text-left">
+				<select ui-select2="mdaStatusSelect2Options" id="specialPosition" class="down form-control" data-placeholder="(Special Position)" ng-required="true" ng-class="{'submitted' : submitted}" ng-model="opData.displaySpecialPositionCode" ng-change="onChange()">
+					<option ng-repeat="status in opData.personnelSpecialPositionsList" value="{{::status.descr}}--{{::status.code}}">{{::status.descr}}--{{::status.code}}</option>
+				</select>
+			</div>
+		</div>
+		<div class="row"> 
+		<label class="col-md-4 text-right">Start Date<i class="fa fa-asterisk"></i>:</label>
+			<div class="col-md-6 text-left">
+				<p class="input-group date-picker">
+					<input type="text" class="form-control" datepicker-popup="MM/dd/yyyy" ng-class="{'submitted' : submitted}" ng-model="opData.startDate" is-open="datepickers.startDateOpened" ng-readonly="true"
+						ng-required="true" close-text="Close" ng-change="onChange()"/> <span class="input-group-btn">
+						<button type="button" class="btn btn-default" ng-click="open($event,'startDateOpened')">
+							<i class="glyphicon glyphicon-calendar"></i>
+						</button>
+					</span>
+				</p>
+			</div>
+		</div>
+		<div class="row"> 
+		<label class="col-md-4 text-right">End Date:</label>
+			<div class="col-md-6 text-left">
+				<p class="input-group date-picker">
+					<input type="text" class="form-control" datepicker-popup="MM/dd/yyyy" ng-model="opData.endDate" is-open="datepickers.endDateOpened" ng-readonly="true"
+						ng-required="true" close-text="Close" ng-change="onChange()"/> <span class="input-group-btn">
+						<button type="button" class="btn btn-default" ng-click="open($event,'endDateOpened')">
+							<i class="glyphicon glyphicon-calendar"></i>
+						</button>
+					</span>
+				</p>
+			</div>
+		</div>
+		<div class="row">
+			<label class="col-md-4 text-right">Remarks:</label>
+			<div class="col-md-6 text-left">
+				<input type="text" id="remarks" name="remarks" class="form-control" ng-model="opData.remarks" ng-maxlength="{{::remarksMaxLength}}" maxlength="{{::remarksMaxLength}}" ng-change="onChange()" ng-show="{{::!deleteMode}}" />
+				<input type="text" id="remarks" name="remarks" class="form-control" ng-model="opData.remarks" ng-maxlength="{{::remarksMaxLength}}" maxlength="{{::remarksMaxLength}}" ng-change="onChange()" disabled="disabled" ng-show="{{::deleteMode}}" />
+			</div>
+		</div>
+		</fieldset>
+		</div>
+		<div class="row">
+	        <div th:include="views/modals/fragments/modal-client-errors :: client-errors" th:remove="tag"></div>
+	     </div>
+	       <div class="row">
+      		<div th:include="views/modals/fragments/modal-server-errors :: server-errors" th:remove="tag"></div>
+      	</div>
+	</div>
+	<div th:include="views/modals/fragments/modal-footer :: footer" th:remove="tag"></div>
+	 <div th:include="views/modals/fragments/modal-exceptions :: exceptions" th:remove="tag"></div>
+	<div th:include="views/modals/fragments/modal-processing :: processing" th:remove="tag"></div>
+</form>

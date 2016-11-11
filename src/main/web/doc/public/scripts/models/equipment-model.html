@@ -1,0 +1,215 @@
+<!DOCTYPE html><html lang="en"><head><title>public\scripts\models\equipment-model</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../../"><meta name="groc-document-path" content="public\scripts\models\equipment-model"><meta name="groc-project-path" content="public\scripts\models\equipment-model.js"><link rel="stylesheet" type="text/css" media="all" href="../../../assets/style.css"><script type="text/javascript" src="../../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">public\scripts\models\equipment-model.js</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="hljs-pi">'use strict'</span>;
+
+angular
+		.module(<span class="hljs-string">'OpsBoard'</span>)
+		.factory(
+				<span class="hljs-string">'EquipmentModel'</span>,
+				<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(detachmentHistory)</span> </span>{
+					<span class="hljs-keyword">return</span> {
+						total : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+							<span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.detachmentHistory.length;
+						},
+						getKey : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+							<span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.id.split(<span class="hljs-string">'_'</span>)[<span class="hljs-number">0</span>];
+						},
+						
+						getFormattedPendingLoadStatus : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(status)</span> </span>{
+							<span class="hljs-keyword">var</span> formattedStatus =<span class="hljs-string">''</span>;
+							<span class="hljs-keyword">if</span>(status ===<span class="hljs-string">'L'</span>){
+								formattedStatus = <span class="hljs-string">'Empty'</span>;
+							}<span class="hljs-keyword">else</span>{
+								formattedStatus = status;
+							}
+							<span class="hljs-keyword">return</span> formattedStatus;
+						},
+
+						getFormattedBins : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(materials)</span> </span>{
+							<span class="hljs-keyword">var</span> results = []
+
+							<span class="hljs-keyword">if</span> (!<span class="hljs-keyword">this</span>.bins || <span class="hljs-keyword">this</span>.bins.length ==<span class="hljs-number">0</span> || !materials)
+								<span class="hljs-keyword">return</span> results;
+
+							<span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-keyword">this</span>.bins.length; i++) {
+								<span class="hljs-keyword">var</span> materialDetails = {};
+								<span class="hljs-keyword">for</span> ( <span class="hljs-keyword">var</span> j <span class="hljs-keyword">in</span> materials) {
+									<span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.bins[i].material &amp;&amp; <span class="hljs-keyword">this</span>.bins[i].material.id == materials[j].uniqueId)
+										materialDetails = materials[j];
+								}
+
+								<span class="hljs-keyword">var</span> displayName = <span class="hljs-keyword">this</span>.bins[i].name === <span class="hljs-string">'BIN 1'</span> ? <span class="hljs-string">'Large Side'</span> : <span class="hljs-string">'Small Side'</span>;
+
+								results[i] = {
+									status : <span class="hljs-keyword">this</span>.getFormattedPendingLoadStatus(<span class="hljs-keyword">this</span>.bins[i].status),
+									name : <span class="hljs-keyword">this</span>.bins[i].name,
+									displayName : displayName,
+									descr : materialDetails.descr,
+									materialType : materialDetails.materialType,
+									uniqueId : materialDetails.uniqueId,
+									lastUpdated : moment(<span class="hljs-keyword">this</span>.bins[i].lastModifiedSystem).format(<span class="hljs-string">'MM/DD/YYYY HH:mm:ss'</span>),
+									lastUpdatedBy : <span class="hljs-keyword">this</span>.bins[i].systemUser
+								}
+							}
+							<span class="hljs-keyword">return</span> results;
+						},
+						getFormattedDetachments : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+							<span class="hljs-keyword">var</span> formattedHist = [];
+
+							<span class="hljs-keyword">if</span> (!<span class="hljs-keyword">this</span>.detachmentHistory || <span class="hljs-keyword">this</span>.detachmentHistory.length == <span class="hljs-number">0</span>)
+								<span class="hljs-keyword">return</span> formattedHist;
+
+							<span class="hljs-keyword">var</span> hist = <span class="hljs-keyword">this</span>.detachmentHistory;
+							
+							<span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span> ; i &lt; hist.length ; i++) {
+								<span class="hljs-keyword">var</span> history = {
+								  lastModifiedSystemNonFormatted: hist[i].lastModifiedSystem,
+									lastModifiedSystem:	moment(hist[i].lastModifiedSystem).format(<span class="hljs-string">'MM/DD/YYYY HH:mm:ss'</span>),
+									lastSystemDate:	hist[i].lastModifiedActual,
+									status: hist[i].status,
+									remarks: hist[i].comments,
+									reporter: hist[i].systemUser,
+									from: hist[i].from,
+									to: hist[i].to,
+									driver: hist[i].driver
+								}
+
+								formattedHist.push(history);
+							}
+							<span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.getSortedDetachmentHistory(formattedHist);
+						},
+
+						getUpDownCondition : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+							<span class="hljs-keyword">var</span> results = {
+								condition : <span class="hljs-string">"Up"</span>,
+								lastUpdated : <span class="hljs-literal">null</span>,
+								lastUpdatedBy : <span class="hljs-string">""</span>
+							};
+
+							<span class="hljs-keyword">if</span> (!<span class="hljs-keyword">this</span>.upDownHistory
+									|| <span class="hljs-keyword">this</span>.upDownHistory.length == <span class="hljs-number">0</span>) {
+								<span class="hljs-keyword">return</span> results;
+							}
+
+							<span class="hljs-keyword">var</span> upDown = <span class="hljs-keyword">this</span>.getFormattedUpDownHistory()[<span class="hljs-number">0</span>];
+							<span class="hljs-keyword">if</span> (upDown.action)
+								results.condition = <span class="hljs-string">"Down"</span>;
+							<span class="hljs-keyword">else</span>
+								results.condition = <span class="hljs-string">"Up"</span>;
+
+							<span class="hljs-keyword">if</span> (upDown.conditions
+									&amp;&amp; upDown.conditions.length &gt; <span class="hljs-number">0</span>) {
+								<span class="hljs-keyword">var</span> conditions = upDown.conditions[upDown.conditions.length - <span class="hljs-number">1</span>];
+								results.lastUpdated = conditions.lastModifiedSystem;
+								results.lastUpdatedBy = conditions.systemUser;
+							}
+
+							<span class="hljs-keyword">return</span> results;
+						},
+						
+						
+						getFormattedUpDownHistory :<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{
+							<span class="hljs-keyword">var</span> upDown=[];
+							
+							<span class="hljs-keyword">if</span>(!<span class="hljs-keyword">this</span>.upDownHistory || <span class="hljs-keyword">this</span>.upDownHistory.length == <span class="hljs-number">0</span>)
+								<span class="hljs-keyword">return</span> upDown;
+							
+							<span class="hljs-keyword">var</span> oriUpDown=<span class="hljs-keyword">this</span>.upDownHistory;
+							<span class="hljs-keyword">for</span>(<span class="hljs-keyword">var</span> i=<span class="hljs-number">0</span>;i&lt;oriUpDown.length;i++){
+								<span class="hljs-keyword">var</span> conditions=oriUpDown[i].conditions;
+								<span class="hljs-keyword">var</span> downStatus=oriUpDown[i].down;
+								<span class="hljs-keyword">if</span>(conditions.length==<span class="hljs-number">1</span>){
+									<span class="hljs-keyword">var</span> singleConditions={
+											action:downStatus,
+											date:conditions[<span class="hljs-number">0</span>].lastModifiedActual,
+											time:conditions[<span class="hljs-number">0</span>].lastModifiedSystem,
+											downCode:conditions[<span class="hljs-number">0</span>].downCode,
+											location:conditions[<span class="hljs-number">0</span>].repairLocation,
+											reporter:conditions[<span class="hljs-number">0</span>].actualUser,
+											mechanic:conditions[<span class="hljs-number">0</span>].mechanic,
+											remarks:conditions[<span class="hljs-number">0</span>].comments
+									};
+									upDown.push(singleConditions);
+									
+								}
+								<span class="hljs-keyword">else</span>{
+									<span class="hljs-keyword">for</span>(<span class="hljs-keyword">var</span> j=<span class="hljs-number">0</span>;j&lt;conditions.length;j++){
+										<span class="hljs-keyword">var</span> multiConditions={
+												action:downStatus,
+												date:conditions[j].lastModifiedActual,
+												time:conditions[j].lastModifiedSystem,
+												downCode:conditions[j].downCode,
+												location:conditions[j].repairLocation,
+												reporter:conditions[j].actualUser,
+												mechanic:conditions[j].mechanic,
+												remarks:conditions[j].comments
+										
+										};
+										upDown.push(multiConditions);
+									}
+								}
+								
+							}
+							
+							<span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.getSortedUpDownHistory(upDown);
+						},
+						
+						getSortedUpDownHistory: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(upDown)</span> </span>{
+			                <span class="hljs-keyword">return</span> upDown.sort(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(me, that)</span> </span>{
+			                    
+			                    <span class="hljs-keyword">if</span> (that == <span class="hljs-literal">null</span>)
+			                        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Sort by actual time</p></div></div><div class="code"><div class="wrapper">			                    <span class="hljs-keyword">if</span> (me.date == <span class="hljs-literal">null</span> &amp;&amp; that.date != <span class="hljs-literal">null</span>)
+			                        <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+			                    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (me.date != <span class="hljs-literal">null</span> &amp;&amp; that.date == <span class="hljs-literal">null</span>)
+			                        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+			                    
+			                    <span class="hljs-keyword">if</span> (me.date != <span class="hljs-literal">null</span> &amp;&amp; that.date != <span class="hljs-literal">null</span>) {
+			                        <span class="hljs-keyword">if</span> (me.date &lt; that.date)
+			                            <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+			                        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (me.date &gt; that.date)
+			                            <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+			                    }
+			                    </div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Sort by system time</p></div></div><div class="code"><div class="wrapper">			                    <span class="hljs-keyword">if</span> (me.time != <span class="hljs-literal">null</span> &amp;&amp; that.time != <span class="hljs-literal">null</span>) {
+			                        <span class="hljs-keyword">if</span> (me.time &lt; that.time)
+			                            <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+			                        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (me.time &gt; that.time)
+			                            <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+			                    }
+			                            
+			                    <span class="hljs-keyword">if</span> (me.time != <span class="hljs-literal">null</span> &amp;&amp; that.time != <span class="hljs-literal">null</span>) {
+			                        <span class="hljs-keyword">if</span> (me.time &lt; that.time)
+			                            <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+			                        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (me.time &gt; that.time)
+			                            <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+			                    }
+			                    </div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Sort by status (up or down)</p></div></div><div class="code"><div class="wrapper">			                    <span class="hljs-keyword">if</span> (!me.action &amp;&amp; that.action)
+			                        <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+			                    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (me.action &amp;&amp; !that.action)
+			                        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+			                    
+			                    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+			                   }
+			                )
+			            },
+			            
+			            getSortedDetachmentHistory: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(detachment)</span> </span>{
+			                <span class="hljs-keyword">return</span> detachment.sort(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(me, that)</span> </span>{
+			                    
+			                    <span class="hljs-keyword">if</span> (that == <span class="hljs-literal">null</span>)
+			                        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Now sort by lastModifiedSystem</p></div></div><div class="code"><div class="wrapper">			                    <span class="hljs-keyword">if</span> (me.lastModifiedSystemNonFormatted == <span class="hljs-literal">null</span> &amp;&amp; that.lastModifiedSystemNonFormatted != <span class="hljs-literal">null</span>)
+			                        <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+			                    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (me.lastModifiedSystemNonFormatted != <span class="hljs-literal">null</span> &amp;&amp; that.lastModifiedSystemNonFormatted == <span class="hljs-literal">null</span>)
+			                        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+			                    
+			                    <span class="hljs-keyword">if</span> (me.lastModifiedSystemNonFormatted != <span class="hljs-literal">null</span> &amp;&amp; that.lastModifiedSystemNonFormatted != <span class="hljs-literal">null</span>) {
+			                        <span class="hljs-keyword">if</span> (me.lastModifiedSystemNonFormatted &lt; that.lastModifiedSystemNonFormatted)
+			                            <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+			                        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (me.lastModifiedSystemNonFormatted &gt; that.lastModifiedSystemNonFormatted)
+			                            <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+			                    }
+			                 
+			                    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+			                  
+			                   }
+			                )
+			            }
+					}
+				});</div></div></div></div></body></html>

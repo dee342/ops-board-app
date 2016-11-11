@@ -1,0 +1,72 @@
+<!DOCTYPE html><html lang="en"><head><title>public\scripts\directives\ng-context-menu-0.0.9</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../../"><meta name="groc-document-path" content="public\scripts\directives\ng-context-menu-0.0.9"><meta name="groc-project-path" content="public\scripts\directives\ng-context-menu-0.0.9.js"><link rel="stylesheet" type="text/css" media="all" href="../../../assets/style.css"><script type="text/javascript" src="../../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">public\scripts\directives\ng-context-menu-0.0.9.js</div></div><div id="document"><div class="segment"><div class="comments doc-section"><div class="wrapper"><p><span class='doc-section-header'> author Ian Kennington Walter (<a href="http://ianvonwalter.com">http://ianvonwalter.com</a>)</span></p>
+<p>ng-context-menu - v0.0.9 - An AngularJS directive to display a context menu when a right-click event is triggered</p></div></div><div class="code"><div class="wrapper">angular
+  .module(<span class="hljs-string">'ng-context-menu'</span>, [])
+  .directive(<span class="hljs-string">'contextMenu'</span>, [<span class="hljs-string">'$window'</span>, <span class="hljs-string">'$parse'</span>,
+    <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($window, $parse)</span> </span>{
+      <span class="hljs-keyword">return</span> {
+        restrict: <span class="hljs-string">'A'</span>,
+        link: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($scope, element, attrs)</span> </span>{
+          <span class="hljs-keyword">var</span> opened = <span class="hljs-literal">false</span>,
+            openTarget,
+            disabled = $scope.$<span class="hljs-built_in">eval</span>(attrs.contextMenuDisabled),
+            win = angular.element($<span class="hljs-built_in">window</span>),
+            menuElement = <span class="hljs-literal">null</span>,
+            fn = $parse(attrs.contextMenu);
+
+          <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">open</span><span class="hljs-params">(event, element)</span> </span>{
+            element.addClass(<span class="hljs-string">'open'</span>);
+            element.css(<span class="hljs-string">'top'</span>, <span class="hljs-built_in">Math</span>.max(event.pageY, <span class="hljs-number">0</span>) + <span class="hljs-string">'px'</span>);
+            element.css(<span class="hljs-string">'left'</span>, <span class="hljs-built_in">Math</span>.max(event.pageX, <span class="hljs-number">0</span>) + <span class="hljs-string">'px'</span>);
+            opened = <span class="hljs-literal">true</span>;
+          }
+
+          <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">close</span><span class="hljs-params">(element)</span> </span>{
+            opened = <span class="hljs-literal">false</span>;
+            element.removeClass(<span class="hljs-string">'open'</span>);
+          }
+
+          element.bind(<span class="hljs-string">'contextmenu'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(event)</span> </span>{
+            <span class="hljs-keyword">if</span> (!disabled) {
+              <span class="hljs-keyword">if</span> (attrs.contextMenu === <span class="hljs-string">""</span>) {
+                event.preventDefault();
+                <span class="hljs-comment">//event.stopPropagation();</span>
+                <span class="hljs-keyword">return</span>;
+              }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Make sure the DOM is set before we try to find the menu</p></div></div><div class="code"><div class="wrapper">              <span class="hljs-keyword">if</span> (menuElement === <span class="hljs-literal">null</span>) {
+                menuElement = angular.element(<span class="hljs-built_in">document</span>.getElementById(attrs.target));
+              }
+
+              openTarget = event.target;
+              event.preventDefault();
+              event.stopPropagation();
+              $(win)
+                .trigger(<span class="hljs-string">'click'</span>)
+              $scope.$apply(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+                fn($scope, {
+                  $event: event
+                });
+                open(event, menuElement);
+              });
+            }
+          });
+
+          win.bind(<span class="hljs-string">'keyup'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(event)</span> </span>{
+            <span class="hljs-keyword">if</span> (!disabled &amp;&amp; opened &amp;&amp; event.keyCode === <span class="hljs-number">27</span>) {
+              $scope.$apply(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+                close(menuElement);
+              });
+            }
+          });
+
+          <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">handleWindowClickEvent</span><span class="hljs-params">(event)</span> </span>{
+            <span class="hljs-keyword">if</span> (!disabled &amp;&amp; opened &amp;&amp; (!event || event.button !== <span class="hljs-number">2</span> || event.target !== openTarget)) {
+              $scope.$apply(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+                close(menuElement);
+              });
+            }
+          }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Firefox treats a right-click as a click and a contextmenu event while other browsers
+just treat it as a contextmenu event</p></div></div><div class="code"><div class="wrapper">          win.bind(<span class="hljs-string">'click'</span>, handleWindowClickEvent);
+          win.bind(<span class="hljs-string">'contextmenu'</span>, handleWindowClickEvent);
+        }
+      };
+  }
+]);</div></div></div></div></body></html>

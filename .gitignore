@@ -1,0 +1,23 @@
+/build
+/out
+/bin
+/test-bin
+/.gradle
+/.settings
+/logs
+jsonData/**
+src/main/generated-sources
+src/main/web/public/tests/node_modules
+.idea/**
+
+*.iml
+*.launch
+atlassian*
+.project
+.classpath
+<<<<<<< HEAD
+/build/
+=======
+/vf.gf.dmn-events.txt
+/vf.gf.dmn-license.cfg
+>>>>>>> master-1.0-clean-up-caching

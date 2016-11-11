@@ -1,0 +1,73 @@
+<!--/* Modal window view for detaching a person. */-->
+
+<form id="modal" name="modal" class="container-fluid" novalidate="true" centered-modal="true">
+	<!-- novalidate disables HTML5 native validation -->
+	<div th:include="views/modals/fragments/modal-header :: header" th:remove="tag"></div>
+	<div class="modal-body" ng-show="showContent">
+		<div class="row">
+			<label class="col-md-4 text-right">From:</label>
+			<div class="col-md-6 text-left">{{::opData.from}}</div>
+		</div>
+		<div class="row">
+			<label class="col-md-4 text-right">To<i class="fa fa-asterisk"></i>:</label>
+			<div class="col-md-6 text-left">
+				<select ui-select2="detachPersonSelect2Options" name="to" class="form-control" ng-class="{'submitted' : submitted}" ng-model="opData.to"
+					data-placeholder="Select a Target Location..." ng-required="true">
+					<option value=""></option>
+					<option ng-repeat="location in opData.locations" value="{{::location}}">{{::location}}</option>
+				</select>
+			</div>
+		</div>
+		<div class="row">
+			<label class="col-md-4 text-right">Start Date<i class="fa fa-asterisk"></i>:</label>
+			<div class="col-md-6 text-left">
+				<p class="input-group date-picker">
+					<input type="text" class="form-control" datepicker-popup="MM/dd/yyyy" ng-model="opData.startDate" ng-required="true" is-open="datepickers.startDateOpened" datepicker-options="detachPersonDateOpts"
+						min-date="{{::$parent.min}}" ng-class="{'submitted' : submitted}" ng-readonly="true"/> <span class="input-group-btn">
+						<button type="button" class="btn btn-default" ng-click="open($event,'startDateOpened')">
+							<i class="glyphicon glyphicon-calendar"></i>
+						</button>
+					</span>
+				</p>
+			</div>
+		</div>
+		<div class="row">
+			<label class="col-md-4 text-right">End Date:</label>
+			<div class="col-md-6 text-left">
+				<p class="input-group date-picker">
+					<input type="text" class="form-control" datepicker-popup="MM/dd/yyyy" ng-model="opData.endDate" is-open="datepickers.endDateOpened" datepicker-options="detachPersonDateOpts"
+						ng-required="true" close-text="Close" ng-class="{'submitted' : $parent.isRequired('endDate')}" th:readonly="true"/> <span class="input-group-btn">
+						<button type="button" class="btn btn-default" ng-click="open($event,'endDateOpened')">
+							<i class="glyphicon glyphicon-calendar"></i>
+						</button>
+					</span>
+				</p>
+			</div>
+		</div>
+		<div class="row">
+			<label class="col-md-4 text-right">Shift<i class="fa fa-asterisk"></i>:</label>
+			<div class="col-md-6 text-left">
+				<select ui-select2="detachPersonSelect2Options" name="to" class="form-control" ng-class="{'submitted' : submitted}" ng-model="opData.shift" data-placeholder="Select a Shift..."
+					ng-required="true">
+					<option value=""></option>
+					<option ng-repeat="shift in opData.shifts | orderBy: 'sequence'" value="{{::shift.name}}">{{::shift.name}}</option>
+				</select>
+			</div>
+		</div>
+		<div class="row">
+			<label class="col-md-4 text-right">Remarks:</label>
+			<div class="col-md-6 text-left">
+				<input type="text" id="remarks" name="remarks" class="form-control" ng-model="opData.remarks" ng-maxlength="{{::remarksMaxLength}}" maxlength="{{::remarksMaxLength}}" />
+			</div>
+		</div>
+		<div class="row">
+			<div th:include="views/modals/fragments/modal-client-errors :: client-errors" th:remove="tag"></div>
+		</div>
+		  <div class="row">
+      		<div th:include="views/modals/fragments/modal-server-errors :: server-errors" th:remove="tag"></div>
+      	</div>
+	</div>
+	<div th:include="views/modals/fragments/modal-footer :: footer" th:remove="tag"></div>
+	 <div th:include="views/modals/fragments/modal-exceptions :: exceptions" th:remove="tag"></div>
+	<div th:include="views/modals/fragments/modal-processing :: processing" th:remove="tag"></div>
+</form>

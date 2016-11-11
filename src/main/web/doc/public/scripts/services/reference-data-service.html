@@ -1,0 +1,221 @@
+<!DOCTYPE html><html lang="en"><head><title>public\scripts\services\reference-data-service</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../../"><meta name="groc-document-path" content="public\scripts\services\reference-data-service"><meta name="groc-project-path" content="public\scripts\services\reference-data-service.js"><link rel="stylesheet" type="text/css" media="all" href="../../../assets/style.css"><script type="text/javascript" src="../../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">public\scripts\services\reference-data-service.js</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="hljs-pi">'use strict'</span>;</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>This file contains all the logic for loading and processing Reference Data.</p></div></div><div class="code"><div class="wrapper">angular.module(<span class="hljs-string">'OpsBoard'</span>)
+  .service(
+    <span class="hljs-string">'ReferenceDataService'</span>,
+    <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+
+      <span class="hljs-keyword">return</span> {</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Section - Load functions - Start </p></div></div><div class="code"><div class="wrapper">        loadEquipmentDownCodes: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($resource, pathStart)</span> </span>{
+            <span class="hljs-keyword">var</span> resource = $resource(pathStart + <span class="hljs-string">'/referencedata/downcodes'</span>);
+            <span class="hljs-keyword">var</span> response = resource.query();
+
+            <span class="hljs-keyword">return</span> response.$promise.then(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(list)</span> </span>{
+              <span class="hljs-keyword">return</span> list;
+            }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span> </span>{
+              <span class="hljs-built_in">console</span>.log(error);
+            });
+          },
+
+        loadShifts: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($resource, pathStart)</span> </span>{
+          <span class="hljs-keyword">var</span> resource = $resource(pathStart + <span class="hljs-string">'/referencedata/shifts'</span>);
+          <span class="hljs-keyword">var</span> response = resource.get();
+
+          <span class="hljs-keyword">return</span> response.$promise.then(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(list)</span> </span>{
+            <span class="hljs-keyword">return</span> list;
+          }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span> </span>{
+            <span class="hljs-built_in">console</span>.log(error);
+          });
+        },
+
+        loadCategories: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($resource, pathStart, boardLocation)</span> </span>{
+          <span class="hljs-keyword">var</span> resource = $resource(pathStart + <span class="hljs-string">'/referencedata/categories/'</span> + boardLocation);
+          <span class="hljs-keyword">var</span> response = resource.query()
+
+          <span class="hljs-keyword">return</span> response.$promise.then(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(list)</span> </span>{
+            <span class="hljs-keyword">return</span> list;
+          }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span> </span>{
+            <span class="hljs-built_in">console</span>.log(error);
+          });
+        },
+
+        loadMaterialList: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($resource, pathStart)</span> </span>{
+
+          <span class="hljs-keyword">var</span> resource = $resource(pathStart + <span class="hljs-string">'/referencedata/materialtypes'</span>);
+          <span class="hljs-keyword">var</span> response = resource.query();
+
+          <span class="hljs-keyword">return</span> response.$promise.then(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(list)</span> </span>{
+            list.forEach(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(item, index)</span> </span>{
+              <span class="hljs-keyword">var</span> fItem = {
+                uniqueId: item.id,
+                materialType: item.code,
+                descr: item.description,
+                group: item.group,
+                subGroup: item.category
+              }
+              list[index] = fItem;
+            })
+            <span class="hljs-keyword">return</span> list;
+          }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span> </span>{
+            <span class="hljs-built_in">console</span>.log(error);
+          });
+        },
+
+        loadPersonnelStatusList: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($resource, pathStart)</span> </span>{
+        	
+        	 <span class="hljs-keyword">var</span> resource = $resource(pathStart + <span class="hljs-string">'/referencedata/personnelmdatypes'</span>);
+             <span class="hljs-keyword">var</span> response = resource.query();
+
+             <span class="hljs-keyword">return</span> response.$promise.then(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(list)</span> </span>{
+               list.forEach(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(item, index)</span> </span>{
+                 <span class="hljs-keyword">var</span> fItem = {
+                   type: <span class="hljs-string">'MDA'</span>,
+                   subType: item.code,
+                   descr: item.description
+                 }
+                 list[index] = fItem;
+               })
+               <span class="hljs-keyword">return</span> list;
+             }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span> </span>{
+               <span class="hljs-built_in">console</span>.log(error);
+             });
+        },
+
+        loadPersonnelUnavailabilityCodes: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+          <span class="hljs-keyword">return</span> [{
+            <span class="hljs-string">"code"</span>: <span class="hljs-string">"CHART"</span>,
+            <span class="hljs-string">"id"</span>: <span class="hljs-number">1</span>,
+            <span class="hljs-string">"longDescription"</span>: <span class="hljs-string">"Chart"</span>
+          }, {
+            <span class="hljs-string">"code"</span>: <span class="hljs-string">"VACATION"</span>,
+            <span class="hljs-string">"id"</span>: <span class="hljs-number">2</span>,
+            <span class="hljs-string">"longDescription"</span>: <span class="hljs-string">"Vacation"</span>
+          }, {
+            <span class="hljs-string">"code"</span>: <span class="hljs-string">"XWP"</span>,
+            <span class="hljs-string">"id"</span>: <span class="hljs-number">3</span>,
+            <span class="hljs-string">"longDescription"</span>: <span class="hljs-string">"Excused with pay"</span>
+          }, {
+            <span class="hljs-string">"code"</span>: <span class="hljs-string">"XWOP"</span>,
+            <span class="hljs-string">"id"</span>: <span class="hljs-number">4</span>,
+            <span class="hljs-string">"longDescription"</span>: <span class="hljs-string">"Excused without pay"</span>
+          }, {
+            <span class="hljs-string">"code"</span>: <span class="hljs-string">"SICK"</span>,
+            <span class="hljs-string">"id"</span>: <span class="hljs-number">5</span>,
+            <span class="hljs-string">"longDescription"</span>: <span class="hljs-string">"Sick"</span>
+          }, {
+            <span class="hljs-string">"code"</span>: <span class="hljs-string">"LODI"</span>,
+            <span class="hljs-string">"id"</span>: <span class="hljs-number">6</span>,
+            <span class="hljs-string">"longDescription"</span>: <span class="hljs-string">"Line of Duty Injury"</span>
+          }, {
+            <span class="hljs-string">"code"</span>: <span class="hljs-string">"APP"</span>,
+            <span class="hljs-string">"id"</span>: <span class="hljs-number">7</span>,
+            <span class="hljs-string">"longDescription"</span>: <span class="hljs-string">"Absent pending proof"</span>
+          }, {
+            <span class="hljs-string">"code"</span>: <span class="hljs-string">"AWOL"</span>,
+            <span class="hljs-string">"id"</span>: <span class="hljs-number">8</span>,
+            <span class="hljs-string">"longDescription"</span>: <span class="hljs-string">"Absent without authorized Leave"</span>
+          }, {
+            <span class="hljs-string">"code"</span>: <span class="hljs-string">"DIF"</span>,
+            <span class="hljs-string">"id"</span>: <span class="hljs-number">9</span>,
+            <span class="hljs-string">"longDescription"</span>: <span class="hljs-string">"Death in Family"</span>
+          }, {
+            <span class="hljs-string">"code"</span>: <span class="hljs-string">"SUSPENDED"</span>,
+            <span class="hljs-string">"id"</span>: <span class="hljs-number">10</span>,
+            <span class="hljs-string">"longDescription"</span>: <span class="hljs-string">"Suspended"</span>
+          }, {
+            <span class="hljs-string">"code"</span>: <span class="hljs-string">"TERMINAL LEAVE"</span>,
+            <span class="hljs-string">"id"</span>: <span class="hljs-number">11</span>,
+            <span class="hljs-string">"longDescription"</span>: <span class="hljs-string">"Terminal Leave"</span>
+          }, {
+            <span class="hljs-string">"code"</span>: <span class="hljs-string">"JURY DUTY"</span>,
+            <span class="hljs-string">"id"</span>: <span class="hljs-number">12</span>,
+            <span class="hljs-string">"longDescription"</span>: <span class="hljs-string">"Jury Duty"</span>
+          }, {
+            <span class="hljs-string">"code"</span>: <span class="hljs-string">"Mil Dty w/Pay"</span>,
+            <span class="hljs-string">"id"</span>: <span class="hljs-number">13</span>,
+            <span class="hljs-string">"longDescription"</span>: <span class="hljs-string">"Military Duty with pay"</span>
+          }, {
+            <span class="hljs-string">"code"</span>: <span class="hljs-string">"Mil Dty w/o Pay"</span>,
+            <span class="hljs-string">"id"</span>: <span class="hljs-number">14</span>,
+            <span class="hljs-string">"longDescription"</span>: <span class="hljs-string">"Military Duty without pay"</span>
+          }, {
+            <span class="hljs-string">"code"</span>: <span class="hljs-string">"HONOR GUARD"</span>,
+            <span class="hljs-string">"id"</span>: <span class="hljs-number">15</span>,
+            <span class="hljs-string">"longDescription"</span>: <span class="hljs-string">"Honor Guard"</span>
+          }, {
+            <span class="hljs-string">"code"</span>: <span class="hljs-string">"FMLA"</span>,
+            <span class="hljs-string">"id"</span>: <span class="hljs-number">16</span>,
+            <span class="hljs-string">"longDescription"</span>: <span class="hljs-string">"Family Medical Leave Act"</span>
+          }, {
+            <span class="hljs-string">"code"</span>: <span class="hljs-string">"MATERNITY LEAVE"</span>,
+            <span class="hljs-string">"id"</span>: <span class="hljs-number">17</span>,
+            <span class="hljs-string">"longDescription"</span>: <span class="hljs-string">"Maternity Leave"</span>
+          }];
+        },
+
+
+        loadPersonnelSpecialPositionsList: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+          <span class="hljs-keyword">return</span> [{
+            <span class="hljs-string">"code"</span>: <span class="hljs-string">"ASW"</span>,
+            <span class="hljs-string">"id"</span>: <span class="hljs-number">1</span>,
+            <span class="hljs-string">"longDescription"</span>: <span class="hljs-string">"Alternate Sentence Worker"</span>
+          }, {
+            <span class="hljs-string">"code"</span>: <span class="hljs-string">"BOA"</span>,
+            <span class="hljs-string">"id"</span>: <span class="hljs-number">2</span>,
+            <span class="hljs-string">"longDescription"</span>: <span class="hljs-string">"Borough Superintendent Operations Assistant"</span>
+          }, {
+            <span class="hljs-string">"code"</span>: <span class="hljs-string">"CFC"</span>,
+            <span class="hljs-string">"id"</span>: <span class="hljs-number">3</span>,
+            <span class="hljs-string">"longDescription"</span>: <span class="hljs-string">"Chloro Flouro Carbon"</span>
+          }, {
+            <span class="hljs-string">"code"</span>: <span class="hljs-string">"BCA"</span>,
+            <span class="hljs-string">"id"</span>: <span class="hljs-number">4</span>,
+            <span class="hljs-string">"longDescription"</span>: <span class="hljs-string">"Collection Assistant"</span>
+          }, {
+            <span class="hljs-string">"code"</span>: <span class="hljs-string">"EZP"</span>,
+            <span class="hljs-string">"id"</span>: <span class="hljs-number">5</span>,
+            <span class="hljs-string">"longDescription"</span>: <span class="hljs-string">"EZ Pack"</span>
+          }, {
+            <span class="hljs-string">"code"</span>: <span class="hljs-string">"GU"</span>,
+            <span class="hljs-string">"id"</span>: <span class="hljs-number">6</span>,
+            <span class="hljs-string">"longDescription"</span>: <span class="hljs-string">"Garage Utility"</span>
+          }, {
+            <span class="hljs-string">"code"</span>: <span class="hljs-string">"G&amp;O"</span>,
+            <span class="hljs-string">"id"</span>: <span class="hljs-number">7</span>,
+            <span class="hljs-string">"longDescription"</span>: <span class="hljs-string">"Gas &amp; Oil"</span>
+          }, {
+            <span class="hljs-string">"code"</span>: <span class="hljs-string">"MB"</span>,
+            <span class="hljs-string">"id"</span>: <span class="hljs-number">8</span>,
+            <span class="hljs-string">"longDescription"</span>: <span class="hljs-string">"Mechanical Broom"</span>
+          }, {
+            <span class="hljs-string">"code"</span>: <span class="hljs-string">"OA"</span>,
+            <span class="hljs-string">"id"</span>: <span class="hljs-number">9</span>,
+            <span class="hljs-string">"longDescription"</span>: <span class="hljs-string">"Ops Assistant"</span>
+          }, {
+            <span class="hljs-string">"code"</span>: <span class="hljs-string">"RR"</span>,
+            <span class="hljs-string">"id"</span>: <span class="hljs-number">10</span>,
+            <span class="hljs-string">"longDescription"</span>: <span class="hljs-string">"Roll on/Roll off"</span>
+          }, {
+            <span class="hljs-string">"code"</span>: <span class="hljs-string">"BSA"</span>,
+            <span class="hljs-string">"id"</span>: <span class="hljs-number">11</span>,
+            <span class="hljs-string">"longDescription"</span>: <span class="hljs-string">"Set up Assistant"</span>
+          }, {
+            <span class="hljs-string">"code"</span>: <span class="hljs-string">"SC"</span>,
+            <span class="hljs-string">"id"</span>: <span class="hljs-number">12</span>,
+            <span class="hljs-string">"longDescription"</span>: <span class="hljs-string">"Snow Clerk"</span>
+          }, {
+            <span class="hljs-string">"code"</span>: <span class="hljs-string">"LWR"</span>,
+            <span class="hljs-string">"id"</span>: <span class="hljs-number">13</span>,
+            <span class="hljs-string">"longDescription"</span>: <span class="hljs-string">"Wrecker"</span>
+          }];
+        },
+
+        loadRepairLocations: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($resource, pathStart)</span> </span>{
+          <span class="hljs-keyword">var</span> resource = $resource(pathStart + <span class="hljs-string">'/referencedata/locations'</span>);
+          <span class="hljs-keyword">var</span> response = resource.query({});
+
+          <span class="hljs-keyword">return</span> response.$promise.then(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span> </span>{
+            <span class="hljs-keyword">return</span> data;
+          }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span> </span>{
+            <span class="hljs-built_in">console</span>.log(error);
+          });
+        }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Section - Load functions - End </p></div></div><div class="code"><div class="wrapper">      }
+
+    })</div></div></div></div></body></html>

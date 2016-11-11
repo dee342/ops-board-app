@@ -1,0 +1,38 @@
+<!--/* Modal window view for canceling a persons unavailability. */-->
+
+<form id="modal" name="modal" class="container-fluid form-horizontal" novalidate="true" centered-modal="false">
+  <!-- novalidate disables HTML5 native validation -->
+  <div th:include="views/modals/fragments/modal-header :: header" th:remove="tag"></div>
+  <div class="modal-body" ng-show="showContent">
+    <div class="row"> 
+      <label class="col-md-3">Cancellatation Date:</label> 
+      <div class="col-md-4">
+         <p class="input-group date-picker">
+              <input type="text" class="form-control" datepicker-popup="MM/dd/yyyy" ng-model="opData.startDate" is-open="datepickers.startDateOpened" ng-readonly="true"
+                 min-date="minDate" max-date="maxDate" ng-change="resetcancelTime()"/> <span class="input-group-btn">
+                <button type="button" class="btn btn-default" ng-click="open($event,'startDateOpened')">
+                  <i class="glyphicon glyphicon-calendar"></i>
+                </button>
+              </span>
+            </p>
+      </div>
+      <label class="col-md-3 text-right">Unavailable Type:</label> 
+      <div class="col-md-2">{{::opData.unavailableCode}}</div>
+    </div>
+    <div class="row">
+      <label class="col-md-3 text-left">Remarks:</label>
+          <div class="col-md-6 text-left">
+            <input type="text" id="remarks" name="remarks" class="form-control" ng-model="opData.remarks" ng-maxlength="{{::remarksMaxLength}}" maxlength="{{::remarksMaxLength}}" />
+          </div>
+    </div>
+    <div class="row">
+          <div th:include="views/modals/fragments/modal-client-errors :: client-errors" th:remove="tag"></div>
+        </div>
+        <div class="row">
+          <div th:include="views/modals/fragments/modal-server-errors :: server-errors" th:remove="tag"></div>
+        </div>
+  </div>
+  <div th:include="views/modals/fragments/modal-footer :: footer" th:remove="tag"></div>
+   <div th:include="views/modals/fragments/modal-exceptions :: exceptions" th:remove="tag"></div>
+  <div th:include="views/modals/fragments/modal-processing :: processing" th:remove="tag"></div>
+</form>

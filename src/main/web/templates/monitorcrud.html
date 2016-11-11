@@ -1,0 +1,208 @@
+<!--
+- HTML file to construct the Admin Dashboard as an Angular Single Page Application (SPA).
+-
+- This file defines a single Angular with dependencies, routes and constants application.  It also defines It also links all the CSS,
+- Font, Image and JavaScript dependencies.
+-->
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
+  <head>  
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="generator" content="Bootply"/>
+    <!--<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">-->
+    <title>Kiosk Admin</title>
+     <!-- Favicon -->
+    <link rel="icon" type="image/png"
+          th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/images/favicon.png')}}"/>
+    <link rel="shortcut icon" type="image/x-icon"
+          th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/images/favicon.ico')}}"/>
+
+    <!--monitor-->
+    <link rel="stylesheet" type="text/css"
+          th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/bootstrap.min.css')}}"/>
+
+
+    <link rel="stylesheet" type="text/css"
+          th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/bootstrap-3.1.1.min.css')}}"/>
+    <link rel="stylesheet"
+          th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/bootstrap-glyphicons-3.1.1.css')}}"/>
+    <link rel="stylesheet"
+          th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/font-awesome.min.css')}}"/>
+    <link rel="stylesheet" type="text/css"
+          th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/select2-3.4.8.css')}}"/>
+
+    <link rel="stylesheet" type="text/css"
+          th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/select2-bootstrap3.css')}}"/>
+    <link rel="stylesheet" type="text/css"
+          th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/monitor_crud.css')}}"/>
+    <link rel="stylesheet/less" type="text/css"
+          th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/loader/loading-bar.css')}}"/>
+    <link rel="stylesheet/less" type="text/css"
+          th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/multiselect/multiselect.css')}}"/>
+
+
+    <script>
+        less = {
+            async: true
+        };
+    </script>
+
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/less.min.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/async-0.9.2.js')}}"></script>
+
+    <!-- Libraries -->
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/jquery-2.1.0.min.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/angular-1.3.3.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/angular-resource-1.3.3.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/angular-cookies-1.3.3.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/angular-sanitize-1.3.3.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/angular-route-1.3.3.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/ui-bootstrap-tpls-0.12.1.min.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/select2-3.4.8.min.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/sockjs-0.3.4.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/stomp.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/multiselect/multiselect.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/uuid.js')}}"></script>
+    <style>
+      .username.ng-valid {
+          background-color: lightgreen;
+      }
+      .username.ng-dirty.ng-invalid-required {
+          background-color: red;
+      }
+      .username.ng-dirty.ng-invalid-minlength {
+          background-color: yellow;
+      }
+ 
+      .email.ng-valid {
+          background-color: lightgreen;
+      }
+      .email.ng-dirty.ng-invalid-required {
+          background-color: red;
+      }
+      .email.ng-dirty.ng-invalid-email {
+          background-color: yellow;
+      }
+ 
+    </style>
+  </head>
+  <body ng-app="myApp" class="ng-cloak">
+      <div class="generic-container" ng-controller="monitorCrudCtrl as ctrl">
+           <div class="panel panel-default">
+              <div class="panel-heading"><span class="lead">Kiosk Dashboard Form </span></div>
+              <div class="formcontainer">
+                  <form ng-submit="ctrl.submit()" name="myForm" class="form-horizontal">
+                      <input type="hidden" ng-model="ctrl.kiosk.id" />
+                           <div class="row">
+                          <div class="form-group col-md-12">
+                              <label class="col-md-2 control-lable" for="file">District</label>
+                              <div class="col-md-7">
+                                  <input type="text" ng-model="ctrl.kiosk.district" class="form-control input-sm" placeholder="Enter your District."/>
+                              </div>
+                          </div>
+                      </div>
+                           <div class="row">
+                          <div class="form-group col-md-12">
+                              <label class="col-md-2 control-lable" for="file">Hostname</label>
+                              <div class="col-md-7">
+                                  <input type="text" ng-model="ctrl.kiosk.hostname" class="form-control input-sm" placeholder="Enter your Hostname. "/>
+                              </div>
+                          </div>
+                      </div>
+                           <div class="row">
+                          <div class="form-group col-md-12">
+                              <label class="col-md-2 control-lable" for="file">IP Address</label>
+                              <div class="col-md-7">
+                                  <input type="text" ng-model="ctrl.kiosk.ipAddress" class="form-control input-sm" placeholder="Enter your Address."/>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="row">
+                          <div class="form-group col-md-12">
+                              <label class="col-md-2 control-lable" for="file">Default Gateway</label>
+                              <div class="col-md-7">
+                                  <input type="text" ng-model="ctrl.kiosk.defaultGateway" class="form-control input-sm" placeholder="Enter your Default Gateway."/>
+                              </div>
+                          </div>
+                      </div>
+                           <div class="row">
+                          <div class="form-group col-md-12">
+                              <label class="col-md-2 control-lable" for="file">Subnet Mask</label>
+                              <div class="col-md-7">
+                                  <input type="text" ng-model="ctrl.kiosk.subnetMask" class="form-control input-sm" placeholder="Enter your Subnet Mask."/>
+                              </div>
+                          </div>
+                      </div>
+                           <div class="row">
+                          <div class="form-group col-md-12">
+                              <label class="col-md-2 control-lable" for="file">Username</label>
+                              <div class="col-md-7">
+                                  <input type="text" ng-model="ctrl.kiosk.username" class="form-control input-sm" placeholder="Enter your Username."/>
+                              </div>
+                          </div>
+                      </div>
+                      
+                      			<div class="row">
+				<div class="form-group col-md-12">
+					<label class="col-md-2 control-lable" for="file">Group</label>
+					<div>
+						<select ng-model="ctrl.kiosk.groupName"	ng-options="g for g in groups" >
+						</select>
+					</div>
+				</div>
+			</div>
+ 
+                      <div class="row">
+                          <div class="form-actions floatRight">
+                              <input type="submit"  value="{{!ctrl.kiosk.id ? 'Add' : 'Update'}}" class="btn btn-primary btn-sm" ng-disabled="myForm.$invalid">
+                              <button type="button" ng-click="ctrl.reset()" class="btn btn-warning btn-sm" ng-disabled="myForm.$pristine">Reset Form</button></input>
+                          </div>
+                      </div>
+                  </form>
+              </div>
+          </div> 
+          <div class="panel panel-default">
+                <!-- Default panel contents -->
+              <div class="panel-heading"><span class="lead">List of Kiosks </span></div>
+              <div class="tablecontainer">
+                  <table class="table table-hover">
+                      <thead>
+                          <tr>
+                              
+                              <th>District</th>
+                              <th>Hostname</th>
+                              <th>IP Address</th>
+                              <th>Default Gateway</th>
+                              <th>Subnet Mask</th>
+                              <th>Username</th>
+                              <th>Group</th>
+                              <th></th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          <tr ng-repeat="k in ctrl.kiosks | orderBy:'district'" >
+							<td><span ng-bind="k.district"></span></td>
+							<td><span ng-bind="k.hostname"></span></td>
+							<td><span ng-bind="k.ipAddress"></span></td>
+							<td><span ng-bind="k.defaultGateway"></span></td>
+							<td><span ng-bind="k.subnetMask"></span></td>
+							<td><span ng-bind="k.username"></span></td>
+							<td><span ng-bind="k.groupName"></span></td>
+				
+							<td>
+                              <button type="button" ng-click="ctrl.edit(k.id)" class="btn btn-success custom-width">Edit</button>  <button type="button" ng-click="ctrl.remove(k.id)" class="btn btn-danger custom-width">Remove</button>
+                              </td>
+                          </tr>
+                      </tbody>
+                  </table>
+              </div>
+          </div>
+      </div>
+
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/monitor/app.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/monitor/monitor_crud_service.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/monitor/monitor_crud.js')}}"></script>
+  </body>
+</html>

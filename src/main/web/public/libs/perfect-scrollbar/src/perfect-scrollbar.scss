@@ -1,0 +1,141 @@
+// Helper mixins
+@mixin opacity($o) {
+  $IEValue: $o * 100;
+  opacity: $o;
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity="+$IEValue+")";
+      filter: alpha(opacity=$IEValue);
+}
+
+@mixin border-radius($r) {
+  -webkit-border-radius: $r;
+     -moz-border-radius: $r;
+      -ms-border-radius: $r;
+          border-radius: $r;
+}
+
+@mixin transition($t...) {
+  -webkit-transition: $t;
+     -moz-transition: $t;
+       -o-transition: $t;
+          transition: $t;
+}
+
+// Scrollbar mixins
+@mixin scrollbar-rail-default {
+  display: none;
+  position: absolute; /* please don't change 'position' */
+  @include border-radius(8px);
+  @include opacity(1);
+  @include transition(background-color .2s linear, opacity .2s linear);
+}
+
+// Scrollbar mixins
+@mixin scrollbar-rail-default-wide {
+  display: none;
+  position: absolute; /* please don't change 'position' */
+  @include border-radius(8px);
+  @include opacity(1);
+  @include transition(background-color .2s linear, opacity .2s linear);
+}
+
+@mixin scrollbar-rail-hover {
+  background-color: #1d1e23;
+  @include opacity(1);
+}
+
+@mixin scrollbar-default {
+  position: absolute; /* please don't change 'position' */
+  background-color: #74c40d;
+  @include border-radius(8px);
+  @include transition(background-color .2s linear);
+}
+
+@mixin scrollbar-default-wide {
+  position: absolute; /* please don't change 'position' */
+  background-color: #74c40d;
+  @include border-radius(8px);
+  @include transition(background-color .2s linear);
+}
+
+@mixin scrollbar-hover {
+  background-color: #74c40d;
+}
+
+@mixin in-scrolling {
+  &.in-scrolling {
+    @include scrollbar-rail-hover;
+  }
+}
+
+.ps-container {
+  &.ps-active-x > .ps-scrollbar-x-rail,
+  &.ps-active-y > .ps-scrollbar-y-rail {
+    display: block;
+  }
+
+  >.ps-scrollbar-x-rail {
+    @include scrollbar-rail-default;
+    bottom: 3px; /* there must be 'bottom' for ps-scrollbar-x-rail */
+    height: 14px;
+
+    >.ps-scrollbar-x {
+      @include scrollbar-default;
+      bottom: 0; /* there must be 'bottom' for ps-scrollbar-x */
+      height: 14px;
+    }
+
+    @include in-scrolling;
+  }
+
+  >.ps-scrollbar-y-rail {
+    @include scrollbar-rail-default;
+    right: 3px; /* there must be 'right' for ps-scrollbar-y-rail */
+    width: 14px;
+
+    >.ps-scrollbar-y {
+      @include scrollbar-default;
+      right: 0; /* there must be 'right' for ps-scrollbar-y */
+      width: 14px;
+    }
+
+    @include in-scrolling;
+  }
+
+  >.ps-scrollbar-y-rail-wide {
+    @include scrollbar-rail-default;
+    right: 3px; /* there must be 'right' for ps-scrollbar-y-rail */
+    width: 14px;
+
+    >.ps-scrollbar-y-wide {
+      @include scrollbar-default;
+      right: 0; /* there must be 'right' for ps-scrollbar-y */
+      width: 14px;
+    }
+
+    @include in-scrolling;
+  }
+
+  &:hover {
+    >.ps-scrollbar-x-rail,
+    >.ps-scrollbar-y-rail {
+      @include opacity(0.6);
+      @include in-scrolling;
+    }
+
+    >.ps-scrollbar-x-rail:hover {
+      @include scrollbar-rail-hover;
+
+      >.ps-scrollbar-x {
+        @include scrollbar-hover;
+      }
+    }
+
+    >.ps-scrollbar-y-rail:hover {
+      @include scrollbar-rail-hover;
+
+      >.ps-scrollbar-y {
+        @include scrollbar-hover;
+      }
+    }
+  }
+}

@@ -1,0 +1,332 @@
+<!--/* Thymeleaf fragment to display the Equipment Details Pane. */-->
+
+<div th:fragment="equipment-details-pane">
+	<div ng-controller="EquipmentDetailsCtrl"
+		ng-show="panes.equipmentDetails.active">
+		<div class="header details-header">
+			<div class="row" style="margin:0px;">
+				<div class="col-md-12" style="text-align: center; padding: 0px;">
+					<span style="float: left; padding: 5px 0px 0px 10px; color:#ffff00;" class="paneTitle">{{pieceOfEquipment.name}}</span>
+					<span style="border-left: 1px solid #000; width: 38px; float:right; padding: 9px 12px 11px;">
+						 <i class="fa fa-times fa-lg" ng-click="closeEquipmentDetailsPane()"></i>
+					</span>
+
+					<span style="border-left: 1px solid #000; text-align: center; padding: 7px 12px 8px; float:right;" ng-hide="actionSwitch(pieceOfEquipment);">
+					   <div class="btn-group-xs dropdown">
+						   <button type="button" class="btn btn-success left dropdown-toggle">Action</button>
+						   <button type="button" class="btn btn-success right dropdown-toggle">
+							   <span class="caret"></span> <span class="sr-only"></span>
+						   </button>
+						   <ul class="dropdown-menu right-aligned" role="menu">
+							   <li ng-show="pieceOfEquipment.isLoadStatusUpdatable" ng-click="updateLoadStatus(pieceOfEquipment)">Update Load</li>
+							   <li ng-show="isEquipmentPendingAttach(pieceOfEquipment)" ng-click="acceptEquipmentAttachment(pieceOfEquipment)">Accept Attach</li>
+							   <li ng-show="detachSwitch(pieceOfEquipment)" ng-click="detachEquipment(pieceOfEquipment)">Detach</li>
+							   <li ng-show="isEquipmentPendingDetach(pieceOfEquipment)" ng-click="cancelEquipmentDetachment(pieceOfEquipment)">Cancel Detach</li>
+							   <li ng-hide="pieceOfEquipment.assigned || isPendingLoad(pieceOfEquipment) || pieceOfEquipment.snowReadiness.workingDown || isEquipmentDown(pieceOfEquipment) || isEquipmentPendingAttach(pieceOfEquipment) || isEquipmentPendingDetach(pieceOfEquipment) || isEquipmentDetached(pieceOfEquipment)" ng-click="downEquipment(pieceOfEquipment)">Down</li>
+							   <li ng-show="!pieceOfEquipment.assigned &amp;&amp; isEquipmentDown(pieceOfEquipment)" ng-click="upEquipment(pieceOfEquipment)">Up</li>
+							   <li ng-show="!pieceOfEquipment.assigned &amp;&amp; !isPendingLoad(pieceOfEquipment) &amp;&amp; !isEquipmentPendingDetach(pieceOfEquipment) &amp;&amp; pieceOfEquipment.isEquipmentDressable &amp;&amp; !isEquipmentPendingAttach(pieceOfEquipment)" ng-click="UpdateSnowReadinessEquipment(pieceOfEquipment)">Snow Update</li>
+						   </ul>
+					   </div>
+					</span>
+					<div style="clear: both;"></div>
+				</div>
+			</div>
+		</div>
+		<perfect-scrollbar class="scroller" style="overflow: hidden; position: relative;" ng-style="{'height': layout.scrollpanel.height}" min-scrollbar-length="5" max-scrollbar-length="20" wide-scrollbar="true" use-both-wheel-axes="true"
+						   id="equipment-details-pane">
+			<div class="scrollerpadding">
+				<div id="details">
+					<div
+						class="pane-subpane pane-subpane-equip pane-subpane-detail flex ">
+						<!-- No header -->
+						<div class="body">
+							<table class="table table-transparent">
+								<tr class="equip-condition-row">
+									<td class="equip-condition-cell"><label>Condition:</label>
+										<h4
+											class="{{pieceOfEquipment.getUpDownCondition().condition === 'Up' ? 'equip-condition-up' : 'equip-condition-down'}}">
+											{{pieceOfEquipment.getUpDownCondition().condition}}</h4></td>
+									<td class="equip-condition-cell"><label>Last Update:</label>
+										{{pieceOfEquipment.getUpDownCondition().lastUpdated |
+										formatDate : 'MM/DD/YYYY HH:mm:ss'}}</td>
+									<td colspan="2" class="equip-condition-cell"><label>Last Updated By:</label>
+										{{pieceOfEquipment.getUpDownCondition().lastUpdatedBy}}</td>
+								</tr>
+								<tr>
+									<td><label>Type</label> <span>{{pieceOfEquipment.subType}}</span></td>
+									<td><label>License</label> <span>{{pieceOfEquipment.licensePlate}}</span></td>
+									<td><label>Owner</label> <span>{{pieceOfEquipment.owner}}</span></td>
+									<td><label>Current Location</label> <span>{{pieceOfEquipment.currentLocation}}</span></td>
+								</tr>
+								<tr ng-hide="showInfo || showDetachments">
+									<td><label>VIN#</label> <span>{{pieceOfEquipment.vehicleIdentificationNumber}}</span></td>
+									<td><label>Model Year</label> <span>{{pieceOfEquipment.modelYear}}</span></td>
+									<td><label>Manufacturer</label> <span>{{pieceOfEquipment.manufacturer}}</span></td>
+									<td><label>DEP No.</label> <span>{{pieceOfEquipment.depNumber}}</span></td>
+								</tr>
+								<tr>
+									<td><label>DEP Exp. Date</label> <span>{{pieceOfEquipment.depExpirationDate
+											| formatDate : 'MM/DD/YYYY'}}</span></td>
+									<td><label>Radio ID</label> <span>{{pieceOfEquipment.radioId}}</span></td>
+								</tr>
+							</table>
+						</div>
+					</div>
+					<div
+						class="pane-subpane pane-subpane-equip pane-subpane-detail flex ">
+						<div class="header">
+							Equipment Information <span class="arrowleft"> <i class="fa"
+								ng-class="equipmentInfo.show ? 'fa-caret-down' : 'fa-caret-right'"
+								ng-click="toggleEquipmentInfoSubpanel()"></i>
+							</span>
+						</div>
+						<div class="body">
+							<table class="table table-transparent"
+								ng-show="equipmentInfo.show">
+								<tr>
+									<td><label>In Service Date</label>
+									<span>{{pieceOfEquipment.inServiceDate | formatDate :
+										'MM/DD/YYYY'}}</span></td>
+								</tr>
+								<tr>
+									<td><label>GPS MEID</label>
+									<span>{{pieceOfEquipment.gpsMEID}}</span></td>
+									<td><label>GPS Phone No</label>
+									<span>{{pieceOfEquipment.gpsPhone}}</span></td>
+								</tr>
+								<tr>
+									<td><label>Transponder ID</label>
+									<span>{{pieceOfEquipment.transponderId}}</span></td>
+									<td></td>
+									<td></td>
+								</tr>
+								<tr>
+									<td><label>Cubic Capacity</label>
+									<span>{{pieceOfEquipment.cubicCapacity}}</span></td>
+									<td><label>Length</label>
+									<span>{{pieceOfEquipment.length}}</span></td>
+									<td><label>Hopper Hgt</label>
+									<span>{{pieceOfEquipment.hopperHeight}}</span></td>
+									<td><label>Max Speed</label>
+									<span>{{pieceOfEquipment.maxSpeed}}</span></td>
+								</tr>
+								<tr>
+									<td><label>Tonnage Capacity</label>
+									<span>{{pieceOfEquipment.tonnageCapacity}}</span></td>
+									<td><label>Width</label>
+									<span>{{pieceOfEquipment.width}}</span></td>
+									<td><label>Turn Radius</label>
+									<span>{{pieceOfEquipment.turnRadius}}</span></td>
+									<td><label>Tank Cap</label>
+									<span>{{pieceOfEquipment.tankCapacity}}</span></td>
+								</tr>
+								<tr>
+									<td><label>Tare Weight</label>
+									<span>{{pieceOfEquipment.tareWeight}}</span></td>
+									<td><label>Height</label>
+									<span>{{pieceOfEquipment.height}}</span></td>
+									<td><label>Unit Price</label>
+									<span>{{pieceOfEquipment.unitPrice}}</span></td>
+									<td><label>Fuel Type</label>
+									<span>{{pieceOfEquipment.fuelType}}</span></td>
+								</tr>
+								<tr>
+									<td><label>Front Tires</label>
+									<span>{{pieceOfEquipment.frontTires}}</span></td>
+									<td><label>Rear Tires</label>
+									<span>{{pieceOfEquipment.rearTires}}</span></td>
+								</tr>
+							</table>
+						</div>
+					</div>
+					<div
+						class="pane-subpane pane-subpane-equip pane-subpane-detail flex ">
+						<div class="header">
+							Up / Down History <span class="arrowleft"> <i class="fa"
+								ng-class="equipmentUpDownHist.show ? 'fa-caret-down' : 'fa-caret-right'"
+								ng-click="toggleEquipmentUpDownHistSubpanel()"></i>
+							</span>
+						</div>
+						<div class="body" ng-show="equipmentUpDownHist.show">
+							<table class="table table-bordered">
+								<tr>
+									<th>Action</th>
+									<th>Date</th>
+									<th>Time</th>
+									<th>Down Code</th>
+									<th>Service Location</th>
+									<th>Reporter</th>
+									<th>Mechanic</th>
+									<th>Remarks</th>
+								</tr>
+								<tr ng-repeat="condition in pieceOfEquipment.upDownPaginationModel">
+
+									<td>{{condition.action |judgeAction}}</td>
+									<td>{{condition.date |formatDate:'MM/DD/YYYY'}}</td>
+									<td>{{condition.time |formatDate:'HH:mm'}}</td>
+									<td>{{condition.downCode}}</td>
+									<td>{{condition.location}}</td>
+									<td>{{condition.reporter}}</td>
+									<td>{{condition.mechanic}}</td>
+									<td>{{condition.remarks}}</td>
+								</tr>
+							</table>
+
+							<pagination ng-if="pieceOfEquipment.FormattedUpDownHistory.length>0" ng-model="pieceOfEquipment.upDownCurrentPage" ng-change="upDownPageChanged(pieceOfEquipment.upDownCurrentPage)" boundary-links="false" total-items="pieceOfEquipment.conditionsCount" items-per-page="5" max-size="5"  rotate="false"></pagination>
+						</div>
+					</div>
+
+					<div
+						class="pane-subpane pane-subpane-equip pane-subpane-detail flex" ng-show="pieceOfEquipment.bins &amp;&amp; pieceOfEquipment.bins.length >= 1">
+						<div class="header">
+							Load Status Details <span class="arrowleft"> <i class="fa"
+								ng-class="loadStatusDetails.show ? 'fa-caret-down' : 'fa-caret-right'"
+								ng-click="toggleLoadStatusDetailsSubpanel()"></i>
+							</span>
+						</div>
+						<div class="body">
+							<table class="table table-bordered"
+								ng-show="loadStatusDetails.show">
+								<tr>
+									<th>Bin</th>
+									<th>Status</th>
+									<th>Material Type</th>
+									<th>Last Updated</th>
+									<th>Updated By</th>
+								</tr>
+								<tr ng-repeat="bin in pieceOfEquipment.formattedBins" ng-show="pieceOfEquipment.formattedBins.length &gt; 1">
+									<td>{{bin.displayName}}</td>
+									<td>{{bin.status}}</td>
+									<td><div ng-if="bin.materialType != '' &amp;&amp; bin.descr != '' ">{{ bin.materialType }} - {{bin.descr}}</div>
+										 <div ng-if="bin.materialType != '' &amp;&amp; bin.descr == '' ">{{ bin.materialType }}</div>
+										 <div ng-if="bin.materialType == '' &amp;&amp; bin.descr != '' ">{{ bin.descr }}</div>
+										 </td>
+									<td><div ng-if="bin.lastUpdated != 'Invalid date'">{{bin.lastUpdated | date : 'medium'}}</div></td>
+									<td>{{bin.lastUpdatedBy}}</td>
+								</tr>
+									<tr ng-repeat="bin in pieceOfEquipment.formattedBins" ng-show="pieceOfEquipment.formattedBins.length == 1">
+									<td>Bin1</td>
+									<td>{{bin.status}}</td>
+									<td><div ng-if="bin.materialType != '' &amp;&amp; bin.descr != '' ">{{ bin.materialType }} - {{bin.descr}}</div>
+										 <div ng-if="bin.materialType != '' &amp;&amp; bin.descr == '' ">{{ bin.materialType }}</div>
+										 <div ng-if="bin.materialType == '' &amp;&amp; bin.descr != '' ">{{ bin.descr }}</div>
+										 </td>
+									<td><div ng-if="bin.lastUpdated != 'Invalid date'">{{bin.lastUpdated | date : 'medium'}}</div></td>
+									<td>{{bin.lastUpdatedBy}}</td>
+								</tr>
+							</table>
+						</div>
+					</div>
+<!-- 				Commented out as per SMARTOB-5874
+					<div
+						class="pane-subpane pane-subpane-equip pane-subpane-detail flex ">
+						<div class="header">
+							Devices <span class="arrowleft"> <i class="fa"
+								ng-class="devicesDetails.show ? 'fa-caret-down' : 'fa-caret-right'"
+								ng-click="toggleDevicesDetailsSubpanel()"></i>
+							</span>
+						</div>
+						<div class="body">
+							<table class="table table-bordered" ng-show="devicesDetails.show">
+								<tr>
+									<th>Device</th>
+									<th>Status</th>
+									<th>Description</th>
+									<th>Code</th>
+									<th>Driver</th>
+									<th>Date/Time</th>
+									<th>Remarks</th>
+								</tr>
+								<tr
+									ng-repeat="record in pieceOfEquipment.deviceConditions | orderBy: 'type' : true">
+									<td>{{record.type}}</td>
+									<td>{{record.down ? 'Down' : 'Up'}}</td>
+									<td class="notImplemented"></td>
+									<td>{{record.downCode}}</td>
+									<td>{{record.mechanic}}</td>
+									<td>{{record.lastModifiedActual}}</td>
+									<td>{{record.comments}}</td>
+								</tr>
+							</table>
+						</div>
+					</div> -->
+					<div
+						class="pane-subpane pane-subpane-equip pane-subpane-detail flex " ng-if="pieceOfEquipment.isEquipmentDressable">
+						<div class="header">
+							Snow<span class="arrowleft"> <i class="fa"
+								ng-class="snowDetails.show ? 'fa-caret-down' : 'fa-caret-right'"
+								ng-click="toggleSnowDetailsSubpanel()"></i>
+							</span>
+						</div>
+						<div class="body">
+							<table class="table table-bordered person"
+								ng-show="snowDetails.show">
+								<tr>
+									<th><label>Plow Type</label></th>
+									<th><label>Plow Direction</label></th>
+									<th><label>Chains</label></th>
+									<th><label>Load</label></th>
+									<th><label>Working Down</label></th>
+									<th><label>Snow Assignment</label></th>
+								</tr>
+								<tr>
+									<!-- <td><span class="spanleft">{{pieceOfEquipment.snowReadiness.plowType}}</span><br />
+										<span class="spanleft">{{pieceOfEquipment.snowReadiness.chainable ?
+											'Chained' : 'Not Chained'}}</span></td>
+									<td><span class="spanleft">{{pieceOfEquipment.snowReadiness.plowType}}</span><br />
+										<span class="spanleft">{{pieceOfEquipment.snowReadiness.chainable ?
+											'Chained' : 'Not Chained'}}</span></td>
+									<td><span class="spanleft">{{pieceOfEquipment.snowReadiness.holdSalt
+											? 'Loaded' : 'Not Loaded'}}</span></td>
+									<td><span class="spanleft">{{pieceOfEquipment.snowReadiness.holdSand
+											? 'Loaded' : 'Not Loaded'}}</span></td> -->
+									<td>{{plowTypes[pieceOfEquipment.snowReadiness.plowType]}}</td>
+								    <td>{{pieceOfEquipment.snowReadiness.plowDirection}}</td>
+								    <td>{{pieceOfEquipment.snowReadiness.chained ? 'Chained' : 'Not Chained'}}</td>
+								    <td>{{loads[pieceOfEquipment.snowReadiness.load]}}</td>
+								    <td>{{pieceOfEquipment.snowReadiness.workingDown ? 'Yes': 'No'}}</td>
+								    <td>{{pieceOfEquipment.snowReadiness.snowAssignment ? 'Yes': 'No'}}</td>
+								</tr>
+							</table>
+						</div>
+					</div>
+					<div
+						class="pane-subpane pane-subpane-equip pane-subpane-detail flex ">
+						<div class="header">
+							Detachment History <span class="arrowleft"> <i class="fa"
+								ng-class="detachHist.show ? 'fa-caret-down' : 'fa-caret-right'"
+								ng-click="toggleDetachHistSubpanel()"></i>
+							</span>
+						</div>
+						<div class="body" ng-show="detachHist.show">
+							<table class="table table-bordered">
+								<tr>
+									<th>Action</th>
+									<th>Date &amp; Time</th>
+									<th>From</th>
+									<th>To</th>
+									<th>Action Taken By</th>
+									<th>Driver</th>
+									<th>Remarks</th>
+								</tr>
+								<tr ng-repeat="history in pieceOfEquipment.equipmentDetachmentPaginationModel | orderBy:'lastModifiedSystemNonFormatted':'reverse' track by $index">
+									<td>{{history.status}}</td>
+									<td>{{history.lastModifiedSystem}}</td>
+									<td>{{history.from}}</td>
+									<td>{{history.to}}</td>
+									<td>{{history.reporter}}</td>
+									<td>{{history.driver}}</td>
+									<td>{{history.remarks}}</td>
+								</tr>
+								<tr></tr>
+							</table>
+							<pagination ng-if="pieceOfEquipment.formattedDetachments.length>0" ng-model="pieceOfEquipment.detachmentCurrentPage" ng-change="detachmentPageChanged(pieceOfEquipment.detachmentCurrentPage)" boundary-links="false" total-items="pieceOfEquipment.detachmentCount" items-per-page="5" max-size="5"  rotate="false"></pagination>
+
+
+						</div>
+					</div>
+				</div>
+			</div>
+		</perfect-scrollbar>
+	</div>
+</div>

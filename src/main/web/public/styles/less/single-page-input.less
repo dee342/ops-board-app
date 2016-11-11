@@ -1,0 +1,301 @@
+// Variables **/
+@page_background: #1d1e23;
+
+input::-moz-focus-inner {
+	padding: 0;
+	border: 0;
+}
+
+@font-face {
+  font-family: 'Open Sans';
+  src: url('../../fonts/opensans-extrabold-webfont.eot');
+  src: url('../../fonts/opensans-extrabold-webfont.eot?#iefix') format('embedded-opentype'),
+    url('../../fonts/opensans-extrabold-webfont.woff') format('woff'),
+    url('../../fonts/opensans-extrabold-webfont.ttf') format('truetype'),
+    url('../../fonts/opensans-extrabold-webfont.svg#open_sansextrabold') format('svg');
+  font-weight: 800;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Open Sans';
+  src: url('../../fonts/opensans-light-webfont.eot');
+  src: url('../../fonts/opensans-light-webfont.eot?#iefix') format('embedded-opentype'),
+    url('../../fonts/opensans-light-webfont.woff') format('woff'),
+    url('../../fonts/opensans-light-webfont.ttf') format('truetype'),
+    url('../../fonts/opensans-light-webfont.svg#open_sansextrabold') format('svg');
+  font-weight: 300;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Open Sans';
+  src: url('../../fonts/opensans-bold-webfont.eot');
+  src: url('../../fonts/opensans-bold-webfont.eot?#iefix') format('embedded-opentype'),
+    url('../../fonts/opensans-bold-webfont.woff') format('woff'),
+    url('../../fonts/opensans-bold-webfont.ttf') format('truetype'),
+    url('../../fonts/opensans-bold-webfont.svg#open_sansextrabold') format('svg');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Open Sans';
+  src: url('../../fonts/opensans-semibold-webfont.eot');
+  src: url('../../fonts/opensans-semibold-webfont.eot?#iefix') format('embedded-opentype'),
+    url('../../fonts/opensans-semibold-webfont.woff') format('woff'),
+    url('../../fonts/opensans-semibold-webfont.ttf') format('truetype'),
+    url('../../fonts/opensans-semibold-webfont.svg#open_sansextrabold') format('svg');
+  font-weight: 600;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Open Sans';
+  src: url('../../fonts/opensans-regular-webfont.eot');
+  src: url('../../fonts/opensans-regular-webfont.eot?#iefix') format('embedded-opentype'),
+    url('../../fonts/opensans-regular-webfont.woff') format('woff'),
+    url('../../fonts/opensans-regular-webfont.ttf') format('truetype'),
+    url('../../fonts/opensans-regular-webfont.svg#open_sansregular') format('svg');
+  font-weight: 400;
+  font-style: normal;
+
+}
+
+.no-glow() { // mixins
+	outline: none;
+	box-shadow: none;
+};
+
+.form-control {
+	text-align: left;
+	&:focus,
+	&:active {
+		.no-glow();
+	}
+}
+
+.select2-container-active .select2-choice {
+	.no-glow();
+}
+
+form {
+	font-size: 14px;
+	.btn {
+		font-size: 105%;
+		font-weight: 400;
+		background-color: #717174;
+		&[type="submit"] {
+			border: 0;
+			color: #fff;
+			padding: 8px 18px;
+			&:hover,
+			&:focus,
+			&:active {
+				background-color: #74c40d;
+				border-color: #74c40d;
+			}
+		}
+		&.btn-spin {
+			width: 60%;
+			height: 37px;
+			position: relative;
+			#loading-bar-spinner {
+				position: relative;
+				margin: 0;
+				top: -18px;
+				left: 0;
+				transform: scale(0.2);
+				.spinner > div {
+					background: #333;
+				}
+			}
+		}
+	}
+	.datepicker {
+		.dropdown-menu {
+			padding: 1px;
+		}
+		button  {
+			font-size: 14px;
+			background-color: #fff;
+			&:hover, &.focus {
+				background-color: #74c40d;
+			}
+		}
+	}
+	.selec2-results .selec2-highlighted {
+		background-color: #74c40d;
+	}
+	.form-group {
+		&.has-error {
+			.help-block {
+				display: block;
+			}
+			.form-control,
+			.select2-choice,
+			.select2-arrow,
+			.input-group-btn > .btn {
+				border-color: #f00; // text-danger;
+			}
+			.select2-dropdown-open {
+				.select2-arrow {
+					border-color: transparent;
+				}
+			}
+		}
+		.help-block {
+			color: #f00; // text-danger
+			padding-left: 5px;
+			margin-bottom: 0;
+			text-align: left;
+			display: none;
+		}
+		.form-control[readonly] {
+			background-color: #fff;
+			cursor: pointer;
+		}
+	}
+}
+
+.information {
+	float: left;
+	width: 16px;
+	height: 16px;
+	cursor: pointer;
+}
+.logo_salesforce {
+	cursor: pointer;
+}
+
+.row {
+	margin: 0 0 7px 0;
+}
+
+.help-block,
+.message > #error {
+	color: #fe0000;
+	font-weight: 600;
+}
+
+.messagebrowser {
+	color: #fe0000;
+	font-weight: normal;
+	font-size: 15px;
+}
+
+.browserlink {
+	font-size: 13px;
+	font-weight: 600;
+	color: #5e5f63;
+}
+
+
+
+// Select2 overrides **/
+
+.select2-container .select2-choice {
+	height: 100%;
+}
+
+// Page CSS  **/
+
+//* Tags ***/
+
+html {
+	font-size: 100%;
+	-webkit-text-size-adjust: 100%;
+	-ms-text-size-adjust: 100%;
+	// login page
+	&[ng-app="login"],
+	&[ng-app="login"] body {
+		height: 100%;
+		transform-style: preserve-3d;
+		.single-page-container {
+			width: 100%;
+			position: relative;
+			top: 50%;
+			transform: translateY(-50%);
+			margin-top: 0;
+		}
+	}	
+}
+
+body {
+	background-color: @page_background;
+	padding: 0px;
+	margin: 0px;
+	font-family: 'Open Sans', sans-serif;
+	font-weight: 300;
+	font-size: 13px;
+	color: #586064;
+}
+
+img {
+	vertical-align: middle;
+	border: 0;
+}
+
+//* IDs ***/
+
+#footer {
+	color: #e1e1e1;
+	margin-left: auto;
+	margin-right: auto;
+	font-size: 11px;
+	line-height: 14px;
+	text-align: center;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 6px;
+}
+
+#logo {
+	height: 150px;
+	margin: 15px auto;
+	vertical-align: middle;
+	width: 150px;
+}
+
+//* Classes ***/
+
+.form-control.ng-pristine.ng-invalid {
+	border: none;
+}
+
+.form-pane {
+	background: #e5e5e5;
+	padding: 10px;
+}
+
+.single-page-container {
+	margin: 100px auto 0 auto;
+	max-width: 330px;
+	position: relative;
+	text-align: center;
+}
+
+.maintenance-mode {
+  color: #fff;
+  text-align: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1000000000;
+  background-color: rgba(0,0,0,0.8);
+  padding-top: 100px;
+
+  .message {
+	border: 1px solid #fff;
+	border-radius: 8px;
+	padding: 20px;
+	margin: 100px;
+  }
+
+  h4 {
+	margin-top: 8px;
+  }
+}
+

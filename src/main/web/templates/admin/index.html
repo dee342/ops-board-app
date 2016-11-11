@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html ng-app="OpsBoard" xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>SMART Administration Page</title>
+<link rel='shortcut icon' type='image/x-icon' href='/favicon.ico' />
+<link rel="stylesheet" type="text/css" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/bootstrap-3.1.1.min.css')}}"></link>
+<link rel="stylesheet" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/bootstrap-glyphicons-3.1.1.css')}}" />
+<link rel="stylesheet" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/font-awesome.min.css')}}" />
+<link rel="stylesheet" type="text/css" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/select2-3.4.8.css')}}"></link>
+<link rel="stylesheet" type="text/css" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/select2-bootstrap3.css')}}"></link>
+<link rel="stylesheet" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/perfect-scrollbar/min/perfect-scrollbar.min.css')}}" />
+<link rel="stylesheet/less" type="text/css" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/loader/loading-bar.css')}}" />
+<link rel="stylesheet/less" type="text/css" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/multiselect/multiselect.css')}}" />
+<!--  Used for development only...switch to pre-compiler for PROD -->
+<link rel="stylesheet/less" type="text/css" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/less/constants.less')}}" />
+<link rel="stylesheet/less" type="text/css" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/less/fonts.less')}}" />
+<link rel="stylesheet/less" type="text/css" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/less/ops-board.less')}}" />
+<link rel="stylesheet/less" type="text/css" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/less/flexbox-splitter.less')}}" />
+<link rel="stylesheet/less" type="text/css" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/less/board.less')}}" />
+<link rel="stylesheet/less" type="text/css" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/less/core.less')}}" />
+<link rel="stylesheet/less" type="text/css" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/less/panes.less')}}" />
+<link rel="stylesheet/less" type="text/css" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/less/recent-activity.less')}}" />
+<link rel="stylesheet/less" type="text/css" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/less/task-panel.less')}}" />
+<link rel="stylesheet/less" type="text/css" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/less/nav.less')}}" />
+<link rel="stylesheet" type="text/css" th:href="@{/libs/jquery-ui.css}"/>
+<script th:src="@{/libs/sockjs-0.3.4.js}"></script>
+<script th:src="@{/libs/stomp.js}"></script>
+<script	th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/less-1.7.0.min.js')}}"></script>
+<script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/jquery-2.1.0.min.js')}}"></script>
+<script th:src="@{/libs/jquery-ui.js}"></script>
+
+<script type="text/javascript">
+	var socket = new SockJS('/smart-opsboard/loadstatus');
+	var stompClient = Stomp.over(socket);
+
+	var errorConnection = new SockJS('/smart-opsboard/loadError');
+	var errorStompClient = Stomp.over(errorConnection);
+	
+	$('#errorArea').val("");
+	
+	errorStompClient.connect({}, function(frame) {
+		console.log('Connected: ' + frame);
+		errorStompClient.subscribe('/topic/loadError', function(errorMsg){
+		$('#errorArea').val(function(i, text) {
+		    return errorMsg.body + '\n' + text;
+		});
+		});
+	});
+		
+	stompClient.connect({}, function(frame) {
+		console.log('Connected: ' + frame);
+		stompClient.subscribe('/topic/loadStatusUpdate', function(dataLoadPercentage){
+			var data = dataLoadPercentage.body;
+			var barPercentage = data.split(":");
+			
+			if(barPercentage[0]=="personnel"){
+				$('#personnelProgressArea').show();
+				$('#personnelProgressbar').progressbar({
+					value: parseInt(barPercentage[1])
+				});
+			}
+			
+			if(barPercentage[0]=="equipment"){
+				$('#equipmentProgressArea').show();
+				$('#equipmentProgressbar').progressbar({
+					value: parseInt(barPercentage[1])
+				});
+			}
+		});
+	});
+	
+	function loadData(url){
+		 $.get(url, function(result){
+			console.log(result);
+		 });	
+	}
+</script>
+
+</head>
+<body class="container">
+  <div class="container">
+	<nav class="navbar navbar-inverse navbar-fixed-top">
+		<div class="container">
+			<div class="navbar-header">
+				<a class="navbar-brand" href="#">
+					<img id="logo" class="logo_salesforce"  height="80" width="80" th:src="@{/images/logo.png}"  border="0" alt=""/>
+					<b><em>Administration Page</em></b>
+				</a>
+			</div>
+			<!--/.navbar-collapse -->
+		</div>
+	</nav>
+    </div> <!-- /container -->
+
+ <div class="container"  style="margin-top: 130px;">
+	  <!-- Main jumbotron for a primary marketing message or call to action -->
+    <div class="jumbotron">
+      <div class="container" style="color:#002E00">
+        <h1>SMART Admin controller</h1>
+        <p>This page exposes Web serivces and REST adminitration endpoints</p>
+      </div>
+    </div>
+</div>
+
+    <div class="container" styple="overflow-y:scroll">
+      <!-- Example row of columns -->
+      <div class="row">
+        <div class="col-md-12">
+          <h2>Data Load</h2>
+          <table class="table">
+          <tr>
+          	<td><button style="color:red" onclick="loadData('admin/data?path=/admin/load/all')">Load All Data</button></td>
+          </tr>
+          <tr>
+          	<td><button onclick="loadData('admin/data?path=/admin/load/referencedata/all')">Load All Reference Data</button></td>
+          </tr>
+          <tr>
+	        <td><button onclick="loadData('admin/data?path=/admin/load/personnel')">Load All Personnel Data</button></td>
+	       </tr>
+	       <tr>
+          	<td><button onclick="loadData('admin/data?path=/admin/load/equipment/all')">Load All Equipment Data</button></td>
+          </tr>
+          </table>
+          <table class="table">
+          	<tr>
+          		<td><textarea id="errorArea" rows="10" cols="250" readonly="readonly" style="resize: none;"></textarea></td>
+          	</tr>
+          </table>
+      </div>
+	</div>
+	</div>
+      <hr/>
+      <div class="container">
+     	<div id="peronnelProgressArea" class="row">Personnel data load progress: <div id="personnelProgressbar"></div></div>
+      	<div id="equipmentProgressArea" class="row">Equipment data load progress: <div id="equipmentProgressbar"></div></div>
+      </div>
+      
+      <footer>
+        <p>&copy; The City of New York Department of Sanitation</p>
+      </footer>
+</body>
+</html>

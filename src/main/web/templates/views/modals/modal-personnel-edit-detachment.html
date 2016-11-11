@@ -1,0 +1,40 @@
+<div id="modal" class="container-fluid" centered-modal="true">
+	<div th:include="views/modals/fragments/modal-header :: header" th:remove="tag"></div>
+	<div class="modal-body">
+		<div class="row">
+			<label class="col-md-4 text-right">
+				Detachment End Date<i class="fa fa-asterisk"></i>:
+			</label>
+			<div class="col-md-6">
+				<p class="input-group date-picker">
+					<input
+					type="text"
+					class="form-control"
+					datepicker-popup="MM/dd/yyyy EEEE"
+					ng-model="opData.endDate"
+					ng-required="true"
+					is-open="datepickers.startDateOpened"
+					show-button-bar="false"
+					min-date="minDate"
+					max-date="maxDate"
+					ng-readonly="true" />
+					<span class="input-group-btn">
+						<button type="button" class="btn btn-default" ng-click="open($event,'startDateOpened')">
+							<i class="glyphicon glyphicon-calendar"></i>
+						</button>
+					</span>
+				</p>
+			</div>
+		</div>
+		<div class="row">
+			<div th:include="views/modals/fragments/modal-client-errors :: client-errors" th:remove="tag"></div>
+		</div>
+		<div class="row">
+			<div th:include="views/modals/fragments/modal-server-errors :: server-errors" th:remove="tag"></div>
+		</div>
+	</div>
+	<br />
+	<div th:include="views/modals/fragments/modal-footer :: footer" th:remove="tag"></div>
+	<div th:include="views/modals/fragments/modal-exceptions :: exceptions" th:remove="tag"></div>
+	<div th:include="views/modals/fragments/modal-processing :: processing" th:remove="tag"></div>
+</div>

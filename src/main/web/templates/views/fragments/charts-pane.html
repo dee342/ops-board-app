@@ -1,0 +1,86 @@
+<div id="charts" class="flex pane no-scroll col-md-12" ng-style="{'width': '100%'}"
+  ng-show="layout.screen2.visible &amp;&amp; panes.charts.active">
+    <div class="header col-md-12">
+      <div class="row" style="margin:0px;">
+        <div class="col-md-12" style="text-align: center; padding: 0px;">
+          <span style="float: left; padding: 5px 0px 3px 10px;" class="paneTitle tasks-pane-selenium">
+            Mass Update Chart
+          </span>
+          <div style="width: 180px; right: 0px; position: absolute">
+            <div style="width: 100px; float: left; clear: none; padding: 10px 10px 10px 10px;">
+              <span class="chart-date">{{chartDate | date : 'mediumDate'}}</span>
+            </div>
+            <div style="width: 34px; float: left;">
+              <i class="glyphicon glyphicon-calendar" style="top: 12px" ng-click="open($event,'dateOpened')"></i>
+            </div>
+            <span style="border-left: 1px solid #000; width: 38px; float:right; padding: 9px 12px;">
+              <i class="fa fa-times fa-lg" ng-click="toggleChartsPane()"></i>
+            </span>
+            <span class="btn-sm" datepicker-popup="MM/dd/yyyy" ng-model="chartDate" is-open="datepickers.dateOpened" ng-change="loadChart(chartDate)"></span>
+          </div>
+          <div class="clear"></div>
+        </div>
+      </div>
+    </div>
+    <div class="spin" ng-show="processing"><i class="fa fa-spinner fa-pulse fa-5x"></i></div>
+    <div class="col-md-12 pane-wrap" ng-class="{'under': processing}">    
+      <div class="onChart flex pane no-scroll col-md-5">
+        <div class="panel panel-default">
+          <!-- Default panel contents -->
+          <div class="panel-heading header">Chart</div>
+            <!-- Table -->
+            <perfect-scrollbar class="scroller" style="overflow: hidden; position: relative;" ng-style="{'max-height': layout.chart.height}" min-scrollbar-length="5" max-scrollbar-length="20" wide-scrollbar="true" use-both-wheel-axes="true" >
+              <table class="table">
+                <tr ng-repeat="(id, person) in charts track by person.id" ng-click="tagChartCancelled(person)" ng-class="{'notProcessing': !processing}">
+                  <td>
+                    <span class="">{{person.fullName}}</span>
+                  </td>
+                </tr>
+                <tr ng-repeat="i in chartsConstTotal track by $index" ng-class="{'notProcessing': !processing}">
+                  <td>
+                    <span> </span>
+                  </td>
+                </tr>
+              </table>
+            </perfect-scrollbar>
+        </div>
+      </div>
+      <div class="flex arrows pane no-scroll col-md-2">
+       <div class="middle-table" ng-style="{'height': layout.chart.height}">
+          <div>
+            <div>
+              <i class="fa fa-angle-double-left fa-2x" ng-click="tagAllChartReverseCancelled()"></i>
+            </div>
+            <div>
+              <i class="fa fa-angle-double-right fa-2x" ng-click="tagAllChartCancelled()"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="chartCancelled flex pane no-scroll col-md-5">
+        <div class="panel panel-default">
+          <!-- Default panel contents -->
+          <div class="panel-heading header">Cancelled Chart</div>
+
+            <!-- Table -->
+            <perfect-scrollbar class="scroller" style="overflow: hidden; position: relative;" ng-style="{'max-height': layout.chart.height}" min-scrollbar-length="5" max-scrollbar-length="20"  wide-scrollbar="true" use-both-wheel-axes="true" >
+              <table class="table">
+                <tr ng-repeat="(id, person) in chartCancelled track by person.id" ng-click="tagChartReverseCancelled(person)" ng-class="{'notProcessing': !processing}">
+                  <td>
+                    <span class="">{{person.fullName}}</span>
+                  </td>
+                </tr>
+                 <tr ng-repeat="i in chartCancelledConstTotal track by $index" ng-class="{'notProcessing': !processing}">
+                  <td>
+                    <span></span>
+                  </td>
+                </tr>
+              </table>
+            </perfect-scrollbar>
+        </div>
+      </div>
+    </div>
+    <div class="action-bar">
+    <button type="submit" class="btn btn-default btn-primary" ng-click="massChartUpdate()" ng-disabled="processing">Save</button>
+  </div>
+</div>

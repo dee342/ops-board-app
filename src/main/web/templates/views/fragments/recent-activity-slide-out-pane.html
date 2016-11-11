@@ -1,0 +1,50 @@
+<div class="slide-out-pane pane recent-activities-pane-selenium" ng-class="{open : panes.recentActivity.active}" ng-show="panes.recentActivity.visible" style="overflow: hidden; z-index: 50000;">
+  <div class="header">
+    <div class="row">
+      <div class="col-md-12 header-col">
+        <div class="col-md-9">
+          <h4>Recent Activities</h4>
+        </div>
+        <div class="col-md-1 right">
+          <a class="activity-export" href="{{export.href}}" download="{{export.fileName}}" ng-mouseover="export.preloadExport()">
+            <i class="fa fa-download fa-lg"></i>
+          </a>
+        </div>
+        <div class="col-md-1 right">
+          <a class="activity-close" ng-click="toggleRecentActivityPane()">
+            <i class="fa fa-times fa-lg"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="body">
+    <div class="recent-activity">
+      <div class="log-entry" ng-repeat="action in actions | reverseArray">
+        <div class="day" ng-show ="actions[$index-1].day !== action.day">
+          <span>{{action.day}}</span>
+        </div>
+        <div class="message">
+          <span class="user">{{action.user}}</span>
+          <span class="chunk {{part.msgType}}" ng-click="showDetails()($event, part.type, part.data)" ng-repeat="part in action.message">{{part.text}}</span>
+        </div>
+        <div class="time">
+          <span class="task">{{action.time}}</span>
+        </div>
+      </div>
+    </div>
+    <div class="online-pane">
+      <div>
+        <h6>Online Users</h6>
+      </div>
+      <perfect-scrollbar class="scroller" style="height: 100px;" min-scrollbar-length="5" max-scrollbar-length="20"  wide-scrollbar="true" use-both-wheel-axes="true" >
+        <div class="users" style="overflow:hidden;">
+          <div class="user" ng-repeat="user in onlineUsers">
+            <span title="{{user.remoteAddr}}">{{user.userId}}</span>
+            <span class="sessions">{{user.sessions}}</span>
+          </div>
+        </div>
+      </perfect-scrollbar>
+    </div>
+  </div>
+</div>

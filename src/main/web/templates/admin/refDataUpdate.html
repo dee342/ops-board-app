@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html ng-app="OpsBoard" xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>SMART Upload data Excel file</title>
+<link rel='shortcut icon' type='image/x-icon' href='/favicon.ico' />
+<link rel="stylesheet" type="text/css"
+	th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/bootstrap-3.1.1.min.css')}}"></link>
+<link rel="stylesheet"
+	th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/bootstrap-glyphicons-3.1.1.css')}}" />
+<link rel="stylesheet"
+	th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/font-awesome.min.css')}}" />
+<link rel="stylesheet" type="text/css"
+	th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/select2-3.4.8.css')}}"></link>
+<link rel="stylesheet" type="text/css"
+	th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/select2-bootstrap3.css')}}"></link>
+<link rel="stylesheet"
+	th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/perfect-scrollbar/min/perfect-scrollbar.min.css')}}" />
+<!--  Used for development only...switch to pre-compiler for PROD -->
+<link rel="stylesheet/less" type="text/css"
+	th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/less/constants.less')}}" />
+<link rel="stylesheet/less" type="text/css"
+	th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/less/fonts.less')}}" />
+<link rel="stylesheet/less" type="text/css"
+	th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/less/ops-board.less')}}" />
+<link rel="stylesheet/less" type="text/css"
+	th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/less/flexbox-splitter.less')}}" />
+<link rel="stylesheet/less" type="text/css"
+	th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/less/board.less')}}" />
+<link rel="stylesheet/less" type="text/css"
+	th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/less/core.less')}}" />
+<link rel="stylesheet/less" type="text/css"
+	th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/less/panes.less')}}" />
+<link rel="stylesheet/less" type="text/css"
+	th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/less/recent-activity.less')}}" />
+<link rel="stylesheet/less" type="text/css"
+	th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/less/task-panel.less')}}" />
+<link rel="stylesheet/less" type="text/css"
+	th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/less/nav.less')}}" />
+<link rel="stylesheet" type="text/css" th:href="@{/libs/jquery-ui.css}" />
+<script th:src="@{/libs/sockjs-0.3.4.js}"></script>
+<script th:src="@{/libs/stomp.js}"></script>
+<script
+	th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/jquery-2.1.0.min.js')}}"></script>
+<script th:src="@{/libs/jquery-ui.js}"></script>
+<style type="text/css">
+.top-buffer {
+	margin-top: 80px;
+}
+</style>
+
+<script type="text/javascript">
+var socket = new SockJS('/smart-opsboard/loadstatus');
+var stompClient = Stomp.over(socket);
+
+$(function() {
+	$( "#dialog" ).dialog();
+	$( "#dialog" ).dialog('close');
+});
+
+stompClient.connect({}, function(frame) {
+	console.log('Connected: ' + frame);
+	stompClient.subscribe('/topic/broadcast', function(response){
+		//John add your UI logic
+	});
+});
+
+	function sendRequest(url, successMsg, errorMsg){
+		var dialog = $( "#dialog" );
+		 $.get(url, function(result){
+				dialog.html(successMsg);
+				dialog.dialog('open');
+		 })
+		 .fail(function(event, jqXHR, settings, error) {
+				dialog.html(errorMsg);
+				dialog.dialog('open');
+		});	
+	}
+</script>
+</head>
+<body class="container">
+	<div class="container">
+		<nav class="navbar navbar-inverse navbar-fixed-top">
+			<div class="container">
+				<div class="navbar-header">
+					<a class="navbar-brand" href="#"> <img id="logo"
+						class="logo_salesforce" height="80" width="80"
+						th:src="@{/images/logo.png}" border="0" />
+					</a>
+				</div>
+				<!--/.navbar-collapse -->
+			</div>
+		</nav>
+	</div>
+	
+	
+	<div id="dialog" title="Message"/>
+
+
+	<div class="container">
+		<div class="row top-buffer">
+			<div>
+
+				<p/>&nbsp;<p/>&nbsp;
+				<legend><b>Maintenance Mode Management</b></legend>
+				<button type="button"  onclick="sendRequest('changemode?mode=maintenance', 'Application changed to maintenance mode', 'Failed to switch Application to maintenance mode')">Enter Maintenance mode</button>
+				&nbsp;&nbsp;&nbsp;
+				<button type="button"  onclick="sendRequest('changemode?mode=normal', 'Application changed to normal mode', 'Failed to switch Application to normal mode')">Exit Maintenance mode</button>
+
+				<p/>&nbsp;<p/>&nbsp;<p/>&nbsp;<p/>
+				
+				<legend><b>Loading PeopleSoft Reference Data</b></legend>
+				<button type="button"  onclick="sendRequest('load/locations/', 'Location data are updated', 'Failed to update Locations data')">Locations</button>
+	            &nbsp;&nbsp;&nbsp;
+				<button type="button"  onclick="sendRequest('load/unavailabilitytypes/', 'Unavailability Types are updated', 'Failed to update Unavailability Types')">Unavailability Types</button>
+				&nbsp;&nbsp;&nbsp;
+				<button type="button"  onclick="sendRequest('load/sppostypes/', 'Special Position Types are updated', 'Failed to update Special Position Types')">Special Position Types</button>
+				&nbsp;&nbsp;&nbsp;
+				<button type="button"  onclick="sendRequest('load/ofpostypes/', 'Officer Position Types are updated', 'Failed to update Officer Position Types')">Officer Position Types</button>
+				&nbsp;&nbsp;&nbsp;
+				<button type="button"  onclick="sendRequest('load/mdatypes/', 'MDA Types are updated', 'Failed to update MDA Types')">MDA Types</button>
+	
+				<p/>&nbsp;<p/>&nbsp;<p/>&nbsp;<p/>
+
+				<legend><b>Loading Scan Reference Data</b></legend>
+				<button type="button"  onclick="sendRequest('load/downcodes/', 'Down Codes are updated', 'Failed to update Down Codes')">Down Codes</button>
+				&nbsp;&nbsp;&nbsp;
+				<button type="button"  onclick="sendRequest('load/materialtypes/', 'Material Types are updated', 'Failed to update Material Types')">Material Types</button>
+				&nbsp;&nbsp;&nbsp;
+				<button type="button"  onclick="sendRequest('load/subtypes/', 'SubTypes are updated', 'Failed to update SubTypes')">SubTypes</button>
+	
+				<p/>&nbsp;<p/>&nbsp;<p/>&nbsp;<p/>
+
+				<legend><b>Refreshing Caches</b></legend>
+				<button type="button"  onclick="sendRequest('refresh/refdata/', 'Reference Data caches are refreshed', 'Failed refreshing reference data caches')">Reference Data</button>
+				
+	<!-- /container 			
+				&nbsp;&nbsp;&nbsp;
+				<button type="button"  onclick="sendRequest('refresh/boards/', 'Boards Data caches are refreshed', 'Failed refreshing boards caches')">Clean Boards Data</button><br/>
+	-->
+	
+			</div>
+		</div>
+		
+	</div>
+</body>
+</html>

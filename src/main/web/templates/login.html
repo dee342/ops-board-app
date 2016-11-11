@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html ng-app="login" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
+<head>
+
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title>SMART Operations Board - Login</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png"
+          th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/images/favicon.png')}}"/>
+    <link rel="shortcut icon" type="image/x-icon"
+          th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/images/favicon.ico')}}"/>
+
+    <!-- Styles -->
+    <link rel="stylesheet" type="text/css"
+          th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/bootstrap-3.1.1.min.css')}}"></link>
+    <link rel="stylesheet/less" type="text/css"
+          th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/less/single-page-input.less')}}"/>
+
+    <!-- Libraries -->
+    <!--	<script>
+            less = {
+                async: true
+            };
+        </script>-->
+
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/less.min.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/jquery-2.1.0.min.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/angular-1.3.3.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/ui-bootstrap-tpls-0.11.0.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/modules/dsny-center-modal.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/factories/modal-position.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/directives/center-modal.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/modules/about-us.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/navigation-controller.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/navigation-modal-controller.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/login-controller.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/common/browser-service.js')}}"></script>
+
+</head>
+<body>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var appPathStart = window.location.pathname.split('/login')[0];
+    var appVersion = "Not Yet Implemented";
+    var login = angular.module('login', [
+        'dsny-center-modal',
+        'ui.bootstrap',
+        'about-us'
+    ]);
+
+    /*]]>*/
+</script>
+<div class="single-page-container" ng-controller="LoginCtrl">
+    <div class="form-pane" ng-controller="LoginCtrl" ng-show="isSupportedBrowser()">
+        <form name="login" method="post" th:action="@{/login}" autocomplete="off" centered-modal="true"
+              center-class="single-page-container">
+            <div class="row">
+                <img id="logo" class="logo_salesforce" th:src="@{/images/logo.png}" border="0" alt=""
+                      ng-click="showReleaseNotes($event)"/>
+            </div>
+            <div class="row">
+                <input type="text" class="form-control" placeholder="User Name" value="" name="username" id="username"/>
+            </div>
+            <div class="row">
+                <input type="password" class="form-control" placeholder="Password" id="password" name="password"
+                       autocomplete="off"/>
+            </div>
+            <div class="row message">
+                <div id="error" th:if="${param.error}">Invalid
+                username
+                and / or
+                password</div>
+                <div th:if="${param.logout}">You
+                have
+                been
+                logged
+                out.</div>
+            </div>
+            <div class="row">
+                <button type="submit" class="btn btn-default" id="Login" name="Login">
+                    Log in
+                </button>
+            </div>
+        </form>
+    </div>
+    <div class="form-pane" ng-controller="LoginCtrl" ng-hide="isSupportedBrowser()">
+        <form name="login" method="post" th:action="@{/login}" autocomplete="off" centered-modal="true"
+              center-class="single-page-container">
+            <div class="row">
+                <img id="logo" class="logo_salesforce" th:src="@{/images/logo.png}" border="0" alt=""
+                     ng-click="showReleaseNotes($event)"/>
+            </div>
+            <div class="row messagebrowser">
+                <div>You are using a web browser that is<br/> not supported by this application. <br/>Please switch to
+                    one of the browsers listed below:
+                </div>
+            </div>
+            <div class="row">
+                <span class="browserlink">Chrome (ver. 37+)&nbsp;&nbsp;<img th:src="@{/images/chrome.png}" border="0"
+                                                                            alt="Download Chrome"/></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <span class="browserlink">Firefox (ver. 32+)&nbsp;&nbsp;<img th:src="@{/images/firefox.png}" border="0"
+                                                                             alt="Download Firefox"/></span>
+            </div>
+        </form>
+    </div>
+    <div id="footer">
+        Copyright © 2015 Department of Sanitation New York City<br/>All rights reserved
+    </div>
+</div>
+</body>
+</html>

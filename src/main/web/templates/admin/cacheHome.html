@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html ng-app="cache" lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Caching Admin page</title>
+<link rel='shortcut icon' type='image/x-icon' href='/favicon.ico' />
+
+<link rel="stylesheet" type="text/css" th:href="@{'/styles/bootstrap-3.1.1.min.css'}"></link>
+<link rel="stylesheet" type="text/css" th:href="@{'/styles/select2-bootstrap3.css'}"></link>
+
+ <link rel="stylesheet" type="text/css" th:href="@{/libs/jquery-ui.css}" />
+<script th:src="@{'/libs/jquery-2.1.0.min.js'}"></script>
+<script th:src="@{'/libs/jquery-ui.js'}"></script>
+<script th:src="@{'/libs/jsonpath.js'}"></script>
+<script>
+	var regionNames;
+	var boardContainerEntryDetail="";
+	var	entryDetail="";
+	var filterProperties;
+	var filterString;
+	var servers;
+	
+	$(document).ready(function(){
+		$("#boardDatePicker").datepicker({ dateFormat: 'yymmdd' });
+		$("#refStartDatePicker").datepicker({ dateFormat: 'yy-mm-dd' });
+		$("#refEndDatePicker").datepicker({ dateFormat: 'yy-mm-dd' });
+		$('[data-toggle="tooltip"]').tooltip();
+		$.ajax({
+			url:		'list/servers',
+			success:	function(result){servers = result.split(";");},
+			async:		false	
+			});
+		filterProperties = $("#filterObjectProperties");
+		filterSectionShowHide();
+		boardDrillDownShowHide();
+	});
+	
+	$.get('cache/region/names', function(result) {
+		var regionNameValue = String(result);
+		regionNames = regionNameValue.split(",");
+		buildDropDown($("#regionNameDropDown"), regionNames);
+	});
+	
+	$.get('cache/location/code', function(result) {
+		var locationCodeValue = String(result);
+		buildDropDown($("#locationCodeDropDown"),  locationCodeValue.split(","));
+	});
+	
+	$.get('cache/refdata/region', function(result) {
+		var regionNameValue = String(result);
+		buildDropDown($("#referenceDataDropDown"),  regionNameValue.split(","));
+	});
+	
+	function boardDrillDownShowHide(){
+		if(boardContainerEntryDetail.length ==0){
+			$("#boardDrillDownElements").hide();
+		}
+		else{
+			$("#boardDrillDownElements").show('slow');
+		}
+	}
+	
+	function filterSectionShowHide(){
+		if(entryDetail.length ==0){
+			$("#filterCriteria").hide();
+			$("#filterList").hide();
+			$("#filterProperties").hide();
+		}
+		else{
+			$("#filterCriteria").show('slow');
+			$("#filterList").show('slow');
+			$("#filterProperties").show('slow');
+		}
+	}
+	
+	function buildDropDown(dropDown, values){
+		var dropDownHTML = "<select>"
+			values.forEach(function(token){
+			dropDownHTML = dropDownHTML + '<option value="' + token + '">' + token + "</option>"
+		})
+		dropDownHTML = dropDownHTML + "</select>";
+		dropDown.html(dropDownHTML);
+	}
+	
+	function getEntryCount(){
+		var getResult = $("#urlResult");
+		var regionName = $('#regionNameDropDown :selected').text();
+		var url = 'cache/' + regionName + '/entrycount';
+		
+		$.get(url, function(result) {
+			getResult.html('Region <b>' + regionName + '</b> has ' + '<b>' + result + '</b> entries');
+		});
+	}
+	
+	function showRegionNames(){
+		var getResult = $("#urlResult");
+		var value = "<b>List of Region Names</b>"
+		regionNames.forEach(function(token){
+			value = value + "<br/>" + token;
+		})
+		getResult.html(value);
+	}
+	
+	function showBoardContainerEntryDetail(){
+		$("#resultFilter").val("");
+		var getResult = $("#urlResult");
+		var boardDate = $('#boardDatePicker').val();
+		var locationCode = $('#locationCodeDropDown :selected').text();
+		var url = 'cache/BoardContainer' + '/' + locationCode +'_' + boardDate;
+		$.get(url, function(result) {
+			boardContainerEntryDetail = result.board; 
+			entryDetail = boardContainerEntryDetail;
+			filterSectionShowHide();
+			boardDrillDownShowHide();
+			getResult.html(JSON.stringify(result));
+			getAllProperties();
+		})
+		.fail(function(event, jqXHR, settings, error){
+			getResult.html("no data found");
+		});
+	}
+	
+	function getValue(obj, property){
+		return obj[property];
+	}
+	
+	function filterEntryDetail(){
+		filterString = $("#resultFilter").val();
+		var getResult = $("#urlResult");
+		var result = jsonPath(entryDetail, filterString);
+		getResult.html(JSON.stringify(result));
+		getAllProperties();
+	}
+
+	function filterPersonnelDetail(filter)
+	{
+		var filter =  "personnel" + "['" + filter + "']";
+		filterDetail(filter);
+	}
+	
+	function filterEquipmentDetail(filter)
+	{
+		var filter =  "equipment" + "['" + filter + "']";
+		filterDetail(filter);
+	}
+	
+	function filterDetail(filter){
+		var getResult = $("#urlResult");
+		var result = jsonPath(entryDetail, filter);
+		getResult.html(JSON.stringify(result));
+	}
+
+	function getAllProperties() {
+		  var properties = '';
+		  var propertyName = "";
+		  var propertyRadioHTML = "";
+		  
+		  for (property in entryDetail) {
+			propertyRadioHTML = propertyRadioHTML + '<input type="radio" name="filter" value="' + property + '" onchange="filterDetail(this.value)">' + property +'</input><br/>';
+		  }
+		  filterProperties.html(propertyRadioHTML); 
+		}
+	
+	
+	function evictDataFromCache(url){
+		$.get(url, function(result) {
+			alert(result);
+		});
+	}
+	
+	function evictDataFromCacheAll(url){
+		for(server in servers){
+			$.get(servers[server]+'admin/' + url, function(result) {
+				alert(result);
+			});
+		}
+	}
+	
+	function evictBoardContainer(){
+		var url = 'cache/boardContainer/' + boardContainerEntryDetail.id + '/evict';
+		$.get(url, function(result) {
+			alert(result);
+			boardContainerEntryDetail = "";
+			entryDetail="";
+			$("#urlResult").html("");
+			filterSectionShowHide();
+			boardDrillDownShowHide();
+		});
+	}
+	
+	function boardDrillDown(obj){
+		var result = Object.keys(boardContainerEntryDetail[obj]);
+		var getResult = $("#urlResult");
+		var results = JSON.stringify(result).split(",");
+		var resultString = obj + " information for Board <strong>" + JSON.stringify(boardContainerEntryDetail.id) + "</strong><br/>";
+		resultString = resultString + '<table class="table-striped table-bordered"><tr><th>Refresh Data</th><th>Refresh Board Data</th></tr>';
+		results.forEach(function(token){
+			bIndex = token.indexOf('"');
+			eIndex = token.lastIndexOf('"');
+			id = token.substring(bIndex+1, eIndex);
+			
+			var entry = boardContainerEntryDetail[obj][id];
+			if(obj=='personnel'){
+				resultString = resultString + '<tr><td>' 
+				+ '<button class="btn btn-link" value="' + id +'" onclick="filterPersonnelDetail(this.value)">'+ entry.firstName +  ' ' + entry.middleName + ' ' + entry.lastName +'</button>'
+				+ '<button class="btn btn-link" value="cache/personnel/'+ id +'/evict" onclick="evictDataFromCache(this.value)"		data-toggle="tooltip" data-placement="top" title="Refresh local server"><span class="glyphicon glyphicon-repeat"></span></button>'
+				+ '<button class="btn btn-link" value="cache/personnel/'+ id +'/evict" onclick="evictDataFromCacheAll(this.value)"	data-toggle="tooltip" data-placement="top" title="Refresh all servers"><span class="glyphicon glyphicon-refresh"></span></button>'
+				+ '</td><td>'
+				+ '<button class="btn btn-link" value="cache/boardPersonnel/'+ entry.id +'/evict" onclick="evictDataFromCache(this.value)"		data-toggle="tooltip" data-placement="top" title="Refresh local server"><span class="glyphicon glyphicon-repeat"></span></button>'
+				+ '<button class="btn btn-link" value="cache/boardPersonnel/'+ entry.id +'/evict" onclick="evictDataFromCacheAll(this.value)"	data-toggle="tooltip" data-placement="top" title="Refresh all servers"><span class="glyphicon glyphicon-refresh"></span></button></td></tr>';
+			}
+			else{
+				resultString = resultString + '<tr><td>'
+				+ '<button class="btn btn-link" value="' + id +'" onclick="filterEquipmentDetail(this.value)">'+ id + '</button>'
+				+ '<button class="btn btn-link" value="cache/equipment/'+ id +'/evict" onclick="evictDataFromCache(this.value)"		data-toggle="tooltip" data-placement="top" title="Refresh local server"><span class="glyphicon glyphicon-repeat"></span></button>'
+				+ '<button class="btn btn-link" value="cache/equipment/'+ id +'/evict" onclick="evictDataFromCacheAll(this.value)"	data-toggle="tooltip" data-placement="top" title="Refresh all servers"><span class="glyphicon glyphicon-refresh"></span></button>'
+				+ '</td><td>'
+				+ '<button class="btn btn-link" value="cache/boardEquipment/'+ entry.id +'/evict" onclick="evictDataFromCache(this.value)"		data-toggle="tooltip" data-placement="top" title="Refresh local server"><span class="glyphicon glyphicon-repeat"></span></button>'
+				+ '<button class="btn btn-link" value="cache/boardEquipment/'+ entry.id +'/evict" onclick="evictDataFromCacheAll(this.value)"	data-toggle="tooltip" data-placement="top" title="Refresh all servers"><span class="glyphicon glyphicon-refresh"></span></button></td></tr>';
+			}
+		}); 
+		resultString = resultString + '</table>';
+		getResult.html(resultString);
+	}
+
+	function retriveRefData(){
+		$("#resultFilter").val("");
+		var getResult = $("#urlResult");
+		var regionName = $('#referenceDataDropDown :selected').text();
+		var startDate = $('#refStartDatePicker').val();
+		var urlArray = [];
+		urlArray.push('cache/refdata/', regionName, '/', startDate); 
+		url = urlArray.join("");
+		$.get(url, function(result) {
+			entryDetail = result;
+			filterSectionShowHide();
+			getResult.html(JSON.stringify(result));
+			getAllProperties();
+		});
+	}
+	
+</script>
+</head>
+<body class="container center-block">
+<div>
+<div class="row">
+  <div class="table-responsive col-md-6">
+      <table class="table-striped table-bordered">
+      	<tr>
+			<td colspan="3" class="col-md-12">
+				<button class="btn btn-link" onclick="showRegionNames()">List of regions</button>
+			</td>
+		</tr>
+		<tr>
+			<td class="col-md-6" colspan="2">
+				<div id="regionNameDropDown"/>
+			</td>
+			<td class="col-md-6">
+				<button class="btn btn-link" onclick="getEntryCount()">Get entry count</button>
+			</td>
+		</tr>
+		<tr>
+			<td class="col-md-4">
+				Location: <div id="locationCodeDropDown"/>
+			</td>
+			<td class="col-md-4">
+				Date: <input type="text" id="boardDatePicker"/>
+			</td>
+			<td class="col-md-4">
+				<button class="btn btn-link" onclick="showBoardContainerEntryDetail()">Get Board details</button>
+			</td>
+		</tr>
+		<tr>
+		<tr id="boardDrillDownElements">
+			<td class="col-md-4">
+				<button class="btn btn-link" onclick="boardDrillDown('equipment')">Get Equipment ID from Board</button>
+			</td>
+			<td class="col-md-4">
+				<button class="btn btn-link" onclick="boardDrillDown('personnel')">Get Personnel ID from Board</button>
+			</td>
+			<td class="col-md-4">
+				<button type="button" class="btn btn-default btn-sm" onclick="evictBoardContainer()"  data-toggle="tooltip" data-placement="top" title="Remove board from cache">
+					<span class="glyphicon glyphicon-trash"></span>Trash 
+				</button>
+			</td>
+		</tr>
+		<div id="referenceDataDiv">
+			<tr>
+				<td colspan="3"><h3>Reference Data</h3></td>
+			</tr>
+			<tr>
+				<td class="col-md-4"><div id="referenceDataDropDown"/></td>
+				<td class="col-md-8" colspan="2">Effective Start Date: <input type="text" id="refStartDatePicker"/></td>
+			</tr>
+			<tr>
+				<td colspan="3"><button class="button" onclick="retriveRefData()">Get reference data</button></td>
+			</tr>
+		</div>
+		</tr>
+		<tr id="filterCriteria">
+	    	<th colspan="3"><h3>Filtering Criteria</h3></th>
+	   	</tr>
+		<tr>
+			<td colspan="3">JSON Filter: <input id="resultFilter" type="text" onchange="filterEntryDetail(this.value)"/></td>
+		</tr>
+		<tr id="filterList">
+			<td colspan="3">Data Filters</td>
+		</tr>
+		<tr id="filterProperties">
+			<td colspan="3"><div id="filterObjectProperties"></div></td>
+		</tr>
+      </table>
+  </div>
+  <div class="table-responsive col-md-6">
+      <table class="table">
+      	<thead>
+      		<tr>
+      			<td><strong>Query Result</strong></td>
+      		</tr>
+      	</thead>
+		<tr>
+			<td><div id="urlResult"></div></td>
+		</tr>
+      </table>
+  </div>
+</div>
+</div>
+</body>
+</html>

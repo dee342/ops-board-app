@@ -1,0 +1,305 @@
+/* 
+ * Don't modify things marked with ! - unless you know what you're doing
+ */
+
+/* ! vertical layout */
+.multiSelect .vertical {
+    float: none;
+}
+
+/* ! horizontal layout */
+.multiSelect .horizontal:not(.multiSelectGroup) {
+    float: left;
+}
+
+/* ! create a "row" */
+.multiSelect .line {
+    max-height: 34px;   
+    overflow: hidden;
+}
+
+/* ! create a "column" */
+.multiSelect .acol {
+    display: inline-block;    
+    min-width: 12px;
+}
+
+/* ! */
+.multiSelect .inlineBlock {
+    display: inline-block;
+}
+.task-settings-container .multiSelect .inputFilter {
+    width: 76%;
+}
+.task-settings-container .multiSelect .clearButton {
+    background-color: transparent;
+    position: absolute;
+    left: 77%;
+    margin-left: -28px;
+    border: 0;
+}
+.task-settings-container .multiSelect .clearButton:hover {
+    border: 0;
+}
+
+/* the multiselect button */
+.multiSelect .button {
+    display: block;
+    position: relative;
+    text-align: center;    
+    cursor: pointer;
+    border: 1px solid #9a9898;
+    font-size: 14px;
+    min-height : 34px !important;
+    border-radius: 4px;
+    color: #555;
+    width: 100%;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -o-user-select: none;
+    user-select: none; 
+    white-space:normal;   
+}
+
+/* button: clicked */
+.multiSelect .buttonClicked {
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15) inset, 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* labels on the button */
+.multiSelect .buttonLabel {
+    display: inline-block;
+    padding: 5px 0px 5px 0px; 
+}
+
+/* downward pointing arrow */
+.multiSelect .caret {
+    display: inline-block;
+    width: 0;
+    height: 0;
+    margin: 0px 0px 1px 12px  !important;    
+    vertical-align: middle;
+    border-right: 4px solid transparent;
+    border-left: 4px solid transparent;
+    border-bottom: 0 dotted; 
+}
+
+/* the main checkboxes and helper layer */
+.multiSelect .checkboxLayer {
+    background-color: #fff;
+    position: absolute;
+    z-index: 999;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);    
+    min-width:278px;
+    display: none !important;
+    margin-right: 30px;
+    width: 98%;
+}
+
+
+/* container of helper elements */
+.multiSelect .helperContainer {
+    border-bottom: 1px solid #ddd;
+    padding: 8px 8px 0px 8px;
+}
+
+/* helper buttons (select all, none, reset); */
+.multiSelect .helperButton {
+    display: inline;
+    text-align: center;
+    cursor: pointer;
+    border: 1px solid #ccc;
+    height: 26px;
+    font-size: 13px;
+    border-radius: 2px;
+    color: #ffffff;    
+    background: #34363f;
+    line-height: 1.6;
+    margin: 0px 0px 8px 0px;
+}
+
+/* clear button */
+.multiSelect .clearButton {
+    position: absolute;
+    display: inline;
+    text-align: center;
+    cursor: pointer;
+    border: 1px solid #ccc;
+    height: 22px;
+    width: 22px;
+    font-size: 13px;
+    border-radius: 2px;
+    color: #ffffff;    
+    background: #34363f;
+    line-height: 1.4;
+    right : 2px;
+    top: 2px;
+}
+
+/* filter */
+.multiSelect .inputFilter {
+    border-radius: 2px; 
+    border: 1px solid #ccc;
+    height: 26px;
+    font-size: 14px;
+    width:100%;    
+    padding-left:7px; 
+    color: #ffffff;
+    margin: 0px 0px 8px 0px;
+}
+
+/* helper elements on hover & focus */
+.multiSelect .clearButton:hover,
+.multiSelect .helperButton:hover {
+    border: 1px solid #ccc;
+    color: #ffffff;    
+    background: #34363f;    
+}
+
+/* container of multi select items */
+.multiSelect .checkBoxContainer {
+    display: inline-block;
+    width: 100%;
+}
+
+/* ! to show / hide the checkbox layer above */
+.multiSelect .show {
+    display: block !important;
+}
+
+/* item labels */
+.multiSelect .multiSelectItem {
+    min-width: 278px;
+    display: block;
+    color: #fff;       
+    white-space: nowrap;
+    text-align: left;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -o-user-select: none;
+    user-select: none;      
+    border: 1px solid transparent;
+    position: relative;
+    padding: 4px 10px;
+}
+
+/* Item labels: selected - Enable this if you want to apply styling on selected items */
+.multiSelect .multiSelectItem:not(.multiSelectGroup).selected {
+  background-color: #666;
+  background-color: rgba(255, 255, 255, 0.2);
+}
+.multiSelect .multiSelectItem:not(.multiSelectGroup).selected label {
+    font-weight: 700;
+}
+.multiSelect .fa-check {
+    position: absolute;
+    top: 9px;
+    right: 26px;
+    color: #0dddff;
+}
+
+/* item labels focus on mouse hover */
+.multiSelect .multiSelectItem:hover, 
+.multiSelect .multiSelectGroup:hover {
+background-color: #555;
+background-color: rgba(255, 255, 255, 0.1);
+cursor: pointer;
+}
+.multiSelect .multiSelectItem:hover label, 
+.multiSelect .multiSelectGroup:hover label {
+  cursor: pointer;
+}
+
+/* item labels focus using keyboard */
+.multiSelect .multiSelectFocus { 
+    cursor: pointer; 
+}
+
+/* ! group labels */
+.multiSelect .multiSelectGroup {    
+    display: block;
+    clear: both;
+}
+
+/* hide the original HTML checkbox away */
+.multiSelect .checkbox {    
+    position: absolute;
+    left: -9999px;
+}
+
+/* checkboxes currently disabled */
+.multiSelect .disabled, 
+.multiSelect .disabled:hover,
+.multiSelect .disabled label input:hover ~ span {
+    color: #c4c4c4 !important;
+    cursor: not-allowed !important;
+}
+
+/* If you use images in button / checkbox label, you might want to change the image style here. */
+.multiSelect img {
+    vertical-align: middle;
+    margin-bottom:0px;
+    height: 22px;
+    width:22px;
+}
+/********************************* custom style starts ***********************************************/
+.multiSelect {
+    font-size: 14px;
+    font-weight: 600;
+}
+.multiSelect input {
+    background: #34363f;
+}
+.multiSelect .button, .multiSelect form, .multiselect .helperButton, .multiselect .clearButton {
+    background: #34363f;
+    color: #ffffff;
+    font-size: 14px !important;
+    font-weight: 600;
+}
+.multiSelect button, .multiSelect input{
+    font-size: 14px !important;
+    font-weight: 600;
+}
+.multiSelect label {
+    font-size: 12px !important;
+    font-weight: 400;
+}
+select.form-control {
+    cursor: pointer;
+}
+select.form-control + .caret,
+.multiSelectButton span.caret {
+    background: url('../../images/select2.png') 0 3px no-repeat;
+    width: 18px;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    right: 0;
+    border: 0;
+}
+.multiSelectButton.buttonClicked span.caret {
+    background-position: -18px 3px;
+}
+select.form-control + .caret:after,
+.multiSelectButton .caret:after {
+    content: '';
+    height: 33px;
+    border-left: 1px solid #9a9898;
+    position: absolute;
+    top: 0;
+    left: -2px;
+}
+select.form-control + .caret {
+  top: 3px;
+  right: 6px;
+  pointer-events: none;
+}
+select.form-control:focus + .caret {
+    background-position: -18px 4px;
+}
+
+/********************************* custom style ends ************************************************/

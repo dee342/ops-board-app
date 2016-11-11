@@ -1,0 +1,410 @@
+[
+  {
+    "endDay": 0,
+    "endTime": [
+      7,
+      0
+    ],
+    "id": 0,
+    "quotaGroup": 1,
+    "sequence": 1,
+    "startDay": -1,
+    "startTime": [
+      23,
+      0
+    ],
+    "_class": "gov.nyc.dsny.smart.opsboard.domain.reference.Shift",
+    "name": "2300-0700"
+  },
+  {
+    "endDay": 0,
+    "endTime": [
+      8,
+      0
+    ],
+    "id": 0,
+    "quotaGroup": 1,
+    "sequence": 2,
+    "startDay": 0,
+    "startTime": [
+      0,
+      0
+    ],
+    "_class": "gov.nyc.dsny.smart.opsboard.domain.reference.Shift",
+    "name": "0000-0800"
+  },
+  {
+    "endDay": 0,
+    "endTime": [
+      9,
+      0
+    ],
+    "id": 0,
+    "quotaGroup": 1,
+    "sequence": 3,
+    "startDay": 0,
+    "startTime": [
+      1,
+      0
+    ],
+    "_class": "gov.nyc.dsny.smart.opsboard.domain.reference.Shift",
+    "name": "0100-0900"
+  },
+  {
+    "endDay": 0,
+    "endTime": [
+      10,
+      0
+    ],
+    "id": 0,
+    "quotaGroup": 1,
+    "sequence": 4,
+    "startDay": 0,
+    "startTime": [
+      2,
+      0
+    ],
+    "_class": "gov.nyc.dsny.smart.opsboard.domain.reference.Shift",
+    "name": "0200-1000"
+  },
+  {
+    "endDay": 0,
+    "endTime": [
+      11,
+      0
+    ],
+    "id": 0,
+    "quotaGroup": 1,
+    "sequence": 5,
+    "startDay": 0,
+    "startTime": [
+      3,
+      0
+    ],
+    "_class": "gov.nyc.dsny.smart.opsboard.domain.reference.Shift",
+    "name": "0300-1100"
+  },
+  {
+    "endDay": 0,
+    "endTime": [
+      12,
+      0
+    ],
+    "id": 0,
+    "quotaGroup": 2,
+    "sequence": 6,
+    "startDay": 0,
+    "startTime": [
+      4,
+      0
+    ],
+    "_class": "gov.nyc.dsny.smart.opsboard.domain.reference.Shift",
+    "name": "0400-1200"
+  },
+  {
+    "endDay": 0,
+    "endTime": [
+      13,
+      0
+    ],
+    "id": 0,
+    "quotaGroup": 2,
+    "sequence": 7,
+    "startDay": 0,
+    "startTime": [
+      5,
+      0
+    ],
+    "_class": "gov.nyc.dsny.smart.opsboard.domain.reference.Shift",
+    "name": "0500-1300"
+  },
+  {
+    "endDay": 0,
+    "endTime": [
+      14,
+      0
+    ],
+    "id": 0,
+    "quotaGroup": 2,
+    "sequence": 8,
+    "startDay": 0,
+    "startTime": [
+      6,
+      0
+    ],
+    "_class": "gov.nyc.dsny.smart.opsboard.domain.reference.Shift",
+    "name": "0600-1400"
+  },
+  {
+    "endDay": 0,
+    "endTime": [
+      15,
+      0
+    ],
+    "id": 0,
+    "quotaGroup": 2,
+    "sequence": 9,
+    "startDay": 0,
+    "startTime": [
+      7,
+      0
+    ],
+    "_class": "gov.nyc.dsny.smart.opsboard.domain.reference.Shift",
+    "name": "0700-1500"
+  },
+  {
+    "endDay": 0,
+    "endTime": [
+      16,
+      0
+    ],
+    "id": 0,
+    "quotaGroup": 2,
+    "sequence": 10,
+    "startDay": 0,
+    "startTime": [
+      8,
+      0
+    ],
+    "_class": "gov.nyc.dsny.smart.opsboard.domain.reference.Shift",
+    "name": "0800-1600"
+  },
+  {
+    "endDay": 0,
+    "endTime": [
+      17,
+      0
+    ],
+    "id": 0,
+    "quotaGroup": 2,
+    "sequence": 11,
+    "startDay": 0,
+    "startTime": [
+      9,
+      0
+    ],
+    "_class": "gov.nyc.dsny.smart.opsboard.domain.reference.Shift",
+    "name": "0900-1700"
+  },
+  {
+    "endDay": 0,
+    "endTime": [
+      18,
+      0
+    ],
+    "id": 0,
+    "quotaGroup": 2,
+    "sequence": 12,
+    "startDay": 0,
+    "startTime": [
+      10,
+      0
+    ],
+    "_class": "gov.nyc.dsny.smart.opsboard.domain.reference.Shift",
+    "name": "1000-1800"
+  },
+  {
+    "endDay": 0,
+    "endTime": [
+      19,
+      0
+    ],
+    "id": 0,
+    "quotaGroup": 3,
+    "sequence": 13,
+    "startDay": 0,
+    "startTime": [
+      11,
+      0
+    ],
+    "_class": "gov.nyc.dsny.smart.opsboard.domain.reference.Shift",
+    "name": "1100-1900"
+  },
+  {
+    "endDay": 0,
+    "endTime": [
+      20,
+      0
+    ],
+    "id": 0,
+    "quotaGroup": 3,
+    "sequence": 14,
+    "startDay": 0,
+    "startTime": [
+      12,
+      0
+    ],
+    "_class": "gov.nyc.dsny.smart.opsboard.domain.reference.Shift",
+    "name": "1200-2000"
+  },
+  {
+    "endDay": 0,
+    "endTime": [
+      21,
+      0
+    ],
+    "id": 0,
+    "quotaGroup": 3,
+    "sequence": 15,
+    "startDay": 0,
+    "startTime": [
+      13,
+      0
+    ],
+    "_class": "gov.nyc.dsny.smart.opsboard.domain.reference.Shift",
+    "name": "1300-2100"
+  },
+  {
+    "endDay": 0,
+    "endTime": [
+      22,
+      0
+    ],
+    "id": 0,
+    "quotaGroup": 3,
+    "sequence": 16,
+    "startDay": 0,
+    "startTime": [
+      14,
+      0
+    ],
+    "_class": "gov.nyc.dsny.smart.opsboard.domain.reference.Shift",
+    "name": "1400-2200"
+  },
+  {
+    "endDay": 0,
+    "endTime": [
+      23,
+      0
+    ],
+    "id": 0,
+    "quotaGroup": 3,
+    "sequence": 17,
+    "startDay": 0,
+    "startTime": [
+      15,
+      0
+    ],
+    "_class": "gov.nyc.dsny.smart.opsboard.domain.reference.Shift",
+    "name": "1500-2300"
+  },
+  {
+    "endDay": 0,
+    "endTime": [
+      0,
+      0
+    ],
+    "id": 0,
+    "quotaGroup": 3,
+    "sequence": 18,
+    "startDay": 0,
+    "startTime": [
+      16,
+      0
+    ],
+    "_class": "gov.nyc.dsny.smart.opsboard.domain.reference.Shift",
+    "name": "1600-0000"
+  },
+  {
+    "endDay": 1,
+    "endTime": [
+      1,
+      0
+    ],
+    "id": 0,
+    "quotaGroup": 3,
+    "sequence": 19,
+    "startDay": 0,
+    "startTime": [
+      17,
+      0
+    ],
+    "_class": "gov.nyc.dsny.smart.opsboard.domain.reference.Shift",
+    "name": "1700-0100"
+  },
+  {
+    "endDay": 1,
+    "endTime": [
+      2,
+      0
+    ],
+    "id": 0,
+    "quotaGroup": 3,
+    "sequence": 20,
+    "startDay": 0,
+    "startTime": [
+      18,
+      0
+    ],
+    "_class": "gov.nyc.dsny.smart.opsboard.domain.reference.Shift",
+    "name": "1800-0200"
+  },
+  {
+    "endDay": 1,
+    "endTime": [
+      3,
+      0
+    ],
+    "id": 0,
+    "quotaGroup": 3,
+    "sequence": 21,
+    "startDay": 0,
+    "startTime": [
+      19,
+      0
+    ],
+    "_class": "gov.nyc.dsny.smart.opsboard.domain.reference.Shift",
+    "name": "1900-0300"
+  },
+  {
+    "endDay": 1,
+    "endTime": [
+      4,
+      0
+    ],
+    "id": 0,
+    "quotaGroup": 3,
+    "sequence": 22,
+    "startDay": 0,
+    "startTime": [
+      20,
+      0
+    ],
+    "_class": "gov.nyc.dsny.smart.opsboard.domain.reference.Shift",
+    "name": "2000-0400"
+  },
+  {
+    "endDay": 1,
+    "endTime": [
+      5,
+      0
+    ],
+    "id": 0,
+    "quotaGroup": 3,
+    "sequence": 23,
+    "startDay": 0,
+    "startTime": [
+      21,
+      0
+    ],
+    "_class": "gov.nyc.dsny.smart.opsboard.domain.reference.Shift",
+    "name": "2100-0500"
+  },
+  {
+    "endDay": 1,
+    "endTime": [
+      6,
+      0
+    ],
+    "id": 0,
+    "quotaGroup": 3,
+    "sequence": 24,
+    "startDay": 0,
+    "startTime": [
+      22,
+      0
+    ],
+    "_class": "gov.nyc.dsny.smart.opsboard.domain.reference.Shift",
+    "name": "2200-0600"
+  }
+]

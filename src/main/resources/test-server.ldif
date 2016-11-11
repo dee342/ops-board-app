@@ -1,0 +1,188 @@
+dn: ou=groups,dc=dsny,dc=nyc,dc=gov
+objectclass: top
+objectclass: organizationalUnit
+ou: groups
+
+dn: ou=people,dc=dsny,dc=nyc,dc=gov
+objectclass: top
+objectclass: organizationalUnit
+ou: people
+
+dn: uid=admin,ou=people,dc=dsny,dc=nyc,dc=gov
+objectclass: top
+objectclass: person
+objectclass: organizationalPerson
+objectclass: inetOrgPerson
+cn: admin
+sn: admin
+uid: admin
+userPassword: admin
+
+dn: uid=cacheadmin,ou=people,dc=dsny,dc=nyc,dc=gov
+objectclass: top
+objectclass: person
+objectclass: organizationalPerson
+objectclass: inetOrgPerson
+cn: cacheadmin
+sn: cacheadmin
+uid: cacheadmin
+userPassword: cacheadmin
+
+dn: uid=1,ou=people,dc=dsny,dc=nyc,dc=gov
+objectclass: top
+objectclass: person
+objectclass: organizationalPerson
+objectclass: inetOrgPerson
+cn: 1
+sn: 1
+uid: 1
+userPassword: 1
+
+dn: uid=2,ou=people,dc=dsny,dc=nyc,dc=gov
+objectclass: top
+objectclass: person
+objectclass: organizationalPerson
+objectclass: inetOrgPerson
+cn: 2
+sn: 2
+uid: 2
+userPassword: 2
+
+dn: uid=3,ou=people,dc=dsny,dc=nyc,dc=gov
+objectclass: top
+objectclass: person
+objectclass: organizationalPerson
+objectclass: inetOrgPerson
+cn: 3
+sn: 3
+uid: 3
+userPassword: 3
+
+dn: uid=4,ou=people,dc=dsny,dc=nyc,dc=gov
+objectclass: top
+objectclass: person
+objectclass: organizationalPerson
+objectclass: inetOrgPerson
+cn: 4
+sn: 4
+uid: 4
+userPassword: 4
+
+dn: uid=5,ou=people,dc=dsny,dc=nyc,dc=gov
+objectclass: top
+objectclass: person
+objectclass: organizationalPerson
+objectclass: inetOrgPerson
+cn: 5
+sn: 5
+uid: 5
+userPassword: 5
+
+dn: uid=6,ou=people,dc=dsny,dc=nyc,dc=gov
+objectclass: top
+objectclass: person
+objectclass: organizationalPerson
+objectclass: inetOrgPerson
+cn: 6
+sn: 6
+uid: 6
+userPassword: 6
+
+dn: uid=7,ou=people,dc=dsny,dc=nyc,dc=gov
+objectclass: top
+objectclass: person
+objectclass: organizationalPerson
+objectclass: inetOrgPerson
+cn: 7
+sn: 7
+uid: 7
+userPassword: 7
+
+dn: uid=8,ou=people,dc=dsny,dc=nyc,dc=gov
+objectclass: top
+objectclass: person
+objectclass: organizationalPerson
+objectclass: inetOrgPerson
+cn: 8
+sn: 8
+uid: 8
+userPassword: 8
+
+dn: uid=9,ou=people,dc=dsny,dc=nyc,dc=gov
+objectclass: top
+objectclass: person
+objectclass: organizationalPerson
+objectclass: inetOrgPerson
+cn: 9
+sn: 9
+uid: 9
+userPassword: 9
+
+dn: uid=1@1.com,ou=people,dc=dsny,dc=nyc,dc=gov
+objectclass: top
+objectclass: person
+objectclass: organizationalPerson
+objectclass: inetOrgPerson
+cn: 1@1.com
+sn: 1@1.com
+uid: 1@1.com
+userPassword: 1
+
+dn: uid=10,ou=people,dc=dsny,dc=nyc,dc=gov
+objectclass: top
+objectclass: person
+objectclass: organizationalPerson
+objectclass: inetOrgPerson
+cn: 10
+sn: 10
+uid: 10
+userPassword: 10
+
+dn: cn=DSNYSMT_hq,ou=groups,dc=dsny,dc=nyc,dc=gov
+objectclass: top
+objectclass: groupOfNames
+cn: DSNYSMT_hq
+ou: hquser
+uniqueMember: uid=1,ou=people,dc=dsny,dc=nyc,dc=gov
+uniqueMember: uid=2,ou=people,dc=dsny,dc=nyc,dc=gov
+uniqueMember: uid=3,ou=people,dc=dsny,dc=nyc,dc=gov
+uniqueMember: uid=4,ou=people,dc=dsny,dc=nyc,dc=gov
+uniqueMember: uid=5,ou=people,dc=dsny,dc=nyc,dc=gov
+uniqueMember: uid=6,ou=people,dc=dsny,dc=nyc,dc=gov
+uniqueMember: uid=7,ou=people,dc=dsny,dc=nyc,dc=gov
+
+dn: cn=DSNYSMT_all_boros,ou=groups,dc=dsny,dc=nyc,dc=gov
+objectclass: top
+objectclass: groupOfNames
+cn: DSNYSMT_all_boros
+ou: allborouser
+uniqueMember: uid=8,ou=people,dc=dsny,dc=nyc,dc=gov
+
+dn: cn=DSNYSMT_boro_level,ou=groups,dc=dsny,dc=nyc,dc=gov
+objectclass: top
+objectclass: groupOfNames
+cn: DSNYSMT_boro_level
+ou: borouser
+uniqueMember: uid=9,ou=people,dc=dsny,dc=nyc,dc=gov
+
+dn: cn=DSNYSMT_district_level,ou=groups,dc=dsny,dc=nyc,dc=gov
+objectclass: top
+objectclass: groupOfNames
+cn: DSNYSMT_district_level
+ou: districtuser
+uniqueMember: uid=10,ou=people,dc=dsny,dc=nyc,dc=gov
+
+dn: cn=DSNYSMT_admins,ou=groups,dc=dsny,dc=nyc,dc=gov
+objectclass: top
+objectclass: groupOfNames
+cn: DSNYSMT_admins
+ou: adminuser
+uniqueMember: uid=admin,ou=people,dc=dsny,dc=nyc,dc=gov
+
+dn: cn=DSNYSMT_cache_admins,ou=groups,dc=dsny,dc=nyc,dc=gov
+objectclass: top
+objectclass: groupOfNames
+cn: DSNYSMT_cache_admins
+ou: cacheadminuser
+uniqueMember: uid=cacheadmin,ou=people,dc=dsny,dc=nyc,dc=gov
+

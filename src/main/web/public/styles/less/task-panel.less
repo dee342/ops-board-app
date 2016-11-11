@@ -1,0 +1,2761 @@
+@import "constants.less";
+@import "fonts.less";
+/*** Tasks Pane - Start ***/
+
+@district-col-width: 260px;
+@district-col-divider-width: 258px;
+
+@task-panel-category-header-background-color: #1d1e23;
+@task-panel-background-color: @pane-background-color;
+
+@available-bgcolor: #9a9899;
+@available-color: #32353c;
+@unavailable-bgcolor: #32353c;
+@unavailable-color: #d6d6d6;
+
+@partial-route-light: #32353c;
+
+@day-shift-color: #0dddff;
+@night-shift-color: #74c40d;
+@base-green: #74c40d;
+@supervision-color: #7F00FF;
+@cleaning-color: #FFFF00;
+@collection-color: #0f75ff;
+@recycling-color: #0f75ff;
+@snow-color: #E15A00;
+@erd-color: #FFFFFF;
+@sw-color: #ffffff;
+@suspended-color: #ff0000;
+
+
+@support-color: #ffffff;
+@surplus-color: #666666;
+@district-pink: #ff0a9b;
+@district-yellow-orange: #ff9900;
+@district-brown: #af5f32;
+@district-light-green: #99ff00;
+@district-light-blue: #33ccff;
+@district-green: #00af01;
+@district-red: #ff0c00;
+@district-light-yellow: #ffff99;
+@district-magneta: #ad12ba;
+@district-light-grey: #999999;
+@district-tan: #cc9966;
+@district-teal: #33cc99;
+@district-grey: #848484;
+@district-olive: #999933;
+@district-blue-violet: #8792de;
+@district-leaf-green: #519472;
+@district-rose: #ce4e48;
+@district-lavender: #e88eff;
+@group1_color: #E88EFF;
+@group2_color: #CE4E48;
+@group3_color: #519472;
+@group4_color: #8792DE;
+@group5_color: #999933;
+@group6_color: #848484;
+@group7_color: #33CC99;
+@group8_color: #CC9966;
+@group9_color: #999999;
+@group10_color: #AD12BA;
+@group11_color: #FFFF99;
+@group12_color: #FF0C00;
+@group13_color: #00AF01;
+@group14_color: #33CCFF;
+@group15_color: #99FF00;
+@group16_color: #AF5F32;
+@group17_color: #FF9900;
+@group18_color: #FF0A9B;
+@group-not-start-truck-background: #424348;
+@group-not-start-truck-color: #ffffff;
+
+@black-color: #000000;
+@white-color: #FFFFFF;
+@pink-color: #FF0A9B;
+@yellow-orange-color: #FF9900;
+@brown-color: #AF5F32;
+@light-green-color: #99FF00;
+@light-blue-color: #33CCFF;
+@green-color: #00AF01;
+@red-color: #FF0C00;
+@light-yellow-color: #FFFF99;
+@magenta-color: #AD128A;
+@light-grey-color: #999999;
+@tan-color: #CC9966;
+@teal-color: #33CC99;
+
+@grey-color: #848484;
+@olive-color: #999933;
+@blue-violet-color: #8792DE;
+@leaf-green-color: #519472;
+@rose-color: #CE4E48;
+@lavender-color: #E88EFF;
+
+@orange-color: #E15A00;
+@yellow-color: #FFFF00;
+@bright-blue-color: #0F75FF;
+
+@purple-color: #7F00FF;
+@salmon-color: #FF897F;
+
+@detached-color:#CCCCCC;
+@font-weight-bold: 600;
+
+.dnd-over {
+  border-color: @base-green !important;
+}
+.dnd-invalid {
+  border-color: red !important;
+}
+
+.dnd-drag-target {
+  opacity: .7;
+}
+
+.group1 {
+  color: @group1_color;
+}
+.group2 {
+  color: @group2_color;
+}
+.group3 {
+  color: @group3_color;
+}
+.group4 {
+  color: @group4_color;
+}
+.group5 {
+  color: @group5_color;
+}
+.group6 {
+  color: @group6_color;
+}
+.group7 {
+  color: @group7_color;
+}
+.group8 {
+  color: @group8_color;
+}
+.group9 {
+  color: @group9_color;
+}
+.group10 {
+  color: @group10_color;
+}
+.group11 {
+  color: @group11_color;
+}
+.group12 {
+  color: @group12_color;
+}
+.group13 {
+  color: @group13_color;
+}
+.group14 {
+  color: @group14_color;
+}
+.group15 {
+  color: @group15_color;
+}
+.group16 {
+  color: @group15_color;
+}
+.group17 {
+  color: @group15_color;
+}
+.group18 {
+  color: @group15_color;
+}
+
+.multi-routes-modal.modal{
+  .modal-header {
+    background-color: @partial-route-light;
+  }
+  button {
+    font-weight: 600;
+    font-size: 13px;
+    background-color: @partial-route-light;
+    color: #FFFFFF;
+    &.confirm {
+      background-color: #b9e973;
+      color: #000000;
+      &[disabled] {
+        color: #FFFFFF;
+      }
+    }
+  }
+  #modal.container-fluid .row {
+    padding: 5px;
+  }
+}
+
+#tasks {
+    width: 100%;
+    .dropdown-menu {
+      position: absolute;
+      margin-top: 20px;
+    }
+  }
+
+  #tasks > h4 {
+    left: 5px;
+    position: absolute;
+    top: 10px;
+  }
+
+  #tasks .tasks-container {
+     align-content: flex-start;    
+     bottom: 0;
+     display: flex;
+     flex-flow: nowrap;
+     left: 0;
+     overflow: auto;
+     padding: 0px;
+     position: absolute;
+     top: 0px;
+    width: 100%;
+    .delete {
+    /* Added all these importants just to make it easy to delete since it will be deleted */
+      color: #fe0000;
+      float: left;
+      font-size: 14px;
+      padding-right: 5px;
+      padding-top: 4px;
+      &:hover {
+        cursor: pointer;
+      }
+      margin-left: 0px !important;
+    }
+    .shift>.panel-heading .delete {
+      margin-left: 4px !important;
+    }
+    .section>.panel-heading .delete {
+      margin-left: 9px !important;
+    }
+    .location .location-header .delete {
+      color: black;
+      margin-left: 6px !important;
+      margin-top: 4px;
+    }
+    .task .delete {
+      margin-left: 22px !important;
+    }
+
+     .flexbox.flex {
+        &.shift:not(:first-child) {
+          margin-left: -2px !important;
+        }
+        &.location {
+          margin-left: 21px;
+        }
+        .panel-title {
+          font-size: 14px;
+          font-weight: 600px;
+        }
+        display: table;
+        margin-right: 10px;
+        border-radius: 0px;
+        border: none;
+        .panel .panel-heading {
+          background-color: @task-panel-category-header-background-color;
+          color: @panel-text-color;
+        }  
+        .panel-heading {
+          border-radius: 0px;
+          border: 1px solid;
+          border-bottom: 0px;
+        }
+        .panel .panel-body,
+        .panel-default .panel-body{
+          background-color: @task-panel-background-color;
+          color: @panel-text-color;
+          margin-left: -26px;
+          margin-right: -17px;
+          border-radius: 0px; 
+          border: none;
+        }
+        >.row {
+          .location-header {
+
+            line-height: 30px;
+            font-size: 14px;
+            font-weight: 600;
+            background-color: @task-panel-category-header-background-color;
+            .BKN01, .BX01, .MN01, .QW01, .SI01 {
+              background-color: @district-pink;
+            }
+            .BKN02, .BX02, .MN02, .QW02, .SI02 {
+              background-color: @district-yellow-orange;
+            }
+            .BKN03, .BX03, .BX03A, .MN03, .MN03A, .QW03, .SI03 {
+              background-color: @district-brown;
+            }
+            .BKN04, .BX04, .MN04, .MN04A, .QW04 {
+              background-color: @district-light-green;
+            }
+            .BKN05, .BX05, .MN05, .QW05, .QW05A {
+              background-color: @district-light-blue;
+            }
+            .BX06, .BX06A, .BKS06, .BKS06A, .MN06, .QW06 {
+              background-color: @district-green;
+            }
+            .BX07, .BKS07, .MN07, .QE07 {
+              background-color: @district-red;
+            }
+            .BKN08, .BX08, .MN08, .QE08 {
+              background-color: @district-light-yellow;
+              color: @pane-background-color;
+            }
+            .BKN09, .BX09, .MN09, .QW09 {
+              background-color: @district-magneta;
+            }
+            .BX10, .BKS10, .MN10, .QE10 {
+              background-color: @district-light-grey;
+            }
+            .BX11, .BKS11, .MN11, .MN11A, .QE11, .QE11A {
+              background-color: @district-tan;
+            }
+            .BX12, .BKS12, .MN12, .QE12 {
+              background-color: @district-teal;
+            }
+            .BX13, .BKS13, .MN13, .QE13, .QE13W {
+              background-color: @district-grey;
+            }
+            .BX14, .BKS14, .MN14, .QE14 {
+              background-color: @district-olive;
+            }
+            .BX15, .BKS15, .MN15 {
+              background-color: @district-blue-violet;
+            }
+            .BKN16, .BX16, .MN16 {
+              background-color: @district-leaf-green;
+            }
+            .BKN17, .BX17, .MN17 {
+              background-color: @district-rose;
+            }
+            .BX18, .BKS18, .MN18 {
+              background-color: @district-lavender;
+            }
+          }
+        }
+        .row .tasks {
+          .panel-group {
+            display: flex;
+            display: -webkit-box;
+            display: -moz-box;
+            display: -o-flexbox;
+            display: -webkit-flex;
+            .panel {
+              min-width: 430px;
+              margin-top: 5px;
+              margin-left: 10px;
+              &.shift {
+                &.day >.panel-heading {
+                  border-color: @day-shift-color;
+                  color: @day-shift-color;
+                }
+                &.night >.panel-heading {
+                  border-color: @night-shift-color;
+                  color: @night-shift-color;
+                }
+                .panel-heading {
+                  padding: 3px 0px;
+                  border-bottom-style: solid;
+                  border-bottom-width: 1px;
+                  .panel-title {
+                    font-weight: 600;
+                    font-size: 13px;
+                    i {
+                      margin-left: 10px;
+                    }
+                    .fa-compress {
+                      float: right;
+                      padding-right: 5px;
+                      padding-top: 4px;
+                    }
+                  }
+                }
+                .category {
+                  .panel-group {
+                    display: block;
+                    margin-top: -14px;
+                    font-size: 12px;
+                    .panel-title {
+                      text-align: left;
+                      margin-left: 5px;
+                    }
+                    .supervision >.panel {
+                      border-top-color: @supervision-color;
+                      border-left-color: @supervision-color;
+                      >.panel-heading {
+                        color: @supervision-color;
+                      }
+                      &:before {
+                        content: '';
+                        border-top: 20px solid @supervision-color;;
+                        border-left: 25px solid transparent;
+                        position: absolute;
+                        right: 0px;
+                        margin-top: -1px;
+                      }
+                    }
+                    .cleaning >.panel {
+                      border-top-color: @cleaning-color;
+                      border-left-color: @cleaning-color;
+                      >.panel-heading {
+                        color: @cleaning-color;
+                      }
+                      &:before {
+                        content: '';
+                        border-top: 20px solid @cleaning-color;;
+                        border-left: 25px solid transparent;
+                        position: absolute;
+                        right: 0px;
+                        margin-top: -1px;
+                      }
+                    }
+                    .collection >.panel {
+                      border-top-color: @collection-color;
+                      border-left-color: @collection-color;
+                      >.panel-heading {
+                        color: @collection-color;
+                      }
+                      &:before {
+                        content: '';
+                        border-top: 20px solid @collection-color;;
+                        border-left: 25px solid transparent;
+                        position: absolute;
+                        right: 0px;
+                        margin-top: -1px;
+                      }
+                    }
+                    .recycling >.panel {
+                      border-top-color: @recycling-color;
+                      border-left-color: @recycling-color;
+                      >.panel-heading {
+                        color: @recycling-color;
+                      }
+                      &:before {
+                        content: '';
+                        border-top: 20px solid @recycling-color;;
+                        border-left: 25px solid transparent;
+                        position: absolute;
+                        right: 0px;
+                        margin-top: -1px;
+                      }
+                    }
+                    .snow >.panel {
+                      border-top-color: @snow-color;
+                      border-left-color: @snow-color;
+                      >.panel-heading {
+                        color: @snow-color;
+                      }
+                      &:before {
+                        content: '';
+                        border-top: 20px solid @snow-color;;
+                        border-left: 25px solid transparent;
+                        position: absolute;
+                        right: 0px;
+                        margin-top: -1px;
+                      }
+                    }
+                    .erd >.panel {
+                      border-top-color: @erd-color;
+                      border-left-color: @erd-color;
+                      >.panel-heading {
+                        color: @erd-color;
+                      }
+                      &:before {
+                        content: '';
+                        border-top: 20px solid @erd-color;;
+                        border-left: 25px solid transparent;
+                        position: absolute;
+                        right: 0px;
+                        margin-top: -1px;
+                      }
+                    }
+                    .support >.panel{
+                      border-top-color: @support-color;
+                      border-left-color: @support-color;
+                      >.panel-heading {
+                        color: @support-color;
+                      }
+                      &:before {
+                        content: '';
+                        border-top: 20px solid @support-color;;
+                        border-left: 25px solid transparent;
+                        position: absolute;
+                        right: 0px;
+                        margin-top: -1px;
+                      }
+                    }
+                    .surplus >.panel {
+                      border-top-color: @surplus-color;
+                      border-left-color: @surplus-color;
+                      >.panel-heading {
+                        color: @surplus-color;
+                      }
+                      &:before {
+                        content: '';
+                        border-top: 20px solid @surplus-color;
+                        border-left: 25px solid transparent;
+                        position: absolute;
+                        right: 0px;
+                        margin-top: -1px;
+                      }
+                    }
+                    .panel {
+                      border-radius: 0px;
+                      border-bottom-color: @task-panel-category-header-background-color;
+                      border-bottom-width: 1px;
+                      border-right-color: @task-panel-category-header-background-color;
+                      border-right-width: 2px;
+                      .panel-heading {
+                        border-top-width: 0px;
+                        border-left-width: 0px;
+                        border-right-width: 0px;
+                        border-bottom: 0px;
+                      }
+                      .panel-body {
+                        border-right-width: 0px;
+                        border-right-style: solid;
+                        margin-right: 0px;
+                        padding-bottom: 5px;
+                        .subcategory {
+                          .panel-group {
+                            margin-bottom: 0px;
+                            .panel {
+                              border-top: 0px;
+                              border-bottom: 0px;
+                              margin-top: 0px;
+                              .panel-heading {
+                                background-color: @panel-header-background-color;
+                                border-bottom: 0px;
+                                height: 24px;
+                                margin-top: -3px;
+                                .supervisor {
+                                  border: 1px dotted @drop-target-color;
+                                  background-color: @supervisor-bg-color;
+                                  color: @supervisor-color;
+                                  height: 19px;
+                                  margin-top: 1px;
+                                  width: 40px;
+                                  text-alogn: center;
+                                  line-height: 12px;
+                                  padding-left: 4px;
+                                  font-size: 11px;
+                                  font-weight: 400;
+                                  height: 18px;
+                                  float: right;
+                                  margin-right: 5px;
+                                  &.noLabel {
+                                    background-color: transparent;
+                                  }
+                                }
+                                .panel-title {
+                                  margin-left: -4px;
+                                  font-size: 12px;
+                                  
+                                  .section1 i {
+                                    color: @section1-bg-color;
+                                  }
+                                  .section2 i {
+                                    color: @section2-bg-color;
+                                  }
+                                  .section3 i {
+                                    color: @section3-bg-color;
+                                  }
+                                  .section4 i {
+                                    color: @section4-bg-color;
+                                  }
+                                  .section5 i {
+                                    color: @section5-bg-color;
+                                  }
+                                  .section6 i {
+                                    color: @section6-bg-color;
+                                  }
+                                  .section7 i {
+                                    color: @section7-bg-color;
+                                  }
+                                  .section8 i {
+                                    color: @section8-bg-color;
+                                  }
+                                  .garage i {
+                                    color: @garage-bg-color;
+                                  }
+                                }
+                              }
+                            }
+                          }
+                          &.hasSections {
+                            >.panel-group {
+                              margin-top: -21px;
+                              margin-bottom: -6px;
+                              margin-right: -17px;
+                            }
+                          }
+                          .task {
+                            font-size: 11px;
+                            .task-name {
+                              margin-top: 4px;
+                              .start {
+                                width: 100%;
+                                float: left;
+                              }
+                              .partial {
+                                margin-left: -14px;
+                              }
+                              .partial.taskOpen {
+                                margin-left: 0px;
+                              }
+                              .partialTaskLabel.taskOpen {
+                                margin-left: 20px;
+                              }
+                              .partialTaskLabel {
+                                margin-left: 0px;
+                              }
+                              &:hover {
+                                cursor: pointer;
+                              }
+                            }
+                            .taskDesc {
+                              height: 20px;
+                              margin-top: 4px;
+                            }
+                            .edit-mode {
+                              width: 80px;
+                              margin-left: 24px;
+                              margin-right: 10px;
+                              font-size: 11px;
+                              padding: 0px;
+                              text-align: center;
+                            }
+                            .equipment, .person{
+                              border: 1px dotted @drop-target-color;
+                              color: @drop-target-color;
+                              height: 25px;
+                              margin-top: 3px;
+                              overflow: hidden;
+                              width: 88px;
+                              padding-top: 0px;
+                              line-height:21px;
+                              &.supervisor {
+                                width: 40px;
+                                line-height: 15px;
+                                height: 18px;
+                                margin-top: 7px;
+                                float: right;
+                                margin-right: 20px;
+                              }
+                            }
+                            .equipment {
+                              &.assigned.group.notHead {
+                                opacity: .5;
+                                //background-color: @group-not-start-truck-background;
+                                //color: @group-not-start-truck-color;
+                              }
+                              &.assigned.cleaning {
+                                background-color: @cleaning-bg-color;
+                                color: @cleaning-text-color;
+                              }
+                             &.assigned.cleaning.loadupdate {
+                                background-color: @load-update-bg-color;
+                                color: @white-text-color;
+                              }
+                              &.assigned.cleaning.snowupdate {
+                                 background-color: @snow-bg-color;
+                                 color: @snow-text-color;
+                              }
+                              &.assigned.collection {
+                                background-color: @collection-bg-color;
+                                color: @collection-text-color;
+                              }
+                              &.assigned.collection.hoist-fitted-chassis {
+                                background-color: @miscellaneous-bg-color;
+                                color: @miscellaneous-text-color;
+                              }
+                              &.assigned.collection.dualbins {
+                                background-color: @dual-bin-bg-color;
+                                color: @collection-text-color;                              
+                              }
+                              
+                              &.assigned.collection.dualbins.loadupdate {
+                                background-color: @load-update-bg-color;
+                                color: @white-text-color;
+                              }
+                              &.assigned.collection.dualbins.snowupdate {
+                                 background-color: @snow-bg-color;
+                                 color: @snow-text-color;
+                              }
+                              &.assigned.collection.loadupdate {
+                                background-color: @load-update-bg-color;
+                                color: @white-text-color;
+                              }
+                              &.assigned.collection.snowupdate {
+                                 background-color: @snow-bg-color;
+                                 color: @snow-text-color;
+                              }
+                              &.assigned.miscellaneous {
+                                background-color: @miscellaneous-bg-color;
+                                color: @miscellaneous-text-color;
+                              }
+                              &.assigned.miscellaneous.loadupdate {
+                                background-color: @load-update-bg-color;
+                                color: @white-text-color;
+                              }
+                               &.assigned.miscellaneous.snowupdate {
+                                background-color: @snow-bg-color;
+                                 color: @snow-text-color;
+                              }
+                              &.assigned.snow {
+                                background-color: @snow-bg-color;
+                                color: @snow-text-color;
+                              }
+                              &.assigned.snow.loadupdate {
+                                background-color: @load-update-bg-color;
+                                color: @white-text-color;
+                              }
+                            }
+                            .person {
+                              &.noDrag {
+                                cursor: default;
+                              }
+                              &.assigned.noLabel{
+                                background-color: transparent !important;
+                              }
+                              margin-left: 5px;
+                              &.assigned.salmon {
+                                background-color: @salmon-color;
+                                color: #fff;
+                              }
+                          
+                              &.assigned.s1 {
+                                background-color: @section1-bg-color;
+                                color: @section1-color;
+                              }
+                          
+                              &.assigned.s2 {
+                                background-color: @section2-bg-color;
+                                color: @section2-color;
+                              }
+                          
+                              &.assigned.s3 {
+                                background-color: @section3-bg-color;
+                                color: @section3-color;
+                              }
+                          
+                              &.assigned.s4 {
+                                background-color: @section4-bg-color;
+                                color: @section4-color;
+                              }
+                          
+                              &.assigned.s5 {
+                                background-color: @section5-bg-color;
+                                color: @section5-color;
+                              }
+
+                              &.assigned.s6 {
+                                background-color: @section6-bg-color;
+                                color: @section6-color;
+                              }
+
+                              &.assigned.s7 {
+                                background-color: @section7-bg-color;
+                                color: @section7-color;
+                              }
+
+                              &.assigned.s8 {
+                                background-color: @section8-bg-color;
+                                color: @section8-color;
+                              }
+
+                              &.assigned.g {
+                                background-color: @garage-bg-color;
+                                color: @garage-color;
+                              }
+
+                              &.assigned.group.notHead {
+                                opacity: .5;
+                                //background-color: @group-not-start-truck-background;
+                                //color: @group-not-start-truck-color;
+                              }
+                               &.assigned.group.detached {
+                                opacity: .5;
+                                //background-color: @group-not-start-truck-background !important;
+                                //color: @group-not-start-truck-color !important;
+                              }      
+                               &.assigned.detached {
+                                background-color: @group-not-start-truck-background !important;
+                                color: @group-not-start-truck-color !important;
+                              }                       
+                              &.assigned.sup {
+                                background-color: @supervisor-bg-color;
+                                color: @supervisor-color;
+                              }
+
+                              &.assigned.civilian {
+                                background-color: @supervisor-bg-color;
+                                color: @supervisor-color;
+                              }
+
+                              &.assigned.gsI {
+                                background-color: @gsI-bg-color;
+                                color: @gsI-color;
+                              }
+
+                              &.assigned.gsII {
+                                background-color: @gsII-bg-color;
+                                color: @gsII-color;
+                              }
+
+                              &.assigned.gsIII {
+                                background-color: @gsIII-bg-color;
+                                color: @gsIII-color;
+                              }
+                              
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+     }
+  }
+
+.personnelTitle {
+
+  & .M {
+    color: @white-color;
+  }
+
+  & .D, .sup, .GS, .Supervision{
+    color: @supervision-color;
+  }
+
+  &  .DSOA, .DET {
+    color: @detached-color;
+  }
+
+  & .GG, .Support {
+    color: @white-color;
+  }
+
+  & .baskets, .MLP, .Cleaning {
+    color: @yellow-color;
+  }
+
+  &  .UA, .sw {
+    color: @white-color;
+  }
+
+  & .COL {
+    color: @bright-blue-color;
+  }
+
+  & .Snow, .civilian {
+    color: @orange-color;
+  }
+
+  & .G, .garage {
+    color: @white-color;
+  }
+
+  & .S1 {
+    color: @pink-color;
+  }
+
+  & .S2 {
+    color: @yellow-orange-color;
+  }
+
+  & .S3 {
+    color: @brown-color;
+  }
+
+  & .S4 {
+    color: @light-green-color;
+  }
+
+  & .S5 {
+    color: @light-blue-color;
+  }
+
+  & .S6 {
+    color: @green-color;
+  }
+
+  & .S7 {
+    color: @red-color;
+  }
+
+  & .S8 {
+    color: @light-yellow-color;
+  }
+  & .S9 {
+    color: @magenta-color;
+  }
+
+  & .S10 {
+    color: @light-grey-color;
+  }
+
+  & .S11 {
+    color: @tan-color;
+  }
+
+  & .S12 {
+    color: @teal-color;
+  }
+
+  & .S13 {
+    color: @grey-color;
+  }
+
+  & .S14 {
+    color: @olive-color;
+  }
+
+  & .S15 {
+    color: @blue-violet-color;
+  }
+
+  & .S16 {
+    color: @leaf-green-color;
+  }
+
+  & .S17 {
+    color: @rose-color;
+  }
+
+  & .S18 {
+    color: @lavender-color;
+  }
+
+  & .gsI {
+    color: @gsI-bg-color;
+  }
+
+  & .gsII {
+    color: @gsII-bg-color;
+  }
+
+  & .gsIII {
+    color: @gsIII-bg-color;
+  }
+
+}
+
+.edit-task-modal {
+  font-size: 14px;
+
+  > .modal-body {
+    //padding-bottom: 0px;
+  }
+}
+
+.edit-task-label {
+    font-size: 14px;
+    color: #9A9898;
+    margin-right: 6px;
+  }
+
+  .modal-header
+    & h4 {
+    font-size: 18px;
+  font-weight: @font-weight-bold;
+    padding: 2px 0px 0px;
+  }
+
+.norowpadding {
+  padding: 4px 0px;
+}
+
+.textwhite {
+  color:#fff;
+}
+
+.squaremarker {
+  margin: 5px 6px 0px 6px;
+  width: 13px;
+  height: 13px;
+  float: right;
+  background-color: @section1-bg-color;
+}
+
+.sectionname {
+  float: right;
+}
+
+.edit-task-task-name-div {
+  padding-top: 26px
+}
+
+.edit-task-label-right {
+  margin-top: 6px;
+  float:left;
+  margin-right: 6px;
+}
+
+.edit-task-label-time {
+  margin-top: 29px;
+  float:left;
+  margin-right: 6px;
+}
+
+.edit-task-name {
+  float:left;
+  width: 132px;
+  text-align: center;
+}
+
+.edit-task-label-comment {
+  margin-top: 6px;
+  float:left;
+  margin-right: 27px;
+}
+
+.edit-task-comment {
+  float:left;
+  width: 762px;
+}
+
+
+.edit-task-multiroute-label {
+  margin-top: 0px;
+  float:left;
+  margin-right: 13px;
+}
+
+.edit-task-multiroute {
+  float:left;
+  width: 754px;
+}
+
+.clear {
+  clear: both;
+  margin: 0px;
+  padding: 0px;
+  height: 0px;
+}
+
+.edit-task-label-supervisors {
+  float: left;
+  width: 85px;
+}
+
+.edit-task-supervisors {
+  text-align: left;
+  font-size: 14px;
+  color: #ffffff;
+  margin-left: 100px;
+}
+
+.comment-row {
+  margin-top: 10px;
+}
+
+.new-code {
+  margin-top: 0px;
+  padding: 1px;
+}
+
+.details-row {
+  margin-top: 13px;
+  border: 1px solid #5e5f63;
+  padding: 20px 10px;
+  border-radius: 4px;
+}
+
+.Collection {
+  background-color: @collection-color;
+}
+
+.Collection {
+  background-color: @collection-color;
+}
+
+.Snow {
+  color: @black-color;
+  background-color: @snow-color;
+}
+
+.Cleaning {
+  color: @black-color;
+  background-color: @cleaning-color;
+}
+
+.Miscellaneous {
+  color: @black-color;
+  background-color: @white-color;
+}
+
+.edit-task-equipment {
+  min-width: 108px;
+  border-radius: 2px;
+  text-align: center;
+  padding: 2px 8px;
+  font-size: 11px;
+}
+
+.edit-task-personnel {
+  min-width: 108px;
+  border-radius: 2px;
+  text-align: center;
+  padding: 2px 8px;
+  font-size: 11px;
+  margin-right: 5px;
+}
+
+.edit-task-personnel, .editTaskSection {
+
+  &.D {
+    background-color: @supervision-color;
+  }
+
+  &.G {
+    background-color: @white-color;
+    color: @black-color;
+  }
+
+  &.S1 {
+    background-color: @pink-color;
+  }
+
+  &.S2 {
+    background-color: @yellow-orange-color;
+    color: @black-color;
+  }
+
+  &.S3 {
+    background-color: @brown-color;
+  }
+
+  &.S4 {
+    background-color: @light-green-color;
+    color: @black-color;
+  }
+
+  &.S5 {
+    background-color: @light-blue-color;
+    color: @black-color;
+  }
+
+  &.S6 {
+    background-color: @green-color;
+  }
+
+  &.S7 {
+    background-color: @red-color;
+  }
+
+  &.S8 {
+    background-color: @light-yellow-color;
+    color: @black-color;
+  }
+
+  &.S9 {
+    background-color: @magenta-color;
+  }
+
+  &.S10 {
+    background-color: @light-grey-color;
+    color: @black-color;
+  }
+
+  &.S11 {
+    background-color: @tan-color;
+  }
+
+  &.S12 {
+    background-color: @teal-color;
+  }
+
+  &.S13 {
+    background-color: @grey-color;
+  }
+
+  &.S14 {
+    background-color: @olive-color;
+  }
+
+  &.S15 {
+    background-color: @blue-violet-color;
+  }
+
+  &.S16 {
+    background-color: @leaf-green-color;
+  }
+
+  &.S17 {
+    background-color: @rose-color;
+  }
+
+  &.S18 {
+    background-color: @lavender-color;
+    color: @black-color;
+  }
+}
+
+.overtime {
+  font-size: 11px;
+  color: #fe0000;
+}
+
+.nextday {
+  font-size: 11px;
+  color: #fff;
+}
+
+.diversion {
+  font-size: 11px;
+  color: #0dddff;
+}
+
+/*.iconsleftMargin {
+  margin-left: 4px;
+  height: 10px;
+}*/
+
+.aligncenter {
+  text-align: center;
+}
+
+.btn-modal {
+  border: 1px solid #32353c;
+  background-color: #32353c;
+  color: @white-color;
+  &:hover {
+    border: 1px solid #32353c;
+    background-color: #5e5f63;
+    color: @white-color;
+  }
+}
+
+.btn-primary-modal {
+  border: 1px solid @base-green !important;
+  background-color: @base-green !important;
+  color: @black-color !important;
+  &:hover {
+    border: 1px solid #8bf404;
+    background-color: #8bf404;
+    color: @black-color;
+  }
+}
+
+.modal-processing-edit-task {
+  padding-bottom:40px;
+}
+
+.blur {
+  -webkit-filter: blur(7px);
+  -moz-filter: blur(7px);
+  -o-filter: blur(7px);
+  -ms-filter: blur(7px);
+  filter: blur(7px);
+}
+.modal-open #board{
+  -webkit-filter: blur(0px);
+  -moz-filter: blur(0px);
+  -o-filter: blur(0px);
+  -ms-filter: blur(0px);
+  filter: blur(0px);
+}
+.modal-backdrop.in {
+  background-color: #4A4A4A;
+}
+
+.modal-tiny {
+  padding: 0px;
+  background-color: @black-color;
+  width: 407px;
+
+  & > .modal-content {
+    border: 0px;
+    background-color: @black-color;
+    padding: 0px;
+  }
+
+  & .modal-header-override {
+    padding: 10px 14px 0px;
+    color: @white-color;
+    height: 45px;
+  }
+
+  & .modal-body-override {
+    color: @white-color;
+    padding: 40px 26px 0px;
+  }
+
+  & .modal-footer-override {
+    padding-top: 14px;
+  }
+
+  & .modal-embedded-errors {
+    padding-top: 0px;
+    margin-bottom: 24px;
+    & ul {
+      margin-left: 0px;
+      padding-left: 14px;
+    }
+  }
+
+  & .radiolabel {
+    color: @white-color !important;
+    font-size: 15px;
+    font-weight: normal;
+    cursor: pointer;
+    padding-top: 0px;
+    float: left;
+    width: 100px;
+  }
+
+  & .radioinput {
+    float: left;
+    width: 20px;
+
+  }
+
+  & .radiodiv {
+    width: 150px;
+  }
+
+  & .asnradio {
+    margin-bottom: 13px;
+  }
+
+  & .modal-body label {
+    color: #fff;
+  }
+
+  & .clear {
+    clear: left;
+    height: 0px;
+  }
+
+}
+
+.multiroute-row > .norowpadding {
+  margin-top: 9px;
+}
+
+.edit-task-multiroute {
+
+  & .highlight {
+    background-color: #424348;
+
+  }
+
+  & .clear {
+    clear: both;
+  }
+
+  & .marker {
+    float: left;
+    padding-top: 2px;
+    width: 19px;
+    display: block;
+    height: 24px;
+    & .fa-custom {
+      font-size: 21px;
+    }
+  }
+
+  & .segmentRow {
+
+    float: left;
+
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+    padding: 3px 7px;
+    margin-bottom: 8px;
+
+    //width: 379px;
+
+    & .number {
+      float: left;
+      width: 25px;
+    }
+
+    & .description {
+      float: left;
+      width: 286px;
+    }
+
+    & .fraction {
+      float: left;
+      width: 25px;
+    }
+
+    & .hours {
+      float: left;
+      width: 38px;
+    }
+  }
+}
+
+// BEGIN NEW TASK PANEL CSS
+
+@item-height: 35px;
+
+.scroller {
+  min-width: 100px;
+  overflow: hidden;
+  position: relative;
+  & .scrollerpaddingtasks {
+    padding-right: 5px;
+    width: 100px;
+
+    & .location {
+      float: left;
+      & .headingdiv {
+        padding: 0px 34px 8px 10px;
+      }
+
+      & .locationtitle {
+        font-weight: 600;
+        min-width: 430px;
+        width: 100%;
+        height: 31px;
+        border: 0px;
+        padding: 6px 0px 0px;
+        text-align: center;
+        background-color: @task-panel-category-header-background-color;
+        color: @white-color;
+        &.BKN01, &.BX01, &.MN01, &.QW01, &.SI01 {
+          background-color: @district-pink;
+        }
+        &.BKN02, &.BX02, &.MN02, &.QW02, &.SI02 {
+          background-color: @district-yellow-orange;
+          color: @black-color;
+        }
+        &.BKN03, &.BX03, &.BX03A, &.MN03, &.MN03A, &.QW03, &.SI03 {
+          background-color: @district-brown;
+        }
+        &.BKN04, &.BX04, &.MN04, &.MN04A, &.QW04 {
+          background-color: @district-light-green;
+          color: @black-color;
+        }
+        &.BKN05, &.BX05, &.MN05, &.QW05, &.QW05A {
+          background-color: @district-light-blue;
+          color: @black-color;
+        }
+        &.BX06, &.BX06A, &.BKS06, &.BKS06A, &.MN06, &.QW06 {
+          background-color: @district-green;
+          color: @black-color;
+        }
+        &.BX07, &.BKS07, &.MN07, &.QE07, &.QNA, &.QE07A {
+          background-color: @district-red;
+        }
+        &.BKN08, &.BX08, &.MN08, &.QE08 {
+          background-color: @district-light-yellow;
+          color: @black-color;
+        }
+        &.BKN09, &.BX09, &.MN09, &.QW09 {
+          background-color: @district-magneta;
+        }
+        &.BX10, &.BKS10, &.MN10, &.QE10 {
+          background-color: @district-light-grey;
+          color: @black-color;
+        }
+        &.BX11, &.BKS11, &.MN11, &.MN11A, &.QE11, &.QE11A {
+          background-color: @district-tan;
+          color: @black-color;
+        }
+        &.BX12, &.BKS12, &.MN12, &.QE12 {
+          background-color: @district-teal;
+          color: @black-color;
+        }
+        &.BX13, &.BKS13, &.MN13, &.QE13, &.QE13W {
+          background-color: @district-grey;
+        }
+        &.BX14, &.BKS14, &.MN14, &.QE14 {
+          background-color: @district-olive;
+        }
+        &.BX15, &.BKS15, &.MN15 {
+          background-color: @district-blue-violet;
+          color: @black-color;
+        }
+        &.BKN16, &.BX16, &.MN16 {
+          background-color: @district-leaf-green;
+        }
+        &.BKN17, &.BX17, &.MN17 {
+          background-color: @district-rose;
+        }
+        &.BX18, &.BKS18, &.MN18 {
+          background-color: @district-lavender;
+          color: @black-color;
+        }
+      }
+
+    }
+
+    & .items {
+      padding: 0px 5px 15px 5px;
+    }
+
+    .items {
+
+      .col-d {
+        width: @district-col-width;
+        float: left;
+        &.colpadding {
+          margin-left: 10px;
+        }
+      }
+
+      & .col {
+        width: 464px;
+        float: left;
+      }
+
+      & .col-narrow {
+        width: 430px;
+        float: left;
+      }
+
+      & .item {
+
+        float: left;
+
+        & .lasttask {
+          border-top: 0px;
+          height: 8px;
+        }
+
+        &.item-narrow {
+          width: 448px;
+          color: #fff;
+        }
+
+        &.item-wide {
+          width: 457px;
+          color: #fff;
+        }
+        .errorcol {
+          float: left;
+          width: 17px;
+
+          .delete {
+            padding: 9px 0px 0px 5px;
+            color: #fe0000;
+            font-size: 14px;
+            &:hover {
+              cursor: pointer;
+            }
+            &.disabled {
+              cursor: not-allowed !important;
+              color: #666;
+            }
+          }
+
+          .deletetask {
+            padding: 14px 0px 0px 5px;
+            color: #fe0000;
+            font-size: 14px;
+            &:hover {
+              cursor: pointer;
+            }
+            &.disabled {
+              cursor: not-allowed !important;
+              color: #666;
+            }
+          }
+        }
+        .shift {
+          float: left;
+          width: 430px;
+          height: 31px;
+          border: 1px solid;
+          margin: 0px 0px 8px !important;
+          padding: 6px 0px 0px;
+          text-align: center;
+          font-weight: 800;
+          font-size: 14px;
+
+
+          &.heading {
+            background-color:  @task-panel-category-header-background-color;
+          }
+
+          &.day {
+            border-color: @day-shift-color;
+            background-color: @day-shift-color;
+            color: @black-color;
+          }
+
+          &.night  {
+            border-color: @night-shift-color;
+            background-color: @night-shift-color;
+            color: @black-color;
+          }
+        }
+
+        .category {
+          float: left;
+          width: 430px;
+          font-weight: 600;
+          height: 31px;
+          border-top: 1px solid;
+          border-left: 1px solid;
+          margin: 0px;
+          padding: 0px 0px 0px;
+
+          .title {
+            float: right;
+            padding: 6px 5px 0px;
+            width: 414px;
+            text-align: center;
+            &.title-d {
+              float: right;
+              padding: 6px 5px 0px;
+              width: 244px;
+              text-align: center;
+            }
+          }  
+
+          &.heading {
+            background-color: @task-panel-category-header-background-color;
+          }
+
+          & .triangle {
+            float: left;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 14px 14px 0 0;
+          }
+          
+          &.supervision {
+            border-top-color: @supervision-color;
+            border-left-color: @supervision-color;
+            color: @supervision-color;
+            & .triangle {
+              border-color: @supervision-color transparent transparent transparent;
+            }
+          }
+          &.cleaning {
+            border-top-color: @cleaning-color;
+            border-left-color: @cleaning-color;
+            color: @cleaning-color;
+            & .triangle {
+              border-color: @cleaning-color transparent transparent transparent;
+            }
+          }
+          &.collection {
+            border-top-color: @collection-color;
+            border-left-color: @collection-color;
+            color: @collection-color;
+            & .triangle {
+              border-color: @collection-color transparent transparent transparent;
+            }
+          }
+          &.recycling {
+            border-top-color: @recycling-color;
+            border-left-color: @recycling-color;
+            color: @recycling-color;
+            & .triangle {
+              border-color: @recycling-color transparent transparent transparent;
+            }
+          }
+          &.snow {
+            border-top-color: @snow-color;
+            border-left-color: @snow-color;
+            color: @snow-color;
+            & .triangle {
+              border-color: @snow-color transparent transparent transparent;
+            }
+          }
+          &.erd {
+            border-top-color: @erd-color;
+            border-left-color: @erd-color;
+            color: @erd-color;
+            & .triangle {
+              border-color: @erd-color transparent transparent transparent;
+            }
+          }
+          &.support {
+            border-top-color: @support-color;
+            border-left-color: @support-color;
+            color: @support-color;
+            & .triangle {
+              border-color: @support-color transparent transparent transparent;
+            }
+          }
+          &.surplus {
+            border-top-color: @surplus-color;
+            border-left-color: @surplus-color;
+            color: @surplus-color;
+            & .triangle {
+              border-color: @surplus-color transparent transparent transparent;
+            }
+          }
+          
+          & .supervisor {
+            float: right;
+            margin-right: 4px;
+          }
+          
+          & .subcategory-sm-subcategory {
+            color: #535664;
+            margin-right: 13px;
+            margin-top: -16px;
+            font-size: 11px;
+            text-align: center;
+            padding: 1px 0px 0px;
+            border: 1px dashed #535664;
+            border-radius: 2px;
+            width: 40px;
+            display: inline-block;
+            height: 18px;
+          }
+          
+          & .assigned.sup {
+            border-style: none;
+            background-color: @supervisor-bg-color;
+            color: @supervisor-color;
+          }
+        }
+        .section {
+          float: left;
+          width: 430px;
+          height: 36px;
+          border-left: 1px solid;
+          border-right: 1px solid @drop-target-color;
+
+          & .assigned.sup {
+            border-style: none;
+            background-color: @supervisor-bg-color;
+            color: @supervisor-color;
+          }
+
+          .empty {
+            color: #535664;
+          }
+
+          & .sectiontitle {
+            margin-left: 5px;
+            float: left;
+          }
+
+          & .supervisor {
+            float: right;
+            margin-right: 4px;
+          }
+
+          & .section-sm-col {
+            text-align: center;
+            padding: 2px;
+            border: 1px dotted @drop-target-color;
+            width: 41px;
+            display: inline-block;
+            height: 18px;
+          }
+
+          & .section-sm-section {
+            margin-right: 13px;
+            font-size: 11px;
+            text-align: center;
+            padding: 1px 0px 0px;
+            border: 1px dashed #535664;
+            border-radius: 2px;
+            width: 40px;
+            display: inline-block;
+            height: 18px;
+          }
+
+          &.heading {
+            padding-top: 4px;
+            height: 25px;
+            background-color: @panel-header-background-color;
+            color: @panel-text-color;
+            font-size: 12px;
+
+            .section1 i {
+              color: @section1-bg-color;
+            }
+            .section2 i {
+              color: @section2-bg-color;
+            }
+            .section3 i {
+              color: @section3-bg-color;
+            }
+            .section4 i {
+              color: @section4-bg-color;
+            }
+            .section5 i {
+              color: @section5-bg-color;
+            }
+            .section6 i {
+              color: @section6-bg-color;
+            }
+            .section7 i {
+              color: @section7-bg-color;
+            }
+            .section8 i {
+              color: @section8-bg-color;
+            }
+            .garage i {
+              color: @garage-bg-color;
+            }
+
+          }
+
+          &.supervision {
+            border-left-color: @supervision-color;
+          }
+          &.cleaning {
+            border-left-color: @cleaning-color;
+          }
+          &.collection {
+            border-left-color: @collection-color;
+          }
+          &.recycling {
+            border-left-color: @recycling-color;
+          }
+          &.snow {
+            border-left-color: @snow-color;
+          }
+          &.erd {
+            border-left-color: @erd-color;
+          }
+          &.support {
+            border-left-color: @support-color;
+          }
+          &.surplus {
+            border-left-color: @surplus-color;
+          }
+        }
+
+        & .lastsectiontask {
+          border-left: 1px solid;
+          height: 3px;
+          &.supervision {
+            border-left-color: @supervision-color;
+          }
+          &.cleaning {
+            border-left-color: @cleaning-color;
+          }
+          &.collection {
+            border-left-color: @collection-color;
+          }
+          &.recycling {
+            border-left-color: @recycling-color;
+          }
+          &.snow {
+            border-left-color: @snow-color;
+          }
+          &.erd {
+            border-left-color: @erd-color;
+          }
+          &.support {
+            border-left-color: @support-color;
+          }
+          &.surplus {
+            border-left-color: @surplus-color;
+          }
+        }
+
+        .task {
+          width: 430px;
+          float: left;
+          font-size: 12px;
+          border-left: 1px solid;
+          border-right: 1px solid @drop-target-color;
+          padding: 4px 0px 0px;
+
+          .empty {
+            color: @drop-target-color;
+          }
+
+
+          & .taskdivider {
+            width: 429px;
+            border-left: 1px solid @drop-target-color;
+            border-bottom: 1px solid @drop-target-color;
+            height: 3px;
+
+            &.supervision {
+              border-left-color: @supervision-color;
+            }
+            &.cleaning {
+              border-left-color: @cleaning-color;
+            }
+            &.collection {
+              border-left-color: @collection-color;
+            }
+            &.recycling {
+              border-left-color: @recycling-color;
+            }
+            &.snow {
+              border-left-color: @snow-color;
+            }
+            &.erd {
+              border-left-color: @erd-color;
+            }
+            &.support {
+              border-left-color: @support-color;
+            }
+            &.surplus {
+              border-left-color: @surplus-color;
+            }
+
+          }
+
+
+          .supervisor {
+            float: right;
+            margin-right: 4px;
+          }
+
+          & .task-marker-col {
+            float: left;
+            font-size: 14px;
+            text-align: center;
+            padding: 3px 2px 0px;
+            width: 30px;
+            display: inline-block;
+            & .multi {
+              & .start {
+                font-size: 8px;
+                width: 100%;
+                float: left;
+                margin: -4px 0px 0px;
+                padding: 0px;
+              }
+            }
+          }
+
+          & .task-name-col {
+            float: left;
+            margin: 0px 0px;
+            text-align: center;
+            padding: 6px 0px 0px;
+            width: 58px;
+            display: inline-block;
+            border-radius: 2px;
+          }
+
+          & .task-md-col {
+            float: left;
+            margin: 2px 0px 5px;
+            text-align: center;
+           /* padding: 4px 0px; */
+           line-height: 1.7;
+            border: 1px dashed @drop-target-color;
+            width: 88px;
+            height: 22px;
+            display: inline-block;
+            border-radius: 2px;
+            
+          }
+
+          & .task-md-col-d {
+            float: left;
+            margin: 2px 0px 5px;
+            text-align: center;
+             /* padding: 4px 0px; */
+             line-height: 1.7;
+            border: 1px dashed @drop-target-color;
+            width: 98px;
+            height: 23px;
+            display: inline-block;
+            border-radius: 2px;
+          }
+
+          & .task-sm-col {
+            float: right;
+            margin: 5px 13px 0px 0px;
+            text-align: center;
+            padding: 1px 0px 0px;
+            border: 1px dashed @drop-target-color;
+            width: 40px;
+            display: inline-block;
+            height: 18px;
+            border-radius: 2px;
+          }
+
+          &.supervision {
+            border-left-color: @supervision-color;
+          }
+          &.cleaning {
+            border-left-color: @cleaning-color;
+          }
+          &.collection {
+            border-left-color: @collection-color;
+          }
+          &.recycling {
+            border-left-color: @recycling-color;
+          }
+          &.snow {
+            border-left-color: @snow-color;
+          }
+          &.erd {
+            border-left-color: @erd-color;
+          }
+          &.support {
+            border-left-color: @support-color;
+          }
+          &.surplus {
+            border-left-color: @surplus-color;
+          }
+
+          .equipment {
+
+            &.assigned.group.notHead {
+              border-style: none;
+              opacity: .5;
+              //background-color: @group-not-start-truck-background;
+              //color: @group-not-start-truck-color;
+            }
+            &.assigned.cleaning {
+              border-style: none;
+              background-color: @cleaning-bg-color;
+              color: @cleaning-text-color;
+            }
+            &.assigned.cleaning.loadupdate {
+              border-style: none;
+              background-color: @load-update-bg-color;
+              color: @white-text-color;
+            }
+            &.assigned.cleaning.snowupdate {
+              border-style: none;
+              background-color: @snow-bg-color;
+              color: @snow-text-color;
+            }
+            &.assigned.collection {
+              border-style: none;
+              border-style: none;
+              background-color: @collection-bg-color;
+              color: @collection-text-color;
+            }
+            &.assigned.collection.hoist-fitted-chassis {
+              border-style: none;
+              background-color: @miscellaneous-bg-color;
+              color: @miscellaneous-text-color;
+            }
+            &.assigned.collection.dualbins {
+              border-style: none;
+              background-color: @dual-bin-bg-color;
+              color: @collection-text-color;
+               &.group.notHead {
+                 opacity: .5;
+                  //background-color: @group-not-start-truck-background;
+                  //color: @group-not-start-truck-color;
+                }
+            }
+
+            &.assigned.collection.dualbins.loadupdate {
+              border-style: none;
+              background-color: @load-update-bg-color;
+              color: @white-text-color;
+            }
+            &.assigned.collection.dualbins.snowupdate {
+              border-style: none;
+              background-color: @snow-bg-color;
+              color: @snow-text-color;
+            }
+            &.assigned.collection.loadupdate {
+              border-style: none;
+              background-color: @load-update-bg-color;
+              color: @white-text-color;
+            }
+            &.assigned.collection.snowupdate {
+              border-style: none;
+              background-color: @snow-bg-color;
+              color: @snow-text-color;
+                &.group.notHead {
+                  opacity: .5;
+                  //background-color: @group-not-start-truck-background;
+                  //color: @group-not-start-truck-color;
+                }
+            }
+            &.assigned.miscellaneous {
+              border-style: none;
+              background-color: @miscellaneous-bg-color;
+              color: @miscellaneous-text-color;
+            }
+            &.assigned.miscellaneous.loadupdate {
+              border-style: none;
+              background-color: @load-update-bg-color;
+              color: @white-text-color;
+            }
+            &.assigned.miscellaneous.snowupdate {
+              border-style: none;
+              background-color: @snow-bg-color;
+              color: @snow-text-color;
+            }
+            &.assigned.snow {
+              border-style: none;
+              background-color: @snow-bg-color;
+              color: @snow-text-color;
+            }
+            &.assigned.snow.loadupdate {
+              border-style: none;
+              background-color: @load-update-bg-color;
+              color: @white-text-color;
+            }
+          }
+          .person {
+            &.noDrag {
+              cursor: default;
+            }
+            &.assigned.sw {
+              background-color: #fff;
+              color: #000;
+            }
+            &.assigned.noLabel {
+              background-color: transparent !important;
+            }
+            margin-left: 5px;
+            &.assigned.salmon {
+              background-color: @salmon-color;
+              color: #fff;
+            }
+            
+            &.detached {
+              border-style: none;
+              background-color: @group-not-start-truck-background !important;
+              color: @group-not-start-truck-color !important;
+                              } 
+
+            &.assigned.s1 {
+              border-style: none;
+              background-color: @section1-bg-color;
+              color: @section1-color;
+            }
+
+            &.assigned.s2 {
+              border-style: none;
+              background-color: @section2-bg-color;
+              color: @section2-color;
+            }
+
+            &.assigned.s3 {
+              border-style: none;
+              background-color: @section3-bg-color;
+              color: @section3-color;
+            }
+
+            &.assigned.s4 {
+              border-style: none;
+              background-color: @section4-bg-color;
+              color: @section4-color;
+            }
+
+            &.assigned.s5 {
+              border-style: none;
+              background-color: @section5-bg-color;
+              color: @section5-color;
+            }
+
+            &.assigned.s6 {
+              border-style: none;
+              background-color: @section6-bg-color;
+              color: @section6-color;
+            }
+
+            &.assigned.s7 {
+              border-style: none;
+              background-color: @section7-bg-color;
+              color: @section7-color;
+            }
+
+            &.assigned.s8 {
+              border-style: none;
+              background-color: @section8-bg-color;
+              color: @section8-color;
+            }
+
+            &.assigned.g {
+              border-style: none;
+              background-color: @garage-bg-color;
+              color: @garage-color;
+            }
+            &.assigned.group.notHead {
+              border-style: none;
+              opacity: .5;
+              //background-color: @group-not-start-truck-background;
+              //color: @group-not-start-truck-color;
+            }
+            &.assigned.sup {
+              border-style: none;
+              background-color: @supervisor-bg-color;
+              color: @supervisor-color;
+            }
+
+            &.assigned.civilian {
+              border-style: none;
+              background-color: @civilian-bg-color;
+              color: @civilian-color;
+            }
+
+            &.assigned.gsI {
+              border-style: none;
+              background-color: @gsI-bg-color;
+              color: @gsI-color;
+            }
+
+            &.assigned.gsII {
+              border-style: none;
+              background-color: @gsII-bg-color;
+              color: @gsII-color;
+            }
+
+            &.assigned.gsIII {
+              border-style: none;
+              background-color: @gsIII-bg-color;
+              color: @gsIII-color;
+            }
+            
+            &.assigned.attachedtopayrolllocation {
+              border-style: none;
+              background-color: @white-color;
+              color: #000;
+            }
+            
+            &.assigned.detachedsw {
+              border-style: none;
+              background-color: @salmon-color;
+              color: #000;
+            }
+            
+            &.assigned.detachedsup {
+              border-style: none;
+              background-color: @salmon-color;
+              color: #000;
+            }
+            
+            &.assigned.detachedoutsidepayroll {
+              border-style: none;
+              background-color: @salmon-color;
+              color: #000;
+            }
+            
+            &.assigned.completed {
+        background-color: @load-update-bg-color;
+        color: @white-text-color;
+            }
+          }
+        }
+
+        .lasttask {
+          width: 430px;
+          height: 9px;
+        }
+
+        .personnelheader {
+          font-size: 14px;
+          font-weight: 600;
+          height: 30px;
+          padding: 5px 10px 0px;
+          color: @white-color;
+          width: @district-col-width;
+
+          border-top: 1px solid #242529;
+          border-left: 1px solid #242529;
+          border-right: 1px solid #242529;
+
+          & .badge {
+            font-weight: 600;
+            padding: 2px 5px 2px 4px;
+            margin-left: 6px;
+            border-radius: 3px;
+          }
+
+          &.available {
+            background-color: @available-bgcolor;
+            color: @available-color;
+            & .badge {
+              background-color: @unavailable-bgcolor;
+              color: @unavailable-color;
+            }
+
+          }
+
+          &.mda {
+            background-color: @unavailable-bgcolor;
+            color: @unavailable-color;
+            & .badge {
+              background-color: @available-bgcolor;
+              color: @available-color;
+
+            }
+          }
+
+          &.unavailable {
+            background-color: @unavailable-bgcolor;
+            color: @unavailable-color;
+            & .badge {
+              background-color: @available-bgcolor;
+              color: @available-color;
+            }
+          }
+
+        }
+
+        .personnelspacer {
+          width: @district-col-width;
+          height: 4px;
+          border-left: 1px solid #242529;
+          border-right: 1px solid #242529;
+        }
+
+        .unavailablegroupheader {
+          width: @district-col-width;
+          border-left: 1px solid #242529;
+          border-right: 1px solid #242529;
+          padding: 5px 0px 0px 10px;
+        }
+
+        .personnelfooter {
+          width: @district-col-width;
+          height: 10px;
+          border-bottom: 1px solid #242529;
+          border-left: 1px solid #242529;
+          border-right: 1px solid #242529;
+          margin-bottom: 8px;
+        }
+
+        .personnelblock {
+          width: 430px;
+          font-size: 11px;
+          border-left: 1px solid #242529;
+          border-right: 1px solid #242529;
+          padding: 5px 0px 0px 10px;
+
+          & .salmon {
+            background-color: @salmon-color;
+            color: #fff;
+          }
+
+          & .person-container {
+            width: 116px;
+            float: left;
+            margin-right: 8px;
+          }
+
+          & .person {
+            border: 1px solid;
+            height: 18px;
+            padding: 0px 3px 0px;
+            text-align: left;
+            width: 84px;
+            float: left;
+            border-radius: 2px 0px 0px 2px;
+            -moz-border-radius: 2px 0px 0px 2px;
+            -webkit-border-radius: 2px 0px 0px 2px;
+            margin-right: 0px;
+            cursor: pointer;
+            overflow: hidden;
+            position: relative;
+
+            & .skrim {
+              width: 8px;
+              height: 16px;
+              background-color: inherit;
+              position: absolute;
+              left: 81px;
+              top: 0px;
+
+              background-color: inherit;
+
+             /* background: rgba(248,80,50,0);
+              background: -moz-linear-gradient(left, rgba(248,80,50,0) 0%, rgba(127,0,255,1) 100%);
+              background: -webkit-gradient(left top, right top, color-stop(0%, rgba(248,80,50,0)), color-stop(100%, rgba(127,0,255,1)));
+              background: -webkit-linear-gradient(left, rgba(248,80,50,0) 0%, rgba(127,0,255,1) 100%);
+              background: -o-linear-gradient(left, rgba(248,80,50,0) 0%, rgba(127,0,255,1) 100%);
+              background: -ms-linear-gradient(left, rgba(248,80,50,0) 0%, rgba(127,0,255,1) 100%);
+              background: linear-gradient(to right, rgba(248,80,50,0) 0%, rgba(127,0,255,1) 100%);
+              filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f85032', endColorstr='#7f00ff', GradientType=1 );*/
+            }
+
+            & .fullname {
+              white-space: nowrap;
+            }
+          }
+
+          & .s1 {
+            background-color: @section1-bg-color;
+            border-color: @section1-bg-color;
+            color: @section1-color;
+            &.same {
+              color: @section1-bg-color;
+            }
+          }
+
+          & .s2 {
+            background-color: @section2-bg-color;
+            border-color: @section2-bg-color;
+            color: @section2-color;
+            &.same {
+              color: @section2-bg-color;
+            }
+          }
+
+          & .s3 {
+            background-color: @section3-bg-color;
+            border-color: @section3-bg-color;
+            color: @section3-color;
+            &.same {
+              color: @section3-bg-color;
+            }
+          }
+
+          & .s4 {
+            background-color: @section4-bg-color;
+            border-color: @section4-bg-color;
+            color: @section4-color;
+            &.same {
+              color: @section4-bg-color;
+            }
+          }
+
+          & .s5 {
+            background-color: @section5-bg-color;
+            border-color: @section5-bg-color;
+            color: @section5-color;
+            &.same {
+              color: @section5-bg-color;
+            }
+          }
+
+          & .s6 {
+            background-color: @section6-bg-color;
+            border-color: @section6-bg-color;
+            color: @section6-color;
+            &.same {
+              color: @section6-bg-color;
+            }
+          }
+
+          & .s7 {
+            background-color: @section7-bg-color;
+            border-color: @section7-bg-color;
+            color: @section7-color;
+            &.same {
+              color: @section7-bg-color;
+            }
+          }
+
+          & .s8 {
+            background-color: @section8-bg-color;
+            border-color: @section8-bg-color;
+            color: @section8-color;
+            &.same {
+              color: @section8-bg-color;
+            }
+          }
+
+          & .g {
+            background-color: @garage-bg-color;
+            border-color: @garage-bg-color;
+            color: @garage-color;
+            &.same {
+              color: @garage-bg-color;
+            }
+          }
+
+          & .sup {
+            background-color: @supervisor-bg-color;
+            border-color: @supervisor-bg-color;
+            color: @supervisor-color;
+            &.same {
+              color: @supervisor-bg-color;
+            }
+          }
+
+          & .m {
+            &.sw {
+              background-color: @sw-color;
+              border-color: @sw-color;
+              color: @black-color;
+              &.same {
+                color: @black-color;
+              }
+            }
+          }
+
+          & .civilian {
+            background-color: @civilian-bg-color;
+            border-color: @civilian-bg-color;
+            color: @civilian-color;
+            &.same {
+              color: @civilian-bg-color;
+            }
+          }
+
+          & .gsI {
+            background-color: @gsI-bg-color;
+            border-color: @gsI-bg-color;
+            color: @gsI-color;
+            &.same {
+              color: @gsI-bg-color;
+            }
+          }
+
+          & .gsII {
+            background-color: @gsII-bg-color;
+            border-color: @gsII-bg-color;
+            color: @gsII-color;
+            &.same {
+              color: @gsII-bg-color;
+            }
+          }
+
+          & .gsIII {
+            background-color: @gsIII-bg-color;
+            border-color: @gsIII-bg-color;
+            color: @gsIII-color;
+            &.same {
+              color: @gsIII-bg-color;
+            }
+          }
+        }
+
+        & .personright {
+          border: 1px solid;
+          height: 18px;
+          padding: 0px;
+          text-align: center;
+          border-radius: 0px 2px 2px 0px;
+          -moz-border-radius: 0px 2px 2px 0px;
+          -webkit-border-radius: 0px 2px 2px 0px;
+          margin-left: 1px;
+          width: 30px;
+          float: left;
+          background-color: @black-color;
+          font-weight: 600;
+
+          &.box {
+            &.s1 {
+              background-color: @section1-bg-color;
+              color: @section1-color;
+            }
+
+            &.s2 {
+              background-color: @section2-bg-color;
+              color: @section2-color;
+            }
+
+            &.s3 {
+              background-color: @section3-bg-color;
+              color: @section3-color;
+            }
+
+            &.s4 {
+              background-color: @section4-bg-color;
+              color: @section4-color;
+            }
+
+            &.s5 {
+              background-color: @section5-bg-color;
+              color: @section5-color;
+            }
+
+            &.s6 {
+              background-color: @section6-bg-color;
+              color: @section6-color;
+            }
+
+            &.s7 {
+              background-color: @section7-bg-color;
+              color: @section7-color;
+            }
+
+            &.s8 {
+              background-color: @section8-bg-color;
+              color: @section8-color;
+            }
+
+            &.g {
+              background-color: @garage-bg-color;
+              color: @garage-color;
+            }
+
+            &.sup {
+              background-color: @supervisor-bg-color;
+              color: @supervisor-color;
+            }
+
+            &.m {
+              &.sw {
+                background-color: @sw-color;
+                color: @black-color;
+              }
+            }
+
+            &.civilian {
+              background-color: @civilian-bg-color;
+              color: @civilian-color;
+            }
+
+            &.gsI {
+              background-color: @gsI-bg-color;
+              color: @gsI-color;
+            }
+
+            &.gsII {
+              background-color: @gsII-bg-color;
+              color: @gsII-color;
+            }
+
+            &.gsIII {
+              background-color: @gsIII-bg-color;
+              color: @gsIII-color;
+            }
+
+            /*&.C1 {
+              background-color: @suspended-color;
+              color: @black-color;
+            }*/
+          }
+
+          &.s1 {
+            color: @section1-bg-color;
+          }
+
+          &.s2 {
+            color: @section2-bg-color;
+          }
+
+          &.s3 {
+            color: @section3-bg-color;
+          }
+
+          &.s4 {
+            color: @section4-bg-color;
+          }
+
+          &.s5 {
+            color: @section5-bg-color;
+          }
+
+          &.s6 {
+            color: @section6-bg-color;
+          }
+
+          &.s7 {
+            color: @section7-bg-color;
+          }
+
+          &.s8 {
+            color: @section8-bg-color;
+          }
+
+          &.g {
+            color: @garage-bg-color;
+          }
+
+          &.sup {
+            &.MDA {
+            	color: @supervisor-bg-color;
+            }
+          }
+
+          &.m {
+            &.sw {
+              color: @sw-color;
+            }
+          }
+
+          &.civilian {
+            color: @civilian-bg-color;
+          }
+
+          &.gsI {
+            color: @gsI-bg-color;
+          }
+
+          &.gsII {
+            color: @gsII-bg-color;
+          }
+
+          &.gsIII {
+            color: @gsIII-bg-color;
+          }
+
+          &.CG {
+            color: @red-color;
+            border-color: @red-color;
+            background-color: @black-color;
+          }
+
+          &.red {
+            color: @red-color;
+            border-color: @red-color;
+            background-color: @black-color;
+            margin-right: 0px;
+            &.MDA {
+              color: @red-color;
+              background-color: @black-color;
+              border-color: @red-color;
+            }
+          }
+
+          &.C7, &.C7A, &.C1, &.C8, &.C3, &.C2, &.C4A, &.C4, {
+            background-color: @black-color;
+          }
+
+          &.redbox {
+            background-color: @suspended-color;
+            border-color: @suspended-color;
+            color: @black-color;
+          }
+        }
+      }
+    }
+  }
+}
+
+.item {
+  width: 418px;
+  margin: 0px 5px;
+  padding: 0px 0px;
+}
+
+
+.hidden {
+  overflow: hidden;
+  width: 0px;
+}
+
+.nothidden {
+  width: auto;
+  display: block;
+}
+
+.district-col-item, {
+  width: @district-col-width !important;
+  margin: 0px !important;
+}
+
+.district-col-item-divider, {
+  width: @district-col-divider-width !important;
+}
+
+.headingdiv-d {
+  padding: 0px 5px 8px 5px !important;
+}
+
+.locationtitle-d {
+  min-width: @district-col-width !important;
+  &.servicelocation {
+    margin-bottom: 8px;
+  }
+
+}
+
+#tasks-district {
+	width: 100%;
+}
+
+
+.task-name-d {
+  width: 47px !important;
+}

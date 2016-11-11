@@ -1,0 +1,55 @@
+@import "constants.less";
+@import "fonts.less";
+
+.recent-activities-pane-selenium {
+	.header-col {
+		padding: 5px;
+		a {
+			position: relative;
+			top: 3px;
+			color: #fff;
+		}
+	}
+	.recent-activity {
+		height: 80%;
+		overflow-y:auto;
+	}
+}
+
+.online-pane {
+	background-color: @pane-header-background;
+	border-top: 1px solid @pane-background-color;
+	bottom: 0px; 
+	height: 15%; 
+	padding: 10px; 
+	position: fixed; 
+	right: 0px;
+	width: 100%;
+	& h6 {
+		font-weight: 400;
+	}
+	& .users {
+		display: flex;
+		flex-direction: column;
+		flex-wrap: wrap;
+		height: 95%;
+		overflow-x: scroll;
+		padding: 10px 5px;
+	}
+	& .user {
+		color: #74c40d;
+		padding-right: 10px;
+		width: 96%;
+		& .sessions {
+			float: right;
+			color: @recent-activity-highlight-color
+		}
+	}
+	& .error {
+		color: #FF0C00;
+	}
+}
+
+.removed {
+    text-decoration: line-through;
+}

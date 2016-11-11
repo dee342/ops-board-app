@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>SMART Operations Board - Login</title>
+
+
+<!-- Libraries -->
+<script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/less-1.7.0.min.js')}}"></script>
+<script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/jquery-2.1.0.min.js')}}"></script>
+<script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/sorttable.js')}}"></script>
+
+
+
+<script th:inline="javascript">
+/*<![CDATA[*/
+
+    var defopentab= /*[[${defopentab}]]*/ '1';
+
+
+$(document).ready(function() {
+    $("#content").find("[id^='tab']").hide(); // Hide all content
+//    $("#tabs li:first").attr("id","current"); // Activate the first tab
+    $("#content #tab"+defopentab).fadeIn(); // Show defopentab tab's content
+    
+    $('#tabs a').click(function(e) {
+        e.preventDefault();
+        if ($(this).closest("li").attr("id") == "current"){ //detection for current tab
+         return;       
+        }
+        else{             
+          $("#content").find("[id^='tab']").hide(); // Hide all content
+          $("#tabs li").attr("id",""); //Reset id's
+          $(this).parent().attr("id","current"); // Activate this
+          $('#' + $(this).attr('name')).fadeIn(); // Show content for the current tab
+        }
+    });
+});
+
+
+
+
+/*]]>*/
+</script>
+
+<style>
+
+
+body {
+	font-family: "Trebuchet MS", "Helvetica", "Arial",  "Verdana", "sans-serif";
+	font-size: 62.5%;
+}
+
+/* Sortable tables */
+table.sortable thead {
+    background-color:#eee;
+    color:#666666;
+    font-weight: bold;
+    cursor: default;
+}
+
+
+
+
+/* tabs */
+
+#tabs {
+  overflow: hidden;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+#tabs li {
+  float: left;
+  margin: 0 .5em 0 0;
+}
+
+#tabs a {
+  position: relative;
+  background: #ddd;
+  background-image: linear-gradient(to bottom, #fff, #ddd);  
+  padding: .7em 3.5em;
+  float: left;
+  text-decoration: none;
+  color: #444;
+  text-shadow: 0 1px 0 rgba(255,255,255,.8);
+  border-radius: 5px 0 0 0;
+  box-shadow: 0 2px 2px rgba(0,0,0,.4);
+}
+
+#tabs a:hover,
+#tabs a:hover::after,
+#tabs a:focus,
+#tabs a:focus::after {
+  background: #fff;
+}
+
+#tabs a:focus {
+  outline: 0;
+}
+
+#tabs a::after {
+  content:'';
+  position:absolute;
+  z-index: 1;
+  top: 0;
+  right: -.5em;  
+  bottom: 0;
+  width: 1em;
+  background: #ddd;
+  background-image: linear-gradient(to bottom, #fff, #ddd);  
+  box-shadow: 2px 2px 2px rgba(0,0,0,.4);
+  transform: skew(10deg);
+  border-radius: 0 5px 0 0;  
+}
+
+#tabs #current a,
+#tabs #current a::after {
+  background: #fff;
+  z-index: 3;
+}
+
+#content {
+  background: #fff;
+  padding: 2em;
+  height: 220px;
+  position: relative;
+  z-index: 2; 
+  border-radius: 0 5px 5px 5px;
+  box-shadow: 0 -2px 3px -2px rgba(0, 0, 0, .5);
+}
+</style>
+
+</head>
+<body>
+
+
+
+[<a href='control'>Refresh</a>]
+
+
+<ul id="tabs">
+    <li><a href="#" name="tab1">Board cache</a></li>
+    <li><a href="#" name="tab2">Equipment cache</a></li>
+    <li><a href="#" name="tab3">Personnel cache</a></li>
+    <li><a href="#" name="tab4">Location listeners</a></li>    
+    <li><a href="#" name="tab5">Persistance listeners</a></li>    
+</ul>
+
+<div id="content"> 
+    <div id="tab1" style="display: none;">
+
+<h1>Board cache</h1> 
+
+<div id="tomcatiterator" th:each="ServerState: ${ServerStateList}">
+
+<h2>Server: <span style="background-color: #eee;" th:text="${ServerState.tomcatId}">0</span> </h2> 
+
+     <div>Elements: <span th:text="${#maps.size(ServerState.boardsCache)}">0</span>, [<a href="#" th:href="@{control(tomcatId=${ServerState.tomcatId},controlCommand='delallboards')}">Clear</a>]</div>
+
+         <table  class="sortable" th:if="${not #maps.isEmpty(ServerState.boardsCache)}">
+             <tr>
+                 <th>key</th>
+             </tr>
+             <tr th:each="b: ${ServerState.boardsCache}">
+                 <td th:text="${b.key}" th:title="${b.value}">25AB-CDE_20140101</td>
+                 <td>
+         		<a href="#" th:href="@{control(tomcatId=${ServerState.tomcatId},controlCommand='delboard',entityKey=${b.key})}">del</a>
+         	</td>
+             </tr>
+         </table>
+         
+</div> 
+<!-- tomcatiterator -->
+</div> <!-- "tab1" --> 
+
+
+<div id="tab2" style="display: none;">
+<h1>Equipment cache</h1> 
+   <div id="tomcatiterator" th:each="ServerState: ${ServerStateList}">
+   <h2>Server: <span style="background-color: #eee;" th:text="${ServerState.tomcatId}">0</span> </h2> 
+
+     <div>Elements: <span th:text="${#maps.size(ServerState.equipmentCache)}">0</span>, [<a href="#" th:href="@{control(tomcatId=${ServerState.tomcatId},controlCommand='delallequipment')}">Clear</a>]</div>
+
+          <table  class="sortable" th:if="${not #maps.isEmpty(ServerState.equipmentCache)}">
+              <tr>
+                  <th>key</th>
+                  <th>Name</th>
+                  <th>sorId</th>
+                  <th>Owner</th>
+
+                  <th>detachmentHistory</th>
+
+                  <th>equipmentUpDown</th>
+
+                  <th>Action</th>
+
+              </tr>
+              <tr th:each="equipment : ${ServerState.equipmentCache}">
+                  <td th:text="${equipment.key}" th:title="${equipment.value}">25AB-CDE_20140101</td>
+
+                  <td th:text="${equipment.value.name}">25AB-CDE</td>
+                  <td th:text="${equipment.value.sorId}">12345</td>
+                  <td th:text="${equipment.value.owner}">BKN01</td>
+
+                  <td th:text="${equipment.value.detachmentHistory}"></td>
+
+                  <td th:text="${equipment.value.upDownHistory}" th:title="${equipment.value.upDownHistory}"></td>
+                  <td>
+         		[<a href="#" th:href="@{control(tomcatId=${ServerState.tomcatId},controlCommand='delequipment',entityKey=${equipment.key})}">Delete</a>]
+          	</td>
+              </tr>
+          </table>
+
+          
+     </div> <!-- tomcatiterator -->
+</div> <!-- "tab2" --> 
+
+
+
+
+
+    <div id="tab3" style="display: none;">
+<h1>Personnel cache</h1> 
+   <div id="tomcatiterator" th:each="ServerState: ${ServerStateList}">
+   <h2>Server: <span style="background-color: #eee;" th:text="${ServerState.tomcatId}">0</span> </h2> 
+
+     <div>Elements: <span th:text="${#maps.size(ServerState.personnelCache)}">0</span>, [<a href="#" th:href="@{control(tomcatId=${ServerState.tomcatId},controlCommand='delallpersonnel')}">Clear</a>]</div>
+           <table  class="sortable" th:if="${not #maps.isEmpty(ServerState.personnelCache)}">
+               <tr>
+                   <th>key</th>
+                   <th>sorId</th>
+                   <th>referenceNum</th>
+                   <th>firstName</th>
+                   <th>lastName</th>
+                   <th>workLocation</th>
+                   <th>detachmentHistory</th>
+                   <th>unavailableReasons</th>
+                   <th>mdaStatus</th>
+                   <th>action</th>
+
+               </tr>
+               <tr th:each="p: ${ServerState.personnelCache}">
+                   <td th:text="${p.key}" th:title="${p.value}">25AB-CDE_20140101</td>
+                   <td th:text="${p.value.sorId}">25AB-CDE_20140101</td>
+                   <td th:text="${p.value.referenceNum}"></td>
+
+                   <td th:text="${p.value.firstName}"></td>
+                   <td th:text="${p.value.lastName}"></td>
+                   <td th:text="${p.value.workLocation}"></td>
+                   <td th:text="${p.value.detachmentHistory}"></td>
+                   <td th:text="${p.value.unavailableReasonHistory}"></td>
+                   <td th:text="${p.value.mdaStatus}"></td>
+                   <td>
+         		[<a href="#" th:href="@{control(tomcatId=${ServerState.tomcatId},controlCommand='delpersonnel',entityKey=${p.key})}">Delete</a>]
+           	</td>
+
+
+               </tr>
+           </table>
+           
+     </div> <!-- tomcatiterator -->
+</div> <!-- "tab3" --> 
+
+
+
+
+    <div id="tab4" style="display: none;">
+
+<h1>Location listeners</h1> 
+   <div id="tomcatiterator" th:each="ServerState: ${ServerStateList}">
+   <h2>Server: <span style="background-color: #eee;" th:text="${ServerState.tomcatId}">0</span> </h2> 
+
+     <div>Elements: <span th:text="${#sets.size(ServerState.locationService)}">0</span>, [<a href="#" th:href="@{control(tomcatId=${ServerState.tomcatId},controlCommand='delalllocationlisteners')}">Clear</a>]</div>
+            <table class="sortable" th:if="${not #sets.isEmpty(ServerState.locationService)}">
+                <tr>
+                    <th>queue</th>
+                    <th>action</th>
+                </tr>
+                <tr th:each="b: ${ServerState.locationService}">
+                    <td th:text="${b}">25AB-CDE_20140101</td>
+                    <td>
+         		[<a href="#" th:href="@{control(tomcatId=${ServerState.tomcatId},controlCommand='dellocationlistener',entityKey=${b})}">Delete</a>]
+            	</td>
+                </tr>
+            </table>
+
+     </div> <!-- tomcatiterator -->
+</div> <!-- "tab4" --> 
+
+    <div id="tab5" style="display: none;">
+
+<h1>Persistence listeners</h1> 
+   <div id="tomcatiterator" th:each="ServerState: ${ServerStateList}">
+   <h2>Server: <span style="background-color: #eee;" th:text="${ServerState.tomcatId}">0</span> </h2> 
+
+     <div>Elements: <span th:text="${#sets.size(ServerState.persistanceService)}">0</span>, [<a href="#" th:href="@{control(tomcatId=${ServerState.tomcatId},controlCommand='delallpersistancelisteners')}">Clear</a>]</div>
+
+             <table class="sortable" th:if="${not #sets.isEmpty(ServerState.persistanceService)}">
+                 <tr>
+                     <th>queue</th>
+                     <th>action</th>
+                 </tr>
+                 <tr th:each="b: ${ServerState.persistanceService}">
+                     <td th:text="${b}">25AB-CDE_20140101</td>
+                     <td>
+         		[<a href="#" th:href="@{control(tomcatId=${ServerState.tomcatId},controlCommand='delpersistancelistener',entityKey=${b})}">Delete</a>]
+             	</td>
+                 </tr>
+             </table>
+     </div> <!-- tomcatiterator -->
+</div> <!-- "tab5" --> 
+
+
+
+</div> <!-- "content" --> 
+
+</body>
+</html>

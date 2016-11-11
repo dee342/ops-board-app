@@ -1,0 +1,130 @@
+<!DOCTYPE html><html lang="en"><head><title>public\scripts\controllers\copy-board-controller</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../../"><meta name="groc-document-path" content="public\scripts\controllers\copy-board-controller"><meta name="groc-project-path" content="public\scripts\controllers\copy-board-controller.js"><link rel="stylesheet" type="text/css" media="all" href="../../../assets/style.css"><script type="text/javascript" src="../../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">public\scripts\controllers\copy-board-controller.js</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="hljs-pi">'use strict'</span>;
+
+angular
+    .module(<span class="hljs-string">'OpsBoard'</span>)
+    .controller(
+        <span class="hljs-string">'CopyBoard'</span>,
+        <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($scope, $filter, $modal, $log, OpsBoardRepository, ClientSideError)</span> </span>{
+            $scope.copyBoard = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(person, selectedCode, type)</span> </span>{
+            
+
+            	$scope.formats = [ <span class="hljs-string">'dd-MMMM-yyyy'</span>, <span class="hljs-string">'yyyy/MM/dd'</span>, <span class="hljs-string">'dd.MM.yyyy'</span>, <span class="hljs-string">'shortDate'</span>, <span class="hljs-string">'MM/dd/yyyy'</span>, <span class="hljs-string">'MM/DD/YYYY'</span>, <span class="hljs-string">"HH:mm"</span>];
+                $scope.format = $scope.formats[<span class="hljs-number">4</span>];
+                $scope.minDate = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>();
+                $scope.minDate.setTime($scope.minDate.getTime() + <span class="hljs-number">1</span> * <span class="hljs-number">24</span> * <span class="hljs-number">60</span> * <span class="hljs-number">60</span> * <span class="hljs-number">1000</span>);
+                $scope.warning = <span class="hljs-string">"Please note that any existing tasks for the selected date will be overwritten. Confirm by clicking on 'Copy' again."</span>;
+                $scope.showMessage = <span class="hljs-literal">false</span>;
+                $scope.showedMessage = <span class="hljs-literal">false</span>;
+                
+                $scope.datepickers = {
+                        startDateOpened : <span class="hljs-literal">false</span>
+                    }
+                
+                $scope.open = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($event, opened)</span> </span>{
+                    $event.preventDefault();
+                    $event.stopPropagation();
+                    $scope.datepickers[opened] = <span class="hljs-literal">true</span>;
+                };
+            	
+            	$scope.passPreValidation = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Validate if board has tasks</p></div></div><div class="code"><div class="wrapper">            		<span class="hljs-keyword">var</span> containsTasks = OpsBoardRepository.containsTasks();
+
+                    <span class="hljs-keyword">if</span> (!containsTasks) {
+                        $scope.opData.errors
+                            .push({
+                                type : <span class="hljs-string">'danger'</span>,
+                                message : <span class="hljs-string">'This Board does not have any tasks configured. You can only copy board with at least one task configured.'</span>
+                            });
+                        <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+                    }
+
+                    <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+                }
+            	 
+                <span class="hljs-keyword">var</span> now = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>();
+                <span class="hljs-keyword">var</span> dayOfTheWeek = now.getDay();
+                <span class="hljs-keyword">var</span> daysToAdd = <span class="hljs-number">1</span>;
+                <span class="hljs-keyword">switch</span>(dayOfTheWeek){
+                <span class="hljs-keyword">case</span> <span class="hljs-number">6</span>: daysToAdd = <span class="hljs-number">2</span>;
+                }
+                <span class="hljs-keyword">var</span> copyBoardTo = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>($scope.board.displayDate);
+                <span class="hljs-keyword">if</span>($scope.board.displayDate&lt;moment(<span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>()).format(<span class="hljs-string">'MM/DD/YYYY'</span>)){
+                	copyBoardTo=now;
+                }
+                copyBoardTo.setTime(copyBoardTo.getTime() + daysToAdd * <span class="hljs-number">24</span> * <span class="hljs-number">60</span> * <span class="hljs-number">60</span> * <span class="hljs-number">1000</span>);
+                
+                
+                	 $scope.opData = {
+                             
+                             titleAction : <span class="hljs-string">'Copy Board'</span>,
+                             titleEntity : name,
+                             cancelButtonText : <span class="hljs-string">'Cancel'</span>,
+                             submitButtonText : <span class="hljs-string">'Copy'</span>,
+                             clientErrors : [],
+                             errors : [],
+                             copyBoardTo : moment(copyBoardTo).format($scope.formats[<span class="hljs-number">5</span>]),
+                             progress : <span class="hljs-number">100</span>,
+                             required : []
+                         }
+               
+                $scope.submitted = <span class="hljs-literal">false</span>;
+                
+                <span class="hljs-keyword">var</span> modalInstance = $modal.open({
+                    templateUrl : appPathStart + <span class="hljs-string">'/views/modals/modal-copy-board'</span>,
+                    controller : <span class="hljs-string">'ModalCtrl'</span>,
+                    backdrop : <span class="hljs-string">'static'</span>,
+                    resolve : {
+                        data : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+                            <span class="hljs-keyword">return</span> [ person ]
+                        }
+                    },
+                    scope : $scope
+                });
+
+                $scope.operation = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(success, error)</span> </span>{
+                    $scope.submitted = <span class="hljs-literal">true</span>;
+                    $scope.opData.clientErrors = [];
+                    $scope.opData.serverErrors = [];
+                    
+                    <span class="hljs-keyword">if</span> (!$scope.opData.copyBoardTo) {
+                        $scope.opData.clientErrors.push({
+                            type : <span class="hljs-string">'danger'</span>,
+                            message : <span class="hljs-string">'Copy Board To is a required field.'</span>
+                        });
+                        $scope.opData.required.push(<span class="hljs-string">'copyBoardTo'</span>);
+                    } <span class="hljs-keyword">else</span> {
+                        <span class="hljs-keyword">if</span> (!moment($scope.opData.copyBoardTo).isValid()) {
+                            $scope.opData.clientErrors.push({
+                                type : <span class="hljs-string">'danger'</span>,
+                                message : <span class="hljs-string">'Copy Board To is invalid.'</span>
+                            });
+                            $scope.opData.required.push(<span class="hljs-string">'copyBoardTo'</span>);
+                        }
+                    }
+                    
+                    <span class="hljs-keyword">if</span> ($scope.opData.clientErrors.length == <span class="hljs-number">0</span>) {
+                    	$scope.showMessage = <span class="hljs-literal">true</span>;
+                    }
+                    
+                    <span class="hljs-keyword">if</span>($scope.showMessage &amp;&amp; !$scope.showedMessage){
+                        $scope.opData.clientErrors
+                            .push({
+                                type : <span class="hljs-string">'danger'</span>,
+                                message : $scope.warning
+                            });
+                        $scope.showMessage = <span class="hljs-literal">false</span>;	
+                        $scope.showedMessage = <span class="hljs-literal">true</span>;
+                    }
+
+                    <span class="hljs-keyword">if</span> ($scope.opData.clientErrors.length &gt; <span class="hljs-number">0</span>) {
+                        <span class="hljs-keyword">return</span> error(<span class="hljs-keyword">new</span> ClientSideError(<span class="hljs-string">'ValidationError'</span>));
+                    }
+                   OpsBoardRepository.copyBoard($scope.opData.copyBoardTo, success, error);                   
+                };  
+
+                modalInstance.result.then(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(selectedItem)</span> </span>{
+                    $scope.selected = selectedItem;
+                }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+                    $log.info(<span class="hljs-string">'Modal dismissed at: '</span> + <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>());
+                });
+            }
+        })</div></div></div></div></body></html>

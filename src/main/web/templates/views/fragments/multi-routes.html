@@ -1,0 +1,71 @@
+<div th:fragment="multi-routes">
+  <div class="overlay" ng-show="panes.showMultiRoutes.active">
+    
+  </div>
+  <div class="content" ng-show="panes.showMultiRoutes.active">
+      <table class="routes table table-condensed">
+        <tbody>
+          <tr ng-show="group.length === 0">        
+            <td class="route-details">
+            </td>
+            <td class="bordered">
+              <span class="col-md-10 message">
+                <span class="text-left col-md-10">{{getMessage('head')}}
+                  <i class="fa fa-arrow-right" ng-hide="group.length > 0"></i>
+                  <span class="route-text">{{getMessage('tail')}}</span>
+                </span>
+              </span>
+            </td>
+          </tr>
+          <tr ng-repeat="route in group">        
+            <td class="route-details">
+              <div ng-show="showContent">
+                <div class="col-md-1">
+                  <span>{{route.sequence}}</span>
+                </div>
+                <div class="col-md-6">
+                  <span>{{route.label}}</span>
+                </div>
+                <div class="col-md-3">
+                  <select ui-select2="sectionSelect2Options" class="counter form-control" ng-model="route.duration" ng-change="opData.serverErrors = []">
+                    <option value=""></option>
+                    <option ng-repeat="time in durations" value="{{time.duration}}">{{time.label + " (" + time.duration + "h)"}}</option>
+                  </select>
+                </div>
+                <div class="col-md-1 delete">
+                  <i class="fa fa-times-circle fa-sm" ng-click="deleteTaskFromGroup($index)"></i>
+                </div>
+              </div>
+            </td>
+            <td class="bordered">
+              <div ng-show="showMessage">
+                <span class="col-md-10 message" ng-show="$index == 0">
+                  <span class="text-left col-md-10">{{getMessage('head')}}
+                    <i class="fa fa-arrow-right" ng-hide="group.length > 0"></i>
+                    <span class="route-text">{{getMessage('tail')}}</span>
+                  </span>
+                </span>
+              </div>
+              <div ng-show="$index == 0">
+                <div th:include="views/modals/fragments/modal-server-errors :: server-errors" th:remove
+                ="tag"></div>
+              </div>
+            </td>
+          </tr>
+          <tr>        
+            <td>
+              <div th:include="views/modals/fragments/modal-processing :: processing" th:remove="tag"></div>
+              <div class="col-md-10 col-md-push-1">
+                <button class="btn btn-sm col-md-4 reset" ng-click="reset()"><i class="fa fa-refresh"></i> {{::opData.resetButtonText}}</button>
+              </div>
+            </td>
+            <td class="bordered">  
+              <button class="btn btn-sm col-md-5 cancel" ng-click="cancel()">{{opData.cancelButtonText}}</button>
+              <button class="btn btn-primary btn-sm col-md-6 col-md-push-1 confirm" ng-disabled="!isSet()" ng-click="confirm()">{{opData.submitButtonText}}</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+</div>
+

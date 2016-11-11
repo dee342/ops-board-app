@@ -1,0 +1,8 @@
+<!--/* Thymeleaf fragment to display a processing indicator. */-->
+
+<div th:fragment="processing">
+	<div class="modal-processing modal-processing-edit-task" ng-show="showProcessing">
+		<label>Processing...</label>
+		<progressbar class="progress-striped active" animate="true" value="opData.progress" type="success"></progressbar>
+	</div>
+</div>

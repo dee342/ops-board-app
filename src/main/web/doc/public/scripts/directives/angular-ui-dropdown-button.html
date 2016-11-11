@@ -1,0 +1,20 @@
+<!DOCTYPE html><html lang="en"><head><title>public\scripts\directives\angular-ui-dropdown-button</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../../"><meta name="groc-document-path" content="public\scripts\directives\angular-ui-dropdown-button"><meta name="groc-project-path" content="public\scripts\directives\angular-ui-dropdown-button.js"><link rel="stylesheet" type="text/css" media="all" href="../../../assets/style.css"><script type="text/javascript" src="../../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">public\scripts\directives\angular-ui-dropdown-button.js</div></div><div id="document"><div class="segment"><div class="comments "><div class="wrapper"><p>Created by cvolk on 9/15/14.</p>
+<p>THis was lifted right from the angular-ui site.</p></div></div><div class="code"><div class="wrapper"><span class="hljs-pi">
+'use strict'</span>;
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">DropdownCtrl</span><span class="hljs-params">($scope)</span> </span>{
+
+    $scope.status = {
+        isopen: <span class="hljs-literal">false</span>
+    };
+
+    $scope.toggled = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(open)</span> </span>{
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'Dropdown is now: '</span>, open);
+    };
+
+    $scope.toggleDropdown = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($event)</span> </span>{
+        $event.preventDefault();
+        $event.stopPropagation();
+        $scope.status.isopen = !$scope.status.isopen;
+    };
+}</div></div></div></div></body></html>

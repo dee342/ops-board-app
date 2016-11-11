@@ -1,0 +1,38 @@
+<div th:fragment="personnel-summary">
+  <div class="summary-container ng-hide" ng-show="personnelSummary.active">
+    <table class="table table-bordered table-condensed">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Available</th>
+          <th>Quota</th>
+          <th>Quota +/-</th>
+          <th>Plan</th>
+          <th>Plan +/-</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr ng-repeat="type in personnelCountTypes">
+          <td>
+            {{type.type}}
+          </td>
+          <td>
+            {{type.availablecount}}
+          </td>
+          <td>
+            {{type.quota}}
+          </td>
+          <td class="delta-{{type.quotadeltaflag}}">
+            {{type.quotadelta}}
+          </td>
+          <td>
+            {{type.actual}}
+          </td>
+          <td class="delta-{{type.actualdeltaflag}}">
+            {{type.actualdelta}}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

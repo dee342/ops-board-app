@@ -1,0 +1,11 @@
+<!--/* Thymeleaf fragment to errors thrown by the server. */-->
+
+<div th:fragment="server-errors">
+	<div class="modal-embedded-errors" ng-show="opData.serverErrors.length &gt; 0">
+		<alert type="none">
+		<ul>
+			<li ng-repeat="error in opData.serverErrors" ng-bind-html="error.message"></li>
+		</ul>
+		</alert>
+	</div>
+</div>

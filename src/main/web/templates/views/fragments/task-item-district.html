@@ -1,0 +1,90 @@
+<div class="servicelocation locationtitle locationtitle-d {{ item.locationId }}" ng-if="item.type === 'serviceloc'">
+    <span ng-click="districtBoard(item.locationId)" style="cursor: pointer;">{{ item.locationId }}</span>
+</div>
+
+<div class="shift {{item.shift.shift.type}} heading district-col-item" ng-if="item.type === 'shift'">
+    {{item.shift.shift.name}}
+    <div class="clear"></div>
+</div>
+
+<div class="category {{item.category.category.name.toLowerCase()}} heading district-col-item" ng-if="item.type === 'subcategory'">
+    <span class="triangle">&nbsp;</span>
+    <span class="title title-d">
+        <span ng-if="item.subcategory.subcategory.name.length &lt; 23">{{item.category.category.name}}</span><span ng-if="item.subcategory.subcategory.name.length &gt; 22">{{item.category.category.name.slice(0,5)}}.</span>-{{item.subcategory.subcategory.name}}
+    </span>
+
+    <div class="clear"></div>
+</div>
+
+<div class="section heading {{item.categorynamelowercase}} district-col-item" ng-if="item.type === 'section'">
+    <span class="sectiontitle section{{item.section.sectionId}}">
+        <i class="fa fa-square fa-xs"></i>
+        <span ng-show="item.section.sectionName &gt; 0">Section </span>
+        {{item.section.sectionName}}
+    </span>
+
+    <div class="clear"></div>
+</div>
+
+<div class="task {{item.category.category.name.toLowerCase()}} district-col-item" ng-if="item.type === 'task'" data-automation="{loc: '{{ location.locationId }}', shift: '{{item.shift.shift.name}}', cat: '{{item.category.category.name}}', sub: '{{item.subcategory.subcategory.name}}', sec: {{item.tasksection}}, taskno: {{ item.tasksequence }}}">
+    <span class="task-name-d task-name-col" ng-hide="item.task.editMode" ng-click="addToGroup(item.task, item.subcategory, item.category, item.shift, item.location, item.locationId, item.section)">
+        <span ng-class="{partialTaskLabel: item.task.groupId, taskOpen: layout.screen1.visible &amp;&amp; panes.taskSettings.active}">
+            {{item.task.taskName.slice(0,6)}}
+        </span>
+    </span>
+
+    <span ng-class="{pushed: recentlyPushedId === item.task.assignedEquipment.equipmentId, notPushed: recentlyPushedId !== item.task.assignedEquipment.equipmentId, group: item.task.groupId &amp;&amp; item.task.assignedEquipment.equipmentId &amp;&amp; item.task.homogeneous, notHead: item.task.partialTaskSequence !== 1 &amp;&amp; item.task.assignedEquipment.equipmentId &amp;&amp; item.task.homogeneous, dualbins : item.task.EquipObj.bins.length > 1,loadupdate  :item.task.binLoadUpdated =='G',snowupdate:item.task.binLoadUpdated=='S', empty: !item.task.assignedEquipment.equipmentId}"
+          class="task-md-col equipment assigned {{item.task.EquipObj.type | lowercase}} {{item.task.EquipObj.subType | convertTypeToClass}}"
+          ng-click="showEquipmentDetails($event, item.task.EquipObj.id)">
+
+         {{item.task.EquipObj.name}}
+
+    </span>
+
+
+    <span pos="1"
+          task-indicator="{{item.subcategory.subcategory.taskIndicator}}"
+          context="{{getContext(item.category.category.id)}}"
+          ng-class="{pushed: recentlyPushedId === item.task.assignedPerson1.personId, notPushed: recentlyPushedId !== item.task.assignedPerson1.personId, group: item.task.groupId &amp;&amp; item.task.assignedPerson1.person, notHead: item.task.partialTaskSequence !== 1 &amp;&amp; item.task.assignedPerson1.person, noDrag: item.category.category.id !== 1,detached:item.alreadyDetached1, empty:!item.task.assignedPerson1.personId}"
+          class="task-md-col person first assigned {{item.task.PersonnelObj1.departmentType | lowercase}} {{ item.task.titlemap1 }}"
+          ng-click="showPersonDetails($event, item.task.PersonnelObj1.id)">
+
+
+        {{item.task.PersonnelObj1.formattedName}}
+
+    </span>
+
+    <div class="clear"></div>
+    <div class="taskdivider district-col-item-divider"></div>
+</div>
+
+<div class="lasttask district-col-item" ng-if="item.type === 'lasttask'" style="height: 9px;">&nbsp;</div>
+
+
+<div class="personnelheader district-col-item {{ item.headerclass }}" ng-if="item.type === 'personnelheader'">
+    {{ item.title }}<span class="badge">{{ item.count }}</span>
+</div>
+
+<div class="personnelspacer district-col-item" ng-if="item.type === 'personnelheader'"></div>
+
+<div class="unavailablegroupheader district-col-item {{ item.headerclass }}" ng-if="item.type === 'unavailablegroupheader'">
+    {{ item.title }} ({{ item.count }})
+</div>
+
+<div class="personnelblock district-col-item" ng-if="item.type === 'personnelblock'">
+    <div class="person-container" ng-repeat="person in item.personnelblock track by $index" ng-click="showPersonDetails($event, person)">
+        <span class="person {{person.departmentType | lowercase}} {{person.titleMap2}}">
+            <span class="fullname">{{ person.formattedname }}</span>
+            <span class="skrim">&nbsp;</span>
+        </span>
+
+        <span class="personright {{person.departmentType | lowercase}} C{{person.indicatorText}} {{ item.title }} {{person.indicatorBox}} {{person.titleMap2}}">
+            <span class="indicator">{{person.indicatorText}}</span>
+        </span>
+    </div>
+    <div class="clear"></div>
+</div>
+
+<div class="personnelfooter district-col-item" ng-if="item.type === 'personnelfooter'"></div>
+<!--<div class="lastsectiontask {{item.category.category.name.toLowerCase()}}" ng-show="item.type === 'lastsectiontask'"></div>-->
+<div class="clear"></div>

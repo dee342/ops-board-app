@@ -1,0 +1,655 @@
+<!DOCTYPE html><html lang="en"><head><title>public\scripts\services\personnel-helper-service</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../../"><meta name="groc-document-path" content="public\scripts\services\personnel-helper-service"><meta name="groc-project-path" content="public\scripts\services\personnel-helper-service.js"><link rel="stylesheet" type="text/css" media="all" href="../../../assets/style.css"><script type="text/javascript" src="../../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">public\scripts\services\personnel-helper-service.js</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="hljs-pi">'use strict'</span>;</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>This file contains all the logic for working with Personnel, including creating commands, processing server commands, formatting and manipulating task data.</p></div></div><div class="code"><div class="wrapper">angular.module(<span class="hljs-string">'OpsBoard'</span>)
+  .service(
+    <span class="hljs-string">'PersonnelHelperService'</span>,
+    <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($rootScope, InfoService)</span> </span>{
+
+      <span class="hljs-keyword">var</span> _getPersonKey = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(id)</span> </span>{
+        <span class="hljs-keyword">if</span> (id == <span class="hljs-literal">null</span> || <span class="hljs-keyword">typeof</span> id == <span class="hljs-literal">undefined</span> || id == <span class="hljs-string">''</span>) <span class="hljs-keyword">return</span>;
+        <span class="hljs-keyword">if</span> (id.indexOf(<span class="hljs-string">'_'</span>) &lt; <span class="hljs-number">0</span>) <span class="hljs-keyword">return</span> id;
+        <span class="hljs-keyword">return</span> id.split(<span class="hljs-string">'_'</span>)[<span class="hljs-number">0</span>];
+      }
+
+      <span class="hljs-keyword">var</span> _processPartialAvailabilityAndMda = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(person, now, states)</span> </span>{
+        <span class="hljs-keyword">var</span> changed = <span class="hljs-literal">false</span>;
+        <span class="hljs-keyword">if</span> (person.state !== states.personnel.detached) {
+          <span class="hljs-keyword">if</span> (!person.isPartiallyAvailable())
+            <span class="hljs-keyword">return</span> changed;
+          <span class="hljs-keyword">var</span> available = <span class="hljs-literal">true</span>;
+          <span class="hljs-keyword">if</span> (person.partialAvailability) {
+            <span class="hljs-keyword">var</span> activeRecords = person.activeUnavailabilityReasons;
+            <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; activeRecords.length; i++) {
+              <span class="hljs-keyword">if</span> (activeRecords[i].status === <span class="hljs-string">"A"</span> &amp;&amp; (activeRecords[i].start == <span class="hljs-literal">null</span> ||
+                  (moment(activeRecords[i].start).diff(now, <span class="hljs-string">'days'</span>) &lt;= <span class="hljs-number">0</span> &amp;&amp; moment(activeRecords[i].start).diff(now, <span class="hljs-string">'minutes'</span>) &lt;= <span class="hljs-number">0</span>))) {</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>record start date &lt;= now</p></div></div><div class="code"><div class="wrapper">                <span class="hljs-keyword">if</span> (activeRecords[i].end == <span class="hljs-literal">null</span> ||
+                  (moment(activeRecords[i].end).diff(now, <span class="hljs-string">'days'</span>) &gt;= <span class="hljs-number">0</span> &amp;&amp; moment(activeRecords[i].end).diff(now, <span class="hljs-string">'minutes'</span>) &gt; <span class="hljs-number">0</span>)) {</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>record end date &gt; now</p></div></div><div class="code"><div class="wrapper">                  available = <span class="hljs-literal">false</span>;
+                  <span class="hljs-keyword">break</span>;
+                }
+              }
+            }
+            <span class="hljs-keyword">if</span> (available) {
+              <span class="hljs-keyword">var</span> activeMdaCodes = person.activeMdaCodes;
+              <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; activeMdaCodes.length; i++) {
+                <span class="hljs-keyword">if</span> (activeMdaCodes[i].status == <span class="hljs-string">"A"</span> &amp;&amp; activeMdaCodes[i].subType != <span class="hljs-string">"1L"</span> &amp;&amp; (activeMdaCodes[i].startDate == <span class="hljs-literal">null</span> ||
+                    (moment(activeMdaCodes[i].startDate).diff(now, <span class="hljs-string">'days'</span>) &lt;= <span class="hljs-number">0</span> &amp;&amp; moment(activeMdaCodes[i].startDate).diff(now, <span class="hljs-string">'minutes'</span>) &lt;= <span class="hljs-number">0</span>))) {</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>record start date &lt;= now</p></div></div><div class="code"><div class="wrapper">                  <span class="hljs-keyword">if</span> (activeMdaCodes[i].endDate == <span class="hljs-literal">null</span> ||
+                    (moment(activeMdaCodes[i].endDate).diff(now, <span class="hljs-string">'days'</span>) &gt;= <span class="hljs-number">0</span> &amp;&amp; moment(activeMdaCodes[i].endDate).diff(now, <span class="hljs-string">'minutes'</span>) &gt; <span class="hljs-number">0</span>)) {</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>record end date &gt; now</p></div></div><div class="code"><div class="wrapper">                    available = <span class="hljs-literal">false</span>;
+                    <span class="hljs-keyword">break</span>;
+                  }
+                }
+              }
+            }
+          }
+
+
+          <span class="hljs-keyword">if</span> (available) {
+            <span class="hljs-keyword">if</span> (person.state == states.personnel.partiallyAvailable || person.state == states.personnel.unavailable) {
+              person.state = states.personnel.available;
+              changed = <span class="hljs-literal">true</span>;
+            }
+          } <span class="hljs-keyword">else</span> {
+            <span class="hljs-keyword">if</span> (person.state == states.personnel.partiallyAvailable || person.state == states.personnel.available) {
+              person.state = states.personnel.unavailable;
+              changed = <span class="hljs-literal">true</span>;
+            }
+          }
+        }
+
+        <span class="hljs-keyword">return</span> changed;
+      }
+
+      <span class="hljs-keyword">return</span> {</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Partial Availability Logic </p></div></div><div class="code"><div class="wrapper">        processPartialAvailabilityAndMda: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(person, now, states)</span> </span>{
+          <span class="hljs-keyword">return</span> _processPartialAvailabilityAndMda(person, now, states);
+        },
+
+        processAllPartialAvailabilitiesAndMdas: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(personnel, states)</span> </span>{
+          <span class="hljs-keyword">var</span> check = <span class="hljs-literal">false</span>;
+          <span class="hljs-keyword">if</span> (personnel) {
+            <span class="hljs-keyword">var</span> now = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>();
+            <span class="hljs-built_in">Object</span>.keys(personnel).forEach(
+              <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(key)</span> </span>{
+                check = _processPartialAvailabilityAndMda(personnel[key], now, states);
+              });
+          }
+          <span class="hljs-keyword">return</span> check;
+        },
+
+       </div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Section - Perform synchronous operation on server - Start </p></div></div><div class="code"><div class="wrapper">        detachPersonOnServer: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">($resource, person, detachData, boardData, successFn, errorFn)</span> </span>{
+          <span class="hljs-keyword">var</span> personId = person.id;
+          <span class="hljs-keyword">var</span> endDate = detachData.endDate ? <span class="hljs-string">'&amp;endDate='</span> + <span class="hljs-built_in">encodeURIComponent</span>(<span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(detachData.endDate)) : <span class="hljs-string">''</span>;
+       
+          <span class="hljs-keyword">var</span> resource = $resource(boardData.pathStart
+				+ <span class="hljs-string">'/DetachPerson/:district/:date/:personId?from='</span>
+				+ <span class="hljs-built_in">encodeURIComponent</span>(detachData.from) + <span class="hljs-string">'&amp;to='</span>
+				+ <span class="hljs-built_in">encodeURIComponent</span>(detachData.to) + <span class="hljs-string">'&amp;startDate='</span>
+				+ <span class="hljs-built_in">encodeURIComponent</span>( <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(detachData.startDate))
+				+ endDate + <span class="hljs-string">'&amp;shift='</span>
+				+ <span class="hljs-built_in">encodeURIComponent</span>(detachData.shift) + <span class="hljs-string">'&amp;comments='</span>
+				+ <span class="hljs-built_in">encodeURIComponent</span>( detachData.remarks),  {
+					district : <span class="hljs-literal">null</span>,
+					date : <span class="hljs-literal">null</span>,
+					personId : <span class="hljs-literal">null</span>
+				});        
+        
+          <span class="hljs-keyword">var</span> response = resource.get({
+        	district : boardData.boardLocation,
+			date : boardData.boardDate,
+			personId : personId
+          }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span> </span>{
+			<span class="hljs-built_in">console</span>.log(<span class="hljs-string">'success with DetachEquipment, got data: '</span>, data);
+			successFn(data);
+          }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span> </span>{
+			errorFn(error);
+          });
+		
+        },    
+      
+		updatePersonMdaStatusOnServer: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">($resource, person, mdaData, boardData, successFn, errorFn)</span> </span>{
+	          <span class="hljs-comment">//using person.sorId instead of id - Sriram Vasantha Jan 02 2015	</span>
+	          <span class="hljs-keyword">var</span> personId = person.id;
+	          <span class="hljs-keyword">var</span> resource = $resource(boardData.pathStart + <span class="hljs-string">'/UpdatePersonMdaStatus/:district/:date/:personId'</span>, {
+	            district: boardData.boardLocation,
+	            date: boardData.boardDate,
+	            personId: personId
+	          }, {
+	            save: {
+	              method: <span class="hljs-string">'POST'</span>,
+	              headers: {
+	                <span class="hljs-string">'Content-Type'</span>: <span class="hljs-string">'application/json'</span>
+	              }
+	            }
+	          });
+
+	          <span class="hljs-keyword">var</span> endDate = <span class="hljs-literal">null</span>;
+	          <span class="hljs-keyword">if</span> (mdaData.endDate) {
+				<span class="hljs-keyword">var</span> edt = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(mdaData.endDate);
+				endDate = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(edt.getFullYear(), edt.getMonth(), edt.getDate(), mdaData.endTime.getHours(), mdaData.endTime.getMinutes(), <span class="hljs-number">0</span>, <span class="hljs-number">0</span>);
+			  }
+
+	          <span class="hljs-keyword">var</span> response = resource.save({
+	            type: mdaData.type,
+	            subType: mdaData.subType,</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>changed from sorid to id</p></div></div><div class="code"><div class="wrapper">	            id: mdaData.id,
+	            startDate: mdaData.startDate ? <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(mdaData.startDate) : <span class="hljs-string">''</span>,
+	            endDate: endDate,
+	            appointmentDate: mdaData.appointmentDate ? <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(mdaData.appointmentDate) : <span class="hljs-string">''</span>,
+	            comments: mdaData.remarks
+	          }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span> </span>{
+	            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'success, got data: '</span>, data);
+	            successFn(data);
+	          }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span> </span>{
+	            errorFn(error);
+	          });
+	        },
+
+        removePersonMdaStatusOnServer: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">($resource, person, mdaData, boardData, successFn, errorFn)</span> </span>{
+        <span class="hljs-comment">//using person.sorId instead of id - Sriram Vasantha Jan 02 2015	</span>
+          <span class="hljs-keyword">var</span> personId = person.id;
+          <span class="hljs-keyword">var</span> resource = $resource(boardData.pathStart + <span class="hljs-string">'/RemovePersonMdaStatus/:district/:date/:personId'</span>, {
+            district: boardData.boardLocation,
+            date: boardData.boardDate,  
+            personId: personId
+          }, {
+            save: {
+              method: <span class="hljs-string">'POST'</span>,
+              headers: {
+                <span class="hljs-string">'Content-Type'</span>: <span class="hljs-string">'application/json'</span>
+              }
+            }
+          });
+
+          <span class="hljs-keyword">var</span> record = {
+            subType: mdaData.subType,</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>changed from sorid to id</p></div></div><div class="code"><div class="wrapper">            id: mdaData.id,
+            startDate: <span class="hljs-built_in">Date</span>.parse(mdaData.startDate),
+            reasonForChange: mdaData.reasonForChange
+          }
+
+          <span class="hljs-keyword">var</span> response = resource.save(<span class="hljs-built_in">JSON</span>.stringify(record), <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span> </span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'success, got data: '</span>, data);
+            successFn(data);
+          }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span> </span>{
+            errorFn(error);
+          });
+        },
+
+        createPersonMdaStatusOnServer: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">($resource, person, mdaData, boardData, successFn, errorFn)</span> </span>{
+          <span class="hljs-comment">//using person.sorId instead of id - Sriram Vasantha Dec 29 2014	</span>
+          <span class="hljs-keyword">var</span> personId = person.id;
+          <span class="hljs-keyword">var</span> resource = $resource(boardData.pathStart + <span class="hljs-string">'/AddPersonMdaStatus/:district/:date/:personId'</span>, {
+            district: boardData.boardLocation,
+            date: boardData.boardDate,
+            personId: personId
+          }, {
+            save: {
+              method: <span class="hljs-string">'POST'</span>,
+              headers: {
+                <span class="hljs-string">'Content-Type'</span>: <span class="hljs-string">'application/json'</span>
+              }
+            }
+          });                  
+
+          <span class="hljs-keyword">var</span> endDate;</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>set end date</p></div></div><div class="code"><div class="wrapper">          <span class="hljs-keyword">if</span> (mdaData.endDate &amp;&amp; mdaData.endTime) {
+        	  endDate = InfoService.getDateFormat(mdaData.endDate, mdaData.endTime);
+          }      
+
+          <span class="hljs-keyword">var</span> response = resource.save({
+            type: mdaData.type,
+            subType: mdaData.subType,
+            startDate: <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(mdaData.startDate),
+            endDate: endDate,
+            appointmentDate: <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(mdaData.appointmentDate),
+            comments: mdaData.remarks
+          }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span> </span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'success, got data: '</span>, data);
+            successFn(data);
+          }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span> </span>{
+            errorFn(error);
+          });
+        },
+
+        createPersonUnavailabilityOnServer: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">($resource, person, unavailabilityData, boardData, successFn, errorFn)</span> </span>{
+
+          <span class="hljs-keyword">var</span> personId = person.id;          
+          
+          <span class="hljs-keyword">var</span> resource = $resource(boardData.pathStart + <span class="hljs-string">'/AddPersonUnavailabilityReason/:district/:date/:personId'</span>, {
+            district: boardData.boardLocation,
+            date: boardData.boardDate,
+            personId: personId
+          }, {
+            save: {
+              method: <span class="hljs-string">'POST'</span>,
+              headers: {
+                <span class="hljs-string">'Content-Type'</span>: <span class="hljs-string">'application/json'</span>
+              }
+            }
+          });         
+          
+          <span class="hljs-keyword">var</span> endDate;
+          <span class="hljs-keyword">var</span> startDate;
+          </div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>set start date</p></div></div><div class="code"><div class="wrapper">          <span class="hljs-keyword">if</span> (unavailabilityData.startDate &amp;&amp; unavailabilityData.startTime) {
+        	  startDate = InfoService.getDateFormat(unavailabilityData.startDate, unavailabilityData.startTime);
+          }      
+          </div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>set end date</p></div></div><div class="code"><div class="wrapper">          <span class="hljs-keyword">if</span> (unavailabilityData.endDate &amp;&amp; unavailabilityData.endTime) {
+        	  endDate = InfoService.getDateFormat(unavailabilityData.endDate, unavailabilityData.endTime);
+          }            
+          
+          <span class="hljs-keyword">var</span> record = {
+            code: unavailabilityData.code,
+            start: startDate,
+            end: endDate,
+            comments: unavailabilityData.remarks
+          }
+
+          <span class="hljs-keyword">var</span> response = resource.save(<span class="hljs-built_in">JSON</span>.stringify(record), <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span> </span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'success, got data: '</span>, data);
+            successFn(data);
+          }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span> </span>{
+            errorFn(error);
+          });
+        },
+
+        addSpecialPositionOnServer: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">($resource, person, specialPositionData, boardData, successFn, errorFn)</span> </span>{
+
+          <span class="hljs-keyword">var</span> personId = person.id;
+          <span class="hljs-keyword">var</span> now = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>();
+
+          <span class="hljs-keyword">var</span> resource = $resource(boardData.pathStart + <span class="hljs-string">'/AddSpecialPosition/:district/:date/:personId'</span>, {
+            district: boardData.boardLocation,
+            date: boardData.boardDate,
+            personId: personId
+          }, {
+            save: {
+              method: <span class="hljs-string">'POST'</span>,
+              headers: {
+                <span class="hljs-string">'Content-Type'</span>: <span class="hljs-string">'application/json'</span>
+              }
+            }
+          });
+
+
+          <span class="hljs-keyword">var</span> endDate = <span class="hljs-literal">null</span>;
+          <span class="hljs-keyword">var</span> startDate = <span class="hljs-literal">null</span>;
+          <span class="hljs-keyword">if</span> (specialPositionData.endDate)
+            endDate = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(specialPositionData.endDate.getFullYear(), specialPositionData.endDate.getMonth(), specialPositionData.endDate.getDate(), now.getHours(), now.getMinutes(), <span class="hljs-number">0</span>, <span class="hljs-number">0</span>);
+
+          <span class="hljs-keyword">if</span> (specialPositionData.startDate)
+            startDate = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(specialPositionData.startDate.getFullYear(), specialPositionData.startDate.getMonth(), specialPositionData.startDate.getDate(), now.getHours(), now.getMinutes(), <span class="hljs-number">0</span>, <span class="hljs-number">0</span>);
+
+          <span class="hljs-keyword">var</span> record = {
+            code: specialPositionData.code,
+            description: specialPositionData.description,
+            startDate: startDate,
+            endDate: endDate,
+            comments: specialPositionData.comments
+          }
+
+          <span class="hljs-keyword">var</span> response = resource.save(<span class="hljs-built_in">JSON</span>.stringify(record), <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span> </span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'success, got data: '</span>, data);
+            successFn(data);
+          }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span> </span>{
+            errorFn(error);
+          });
+        },
+
+        updateSpecialPositionOnServer: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">($resource, person, specialPositionData, boardData, successFn, errorFn)</span> </span>{
+
+            <span class="hljs-keyword">var</span> personId = person.id;
+            <span class="hljs-keyword">var</span> now = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>();
+
+            <span class="hljs-keyword">var</span> resource = $resource(boardData.pathStart + <span class="hljs-string">'/UpdateSpecialPosition/:district/:date/:personId'</span>, {
+              district: boardData.boardLocation,
+              date: boardData.boardDate,
+              personId: personId
+            }, {
+              save: {
+                method: <span class="hljs-string">'POST'</span>,
+                headers: {
+                  <span class="hljs-string">'Content-Type'</span>: <span class="hljs-string">'application/json'</span>
+                }
+              }
+            });
+
+
+            <span class="hljs-keyword">var</span> record = {
+              code: specialPositionData.code,
+              description: specialPositionData.description,
+              startDate: specialPositionData.startDate ? <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(specialPositionData.startDate) : <span class="hljs-string">''</span>, 
+              endDate: specialPositionData.endDate ? <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(specialPositionData.endDate) : <span class="hljs-string">''</span>,
+              <span class="hljs-comment">//changed to id</span>
+              id: specialPositionData.id,
+              comments: specialPositionData.comments
+            }
+
+            <span class="hljs-keyword">var</span> response = resource.save(<span class="hljs-built_in">JSON</span>.stringify(record), <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span> </span>{
+              <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'success, got data: '</span>, data);
+              successFn(data);
+            }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span> </span>{
+              errorFn(error);
+            });
+
+        },
+        updatePersonUnavailabilityOnServer: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">($resource, person, unavailabilityData, boardData, successFn, errorFn)</span> </span>{
+
+            <span class="hljs-keyword">var</span> personId = person.id;
+
+            <span class="hljs-keyword">var</span> resource = $resource(boardData.pathStart + <span class="hljs-string">'/UpdatePersonUnavailabilityReason/:district/:date/:personId'</span>, {
+              district: boardData.boardLocation,
+              date: boardData.boardDate,
+              personId: personId
+            }, {
+              save: {
+                method: <span class="hljs-string">'POST'</span>,
+                headers: {
+                  <span class="hljs-string">'Content-Type'</span>: <span class="hljs-string">'application/json'</span>
+                }
+              }
+            });
+            
+
+            <span class="hljs-keyword">var</span> endDate;
+            <span class="hljs-keyword">var</span> startDate;
+            </div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>set start date</p></div></div><div class="code"><div class="wrapper">            <span class="hljs-keyword">if</span> (unavailabilityData.startDate &amp;&amp; unavailabilityData.startTime) {
+          	  startDate = InfoService.getDateFormat(unavailabilityData.startDate, unavailabilityData.startTime);
+            }      
+            </div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>set end date</p></div></div><div class="code"><div class="wrapper">            <span class="hljs-keyword">if</span> (unavailabilityData.endDate &amp;&amp; unavailabilityData.endTime) {
+          	  endDate = InfoService.getDateFormat(unavailabilityData.endDate, unavailabilityData.endTime);
+            }
+            
+	            <span class="hljs-keyword">var</span> record = {
+	              code: unavailabilityData.code,
+	              start: startDate,
+	              end: endDate,
+	              <span class="hljs-comment">//changed from sorid to id</span>
+	              id: unavailabilityData.id,
+	              reasonForChange: unavailabilityData.reasonForChange,
+	              comments: unavailabilityData.remarks
+	            }
+	
+	            <span class="hljs-keyword">var</span> response = resource.save(<span class="hljs-built_in">JSON</span>.stringify(record), <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span> </span>{
+	              <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'success, got data: '</span>, data);
+	              successFn(data);
+	            }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span> </span>{
+	              errorFn(error);
+	            });
+
+          },
+        
+
+        cancelPersonUnavailabilityOnServer:<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($resource, person, unavailabilityData, boardData, successFn, errorFn)</span></span>{
+
+
+            <span class="hljs-keyword">var</span> personId = person.id;
+
+            <span class="hljs-keyword">var</span> resource = $resource(boardData.pathStart + <span class="hljs-string">'/CancelPersonUnavailability/:district/:date/:personId'</span>, {
+              district: boardData.boardLocation,
+              date: boardData.boardDate,
+              personId: personId
+            }, {
+              save: {
+                method: <span class="hljs-string">'POST'</span>,
+                headers: {
+                  <span class="hljs-string">'Content-Type'</span>: <span class="hljs-string">'application/json'</span>
+                }
+              }
+            });
+
+
+            <span class="hljs-keyword">var</span> endDate = <span class="hljs-literal">null</span>;
+            <span class="hljs-keyword">if</span> (unavailabilityData.endDate)              
+              <span class="hljs-keyword">var</span> endDate = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(unavailabilityData.endTime.getFullYear(), unavailabilityData.endTime.getMonth(), unavailabilityData.endTime.getDate(), unavailabilityData.endTime.getHours(), unavailabilityData.endTime.getMinutes(), <span class="hljs-number">0</span>, <span class="hljs-number">0</span>);
+              <span class="hljs-keyword">var</span> startDate=<span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(unavailabilityData.endTime.getFullYear(), unavailabilityData.endTime.getMonth(), unavailabilityData.endTime.getDate(), unavailabilityData.endTime.getHours(), unavailabilityData.endTime.getMinutes(), <span class="hljs-number">0</span>, <span class="hljs-number">0</span>);
+              startDate.setHours(unavailabilityData.startTime.substring(<span class="hljs-number">0</span>,<span class="hljs-number">2</span>));
+              startDate.setMinutes(unavailabilityData.startTime.substring(<span class="hljs-number">3</span>,<span class="hljs-number">5</span>));
+              <span class="hljs-keyword">var</span> systemDate=<span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>();
+              <span class="hljs-keyword">if</span>(startDate.getFullYear()==systemDate.getFullYear() &amp;&amp; startDate.getMonth()==systemDate.getMonth() &amp;&amp; startDate.getDate()!=systemDate.getDate()){
+            	  startDate.setHours(<span class="hljs-number">0</span>);
+            	  startDate.setMinutes(<span class="hljs-number">0</span>);
+            	  endDate.setHours(<span class="hljs-number">23</span>);
+            	  endDate.setMinutes(<span class="hljs-number">59</span>);
+              }
+
+            <span class="hljs-keyword">var</span> record = {
+              code: unavailabilityData.code,
+              start: startDate,
+              end: endDate,
+              id:unavailabilityData.id,
+              comments: unavailabilityData.remarks
+              
+            }
+
+            <span class="hljs-keyword">var</span> response = resource.save(<span class="hljs-built_in">JSON</span>.stringify(record), <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span> </span>{
+              <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'success, got data: '</span>, data);
+              successFn(data);
+            }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span> </span>{
+              errorFn(error);
+            });
+          
+              
+        },
+
+        undoCancelPersonUnavailabilityOnServer:<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($resource, person, unavailabilityData, boardData, successFn, errorFn)</span></span>{
+
+
+            <span class="hljs-keyword">var</span> personId = person.id;
+
+            <span class="hljs-keyword">var</span> resource = $resource(boardData.pathStart + <span class="hljs-string">'/ReverseCancelPersonUnavailability/:district/:date/:personId'</span>, {
+              district: boardData.boardLocation,
+              date: boardData.boardDate,
+              personId: personId
+            }, {
+              save: {
+                method: <span class="hljs-string">'POST'</span>,
+                headers: {
+                  <span class="hljs-string">'Content-Type'</span>: <span class="hljs-string">'application/json'</span>
+                }
+              }
+            });
+
+
+            <span class="hljs-keyword">var</span> endDate = <span class="hljs-literal">null</span>;
+            <span class="hljs-keyword">if</span> (unavailabilityData.endDate)              
+              <span class="hljs-keyword">var</span> endDate = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(unavailabilityData.startDate.getFullYear(), unavailabilityData.startDate.getMonth(), unavailabilityData.startDate.getDate(), unavailabilityData.startDate.getHours(), unavailabilityData.startDate.getMinutes(), <span class="hljs-number">0</span>, <span class="hljs-number">0</span>);
+              <span class="hljs-keyword">var</span> startDate=<span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(unavailabilityData.startDate.getFullYear(), unavailabilityData.startDate.getMonth(), unavailabilityData.startDate.getDate(), unavailabilityData.startDate.getHours(), unavailabilityData.startDate.getMinutes(), <span class="hljs-number">0</span>, <span class="hljs-number">0</span>);
+        	  startDate.setHours(<span class="hljs-number">0</span>);
+        	  startDate.setMinutes(<span class="hljs-number">0</span>);
+        	  endDate.setHours(<span class="hljs-number">23</span>);
+        	  endDate.setMinutes(<span class="hljs-number">59</span>);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><pre><code>          var systemDate=new Date();
+          if(startDate.getFullYear()==systemDate.getFullYear() &amp;&amp; startDate.getMonth()==systemDate.getMonth() &amp;&amp; startDate.getDate()!=systemDate.getDate()){
+              startDate.setHours(unavailabilityData.startDate.substring(0,2));
+              startDate.setMinutes(unavailabilityData.startDate.substring(3,5));
+          }</code></pre></div></div><div class="code"><div class="wrapper">            <span class="hljs-keyword">var</span> record = {
+              code: unavailabilityData.code,
+              start: startDate,
+              end: endDate,
+              id:unavailabilityData.id,
+              comments: unavailabilityData.remarks
+              
+            }
+
+            <span class="hljs-keyword">var</span> response = resource.save(<span class="hljs-built_in">JSON</span>.stringify(record), <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span> </span>{
+              <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'success, got data: '</span>, data);
+              successFn(data);
+            }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span> </span>{
+              errorFn(error);
+            });
+          
+              
+        },
+        removePersonUnavailabilityOnServer: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">($resource, person, unavailabilityData, boardData, successFn, errorFn)</span> </span>{
+
+          <span class="hljs-keyword">var</span> personId = person.id;
+
+          <span class="hljs-keyword">var</span> resource = $resource(boardData.pathStart + <span class="hljs-string">'/RemovePersonUnavailabilityReason/:district/:date/:personId'</span>, {
+            district: boardData.boardLocation,
+            date: boardData.boardDate,
+            personId: personId
+          }, {
+            save: {
+              method: <span class="hljs-string">'POST'</span>,
+              headers: {
+                <span class="hljs-string">'Content-Type'</span>: <span class="hljs-string">'application/json'</span>
+              }
+            }
+          });
+
+          <span class="hljs-keyword">var</span> record = {
+            code: unavailabilityData.code,
+            start: <span class="hljs-built_in">Date</span>.parse(unavailabilityData.startDate),
+            <span class="hljs-comment">//changed from sorid to id</span>
+            id: unavailabilityData.id,
+            reasonForChange: unavailabilityData.reasonForChange
+          }
+
+          <span class="hljs-keyword">var</span> response = resource.save(<span class="hljs-built_in">JSON</span>.stringify(record), <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span> </span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'success, got data: '</span>, data);
+            successFn(data);
+          }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span> </span>{
+            errorFn(error);
+          });
+        },
+
+        removeSpecialPositionOnServer: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">($resource, person, specialPositionData, boardData, successFn, errorFn)</span> </span>{
+
+          <span class="hljs-keyword">var</span> personId = person.id;
+
+          <span class="hljs-keyword">var</span> resource = $resource(boardData.pathStart + <span class="hljs-string">'/RemoveSpecialPosition/:district/:date/:personId'</span>, {
+            district: boardData.boardLocation,
+            date: boardData.boardDate,
+            personId: personId
+          }, {
+            save: {
+              method: <span class="hljs-string">'POST'</span>,
+              headers: {
+                <span class="hljs-string">'Content-Type'</span>: <span class="hljs-string">'application/json'</span>
+              }
+            }
+          });
+
+          <span class="hljs-keyword">var</span> record = {
+            code: specialPositionData.code,
+            <span class="hljs-comment">//changed to id</span>
+            id: specialPositionData.id,
+            startDate: <span class="hljs-built_in">Date</span>.parse(specialPositionData.startDate),
+            reasonForChange: specialPositionData.reasonForChange
+          }
+
+          <span class="hljs-keyword">var</span> response = resource.save(<span class="hljs-built_in">JSON</span>.stringify(record), <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span> </span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'success, got data: '</span>, data);
+            successFn(data);
+          }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span> </span>{
+            errorFn(error);
+          });
+        },</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Section - Perform synchronous operation on server - End </p></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Section - Handle Server Commands - Start </p></div></div><div class="code"><div class="wrapper">        processAddPersonCommand: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(personnel, command, PersonModel)</span> </span>{
+          <span class="hljs-keyword">var</span> personKey = command.commandContent.personId
+          personnel[personKey] = command.commandContent.person;
+          angular.extend(personnel[personKey], PersonModel);
+        },
+
+        processPersonUnavailabilityCommand: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(personnel, states, command)</span> </span>{
+          <span class="hljs-keyword">var</span> personKey = command.commandContent.personId
+          <span class="hljs-keyword">if</span> (personnel[personKey] != <span class="hljs-literal">null</span>) {
+            personnel[personKey].state = command.commandContent.state;
+            <span class="hljs-keyword">if</span> (personnel[personKey].state !== states.personnel.partiallyAvailable) {
+              personnel[personKey].papartialAvailability = <span class="hljs-literal">false</span>; <span class="hljs-comment">// reset based on server state</span>
+            }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Set any previous/historic recored to a status of updated</p></div></div><div class="code"><div class="wrapper">            <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; personnel[personKey].unavailabilityHistory.length; i++) {
+              <span class="hljs-keyword">if</span> (command.commandContent.unavailableReason.replaces &amp;&amp; command.commandContent.unavailableReason.replaces == personnel[personKey].unavailabilityHistory[i].id) {
+            	  <span class="hljs-keyword">if</span> (command.commandName!=<span class="hljs-string">"CancelPersonUnavailability"</span>) {
+            		  personnel[personKey].unavailabilityHistory[i].status = <span class="hljs-string">'I'</span>;
+            	  }
+              }
+            }            
+            personnel[personKey].unavailabilityHistory.push(command.commandContent.unavailableReason);
+            personnel[personKey].formattedUnavailableReasons = personnel[personKey].getFormattedUnavailableReasons();
+            <span class="hljs-keyword">if</span> (!personnel[personKey].showingActiveUnavailableRecords) {
+              personnel[personKey].unavailabilityPaginationModel = personnel[personKey].formattedUnavailableReasons.slice(<span class="hljs-number">0</span>, <span class="hljs-number">5</span>);
+              personnel[personKey].totalUnavailableItems = personnel[personKey].formattedUnavailableReasons.length;
+            } <span class="hljs-keyword">else</span> {
+              personnel[personKey].unavailabilityPaginationModel = personnel[personKey].formattedActiveUnavailableReasons.slice(<span class="hljs-number">0</span>, <span class="hljs-number">5</span>);
+              personnel[personKey].totalUnavailableItems = personnel[personKey].formattedActiveUnavailableReasons.length;
+            }
+            personnel[personKey].showUnavailabilityTable = <span class="hljs-literal">true</span>;
+            personnel[personKey].unavailabilityCurrentPage = <span class="hljs-number">1</span>;
+            personnel[personKey].showPaginationLinksForUnavailable = personnel[personKey].formattedUnavailableReasons.length &gt; <span class="hljs-number">0</span>;
+            <span class="hljs-comment">//personnel[personKey].unavailablityPaginationModel.push(command.commandContent.unavailableReason);</span>
+            personnel[personKey].activeUnavailabilityReasons = command.commandContent.activeUnavailabilityReasons;
+            _processPartialAvailabilityAndMda(personnel[personKey], <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(), states);
+
+          }
+        },
+
+        processSpecialPositionCommand: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(personnel, states, command)</span> </span>{
+          <span class="hljs-keyword">var</span> personKey = command.commandContent.personId
+          <span class="hljs-keyword">if</span> (personnel[personKey] != <span class="hljs-literal">null</span>) {</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Set any previous/historic recored to a status of updated</p></div></div><div class="code"><div class="wrapper">            <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; personnel[personKey].specialPositionsHistory.length; i++) {
+              <span class="hljs-keyword">if</span> (command.commandContent.specialPosition.replaces &amp;&amp; command.commandContent.specialPosition.replaces == personnel[personKey].specialPositionsHistory[i].id) {
+            	  personnel[personKey].specialPositionsHistory[i].status = <span class="hljs-string">'I'</span>;
+            	  personnel[personKey].specialPositionsHistory[i].replacedBy = command.commandContent.specialPosition.id;
+              }
+            }            
+            personnel[personKey].specialPositionsHistory.push(command.commandContent.specialPosition);
+            personnel[personKey].formattedSpecialPositions = personnel[personKey].getFormattedSpecialPositions();
+            <span class="hljs-keyword">if</span> (!personnel[personKey].showingActiveSpecialPositions) {
+              personnel[personKey].specialPositionsPaginationModel = personnel[personKey].formattedSpecialPositions.slice(<span class="hljs-number">0</span>, <span class="hljs-number">5</span>);
+              personnel[personKey].totalSpecialPositions = personnel[personKey].formattedSpecialPositions.length;
+            } <span class="hljs-keyword">else</span> {
+              personnel[personKey].specialPositionsPaginationModel = personnel[personKey].formattedActiveSpecialPositions.slice(<span class="hljs-number">0</span>, <span class="hljs-number">5</span>);
+              personnel[personKey].totalSpecialPositions = personnel[personKey].formattedActiveSpecialPositions.length;
+            }
+            personnel[personKey].showSpecialPositionsTable = <span class="hljs-literal">true</span>;
+            personnel[personKey].specialPositionsCurrentPage = <span class="hljs-number">1</span>;
+            personnel[personKey].showPaginationLinksForSpecialPositions = personnel[personKey].formattedSpecialPositions.length &gt; <span class="hljs-number">0</span>;
+            personnel[personKey].specialPositionsHistory = command.commandContent.specialPositionsHistory;
+            personnel[personKey].activeSpecialPositions = command.commandContent.activeSpecialPositions;
+          }
+        },
+
+        processPersonDetachmentCommand: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(personnel, command, states)</span> </span>{
+          <span class="hljs-keyword">var</span> personKey = command.commandContent.personId
+          <span class="hljs-keyword">if</span> (personnel[personKey] != <span class="hljs-literal">null</span>) {
+            personnel[personKey].state = command.commandContent.state;
+            <span class="hljs-keyword">if</span> (personnel[personKey].state !== states.personnel.partiallyAvailable) {
+              personnel[personKey].papartialAvailability = <span class="hljs-literal">false</span>; <span class="hljs-comment">// reset based on server state</span>
+            }
+            <span class="hljs-keyword">var</span> record = {
+              from: command.commandContent.from,
+              to: command.commandContent.to,
+              startDate: command.commandContent.startDate,
+              endDate: command.commandContent.endDate,
+              shiftId: command.commandContent.shift,
+              comments: command.commandContent.comments,
+              lastModifiedSystem: command.commandContent.systemDateTime
+            };
+            personnel[personKey].detachmentHistory.push(record);
+            personnel[personKey].formattedDetachments = personnel[personKey].getFormattedDetachmentHistory();
+            personnel[personKey].showPaginationLinksForDetachments = personnel[personKey].formattedDetachments.length &gt; <span class="hljs-number">0</span>;
+            personnel[personKey].personDetachPaginationModel = personnel[personKey].formattedDetachments.slice(<span class="hljs-number">0</span>, <span class="hljs-number">5</span>);
+            personnel[personKey].personDetachCurrentPage = <span class="hljs-number">1</span>;
+            $rootScope.$broadcast(<span class="hljs-string">'DETACH-PERSON'</span>);
+          }
+        },
+
+        processRemovePersonCommand: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(personnel, command)</span> </span>{
+          <span class="hljs-keyword">var</span> personKey = command.commandContent.personId
+          <span class="hljs-keyword">delete</span> personnel[personKey];
+        },
+
+        processPersonMdaStatusCommand: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(personnel, states, command)</span> </span>{
+          <span class="hljs-keyword">var</span> personKey = command.commandContent.personId
+          <span class="hljs-keyword">if</span> (personnel[personKey] != <span class="hljs-literal">null</span>) {
+            personnel[personKey].state = command.commandContent.state;
+            <span class="hljs-keyword">if</span> (personnel[personKey].state !== states.personnel.partiallyAvailable) {
+              personnel[personKey].papartialAvailability = <span class="hljs-literal">false</span>; <span class="hljs-comment">// reset based on server state</span>
+            }
+            </div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Set any previous/historic recored to a status of updated</p></div></div><div class="code"><div class="wrapper">            <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; personnel[personKey].mdaStatusHistory.length; i++) {
+              <span class="hljs-keyword">if</span> (command.commandContent.mdaStatus.replaces &amp;&amp; command.commandContent.mdaStatus.replaces == personnel[personKey].mdaStatusHistory[i].id) {
+            	  personnel[personKey].mdaStatusHistory[i].status = <span class="hljs-string">'I'</span>;
+            	  personnel[personKey].mdaStatusHistory[i].replacedBy = command.commandContent.mdaStatus.id;
+              }
+            }
+         
+            personnel[personKey].mdaStatusHistory.push(command.commandContent.mdaStatus);
+            personnel[personKey].activeMdaCodes = command.commandContent.activeMdaStatus;
+            personnel[personKey].formattedMdaStatus = personnel[personKey].getFormattedMdaStatus();
+            personnel[personKey].showPaginationLinksForMda = personnel[personKey].formattedMdaStatus.length &gt; <span class="hljs-number">0</span>;
+            personnel[personKey].personMDAPaginationModel = personnel[personKey].formattedMdaStatus.slice(<span class="hljs-number">0</span>, <span class="hljs-number">5</span>);
+            personnel[personKey].personMDACurrentPage = <span class="hljs-number">1</span>;
+            _processPartialAvailabilityAndMda(personnel[personKey], <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(), states);
+
+          }
+        }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Section - Handle Server Commands - End </p></div></div><div class="code"><div class="wrapper">      }
+    })</div></div></div></div></body></html>

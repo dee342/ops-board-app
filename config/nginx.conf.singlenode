@@ -1,0 +1,101 @@
+user opsboard opsboard;
+
+error_log  /apps/logs/nginx-errors.log;
+error_log  /apps/logs/nginx-errors.log  notice;
+error_log  /apps/logs/nginx-errors.log  info;
+
+pid        /apps/nginx/etc/nginx.pid;
+
+worker_processes  1;
+
+events {
+    worker_connections  1024;
+}
+
+
+http {
+    include mime.types;
+    default_type  application/octet-stream;
+
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for" "$gzip_ratio"';
+
+    access_log  /apps/logs/nginx-http.log  main;
+
+    log_format json '{"remote_addr":"$remote_addr", "remote_user":"$remote_user", "time_local":"$time_local", "request":"$request", '
+                      '"status":"$status", "body_bytes_sent":"$body_bytes_sent", "http_user_agent":"$http_user_agent", "http_referer":"$http_referer", '
+                      '"http_x_forwarded_for":"$http_x_forwarded_for", "gzip_ratio":"$gzip_ratio", "bytes_sent":"$bytes_sent", "connection":"$connection", '
+                       '"content_length":"$content_length", "content_type":"$content_type", "host":"$host", '
+                      '"hostname":"$hostname", "https":"$https", "msie":"$msie", "nginx_version":"$nginx_version", "pid":"$pid", '
+                      '"proxy_add_x_forwarded_for":"$proxy_add_x_forwarded_for", "proxy_host":"$proxy_host", "proxy_port":"$proxy_port", '
+                      '"proxy_protocol_addr":"$proxy_protocol_addr", "query_string":"$query_string", "realpath_root":"$realpath_root", '
+                      '"request_body":"$request_body", "request_length":"$request_length", "request_method":"$request_method", "request_time":"$request_time", '
+                      '"request_uri":"$request_uri", "server_addr":"$server_addr", "server_name":"$server_name", "server_port":"$server_port", "server_protocol":"$server_protocol", '
+                      '"upstream_addr":"$upstream_addr", "upstream_response_length":"$upstream_response_length", "upstream_response_time":"$upstream_response_time", "upstream_status":"$upstream_status"}';
+
+    access_log syslog:server=mstlva-dsnysmt7.csc.nycnet:2514 json;
+
+    sendfile on;
+    tcp_nopush on;
+    keepalive_timeout 65;
+
+    #gzip  on;
+
+    upstream node1 {
+      server 127.0.0.1:7070;
+    }
+
+    map $http_upgrade $connection_upgrade {
+       default upgrade;
+       ''      close;
+    }
+
+    server {
+        listen 80;
+        server_name localhost;
+
+        access_log /apps/logs/nginx-host.access.log  main;
+        access_log syslog:server=mstlva-dsnysmt7.csc.nycnet:2514 json;
+
+        proxy_redirect off;
+        proxy_set_header Host $host:$server_port;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+
+        proxy_connect_timeout       600;
+        proxy_send_timeout          600;
+        proxy_read_timeout          600;
+        send_timeout                600;
+
+        gzip on;
+        gzip_comp_level 6;
+        gzip_min_length 2048;
+        gzip_proxied any;
+        gzip_types application/json application/javascript application/x-font-woff; 
+
+       # redirect server error pages to the static page /50x.html
+        #
+        error_page   500 502 503 504  /50x.html;
+        location = /50x.html {
+            root   html;
+        }
+
+       # Static page shows that nginx is alive
+        location = /alive.html {
+            root   html;
+        }      
+
+        # All requests redirected to TC server
+        #
+        location / {
+          proxy_pass http://node1;
+        }
+
+
+    }
+}

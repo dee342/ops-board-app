@@ -1,0 +1,91 @@
+<!--/* Modal window view for setting a person's MDA status. */-->
+
+<form id="modal" name="modal" class="container-fluid" novalidate="true" centered-modal="true">
+  <!-- novalidate disables HTML5 native validation -->
+  <div th:include="views/modals/fragments/modal-header :: header" th:remove="tag"></div>
+  <div class="modal-body" ng-show="showContent">
+    <div class="row">
+      <label class="col-md-4 text-right">Start Date<i class="fa fa-asterisk"></i>:</label>
+      <div class="col-md-6 text-left">
+        <p class="input-group date-picker">
+          <input type="text" class="form-control" datepicker-popup="MM/dd/yyyy" ng-class="{'submitted' : submitted}" ng-model="opData.startDate" is-open="datepickers.startDateOpened" ng-readonly="true"
+            datepicker-options="mdaDateOptions" ng-required="true" close-text="Close" ng-change="onChange()"/> <span class="input-group-btn">
+            <button type="button" class="btn btn-default" ng-click="open($event,'startDateOpened')" ng-show="{{::!deleteMode}}">
+              <i class="glyphicon glyphicon-calendar"></i>
+            </button>
+            <button type="button" class="btn btn-default" ng-click="open($event,'startDateOpened')" disabled="disabled" ng-show="{{::deleteMode}}">
+              <i class="glyphicon glyphicon-calendar"></i>
+            </button>
+          </span>
+        </p>
+      </div>
+    </div>
+    <div class="row">
+      <label class="col-md-4 text-right">Type<i class="fa fa-asterisk"></i>:</label>
+      <div class="col-md-6 text-left">
+        <select ui-select2="mdaStatusSelect2Options" id="subType" class="down form-control" data-placeholder="(MDA Status Code - Reason)" ng-required="true" ng-model="opData.subType" ng-change="onChange()" ng-class="{'submitted' : submitted}" ng-show="{{::!deleteMode}}">
+          <option ng-repeat="status in opData.personnelStatusList" value="{{::status.code}}">{{::status.code}} - {{::status.descr}}</option>
+        </select>
+        <select ui-select2="mdaStatusSelect2Options" id="subType" class="down form-control" data-placeholder="(MDA Status Code - Reason)" ng-required="true" ng-model="opData.subType" ng-change="onChange()" disabled="disabled" ng-show="{{::deleteMode}}">
+          <option ng-repeat="status in opData.personnelStatusList" value="{{::status.code}}">{{::status.code}} - {{::status.descr}}</option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <label class="col-md-4 text-right">Healthcare Facility Appointment Date:</label>
+      <div class="col-md-6 text-left">
+        <p class="input-group date-picker">
+          <input type="text" class="form-control" datepicker-popup="MM/dd/yyyy" ng-model="opData.appointmentDate" is-open="datepickers.healthApptDateOpened" ng-readonly="true"
+            datepicker-options="mdaDateOptions" close-text="Close" ng-change="onChange()"/> <span class="input-group-btn">
+            <button type="button" class="btn btn-default" ng-click="open($event,'healthApptDateOpened')" ng-show="{{::!deleteMode}}">
+              <i class="glyphicon glyphicon-calendar"></i>
+            </button>
+            <button type="button" class="btn btn-default" ng-click="open($event,'healthApptDateOpened')" disabled="disabled" ng-show="{{::deleteMode}}">
+              <i class="glyphicon glyphicon-calendar"></i>
+            </button>
+          </span>
+        </p>
+      </div>
+    </div>
+            <div class="row">
+          <label class="col-md-4 text-right">End Date:</label>
+          <div class="col-md-6 text-left">
+            <p class="input-group date-picker">
+              <input type="text" class="form-control" datepicker-popup="MM/dd/yyyy" ng-model="opData.endDate" is-open="datepickers.endDateOpened" ng-readonly="true"
+                datepicker-options="mdaDateOptions" ng-required="true" close-text="Close" ng-class="{'submitted' : $parent.isRequired('endDate')}" ng-change="onChange(true)" /> <span
+                class="input-group-btn">
+                <button type="button" class="btn btn-default" ng-click="open($event,'endDateOpened')" ng-show="{{::!deleteMode}}">
+                  <i class="glyphicon glyphicon-calendar"></i>
+                </button>
+                <button type="button" class="btn btn-default" ng-click="open($event,'endDateOpened')" disabled="disabled" ng-show="{{::deleteMode}}">
+                  <i class="glyphicon glyphicon-calendar"></i>
+                </button>
+              </span>
+            </p>
+          </div>
+        </div>
+        <div class="row modal-time-row-lg">
+          <label class="col-md-4 text-right">End Time<i class="fa fa-asterisk"></i>:</label>
+          <div class="col-md-3">
+            <timepicker class="timepicker down" ng-model="opData.endTime" show-meridian="false" ng-change="onChange()" ng-show="{{::!deleteMode}}"></timepicker>
+            <timepicker class="timepicker down" ng-model="opData.endTime" show-meridian="false" ng-change="onChange()" disabled="disabled" ng-show="{{::deleteMode}}"></timepicker>
+          </div>
+        </div>
+    <div class="row">
+      <label class="col-md-4 text-right">Remarks:</label>
+      <div class="col-md-6 text-left">
+        <input type="text" id="remarks" name="remarks" class="form-control" ng-model="opData.remarks" ng-maxlength="{{::remarksMaxLength}}" maxlength="{{::remarksMaxLength}}" ng-change="onChange()" ng-show="{{::!deleteMode}}"/>
+        <input type="text" id="remarks" name="remarks" class="form-control" ng-model="opData.remarks" ng-maxlength="{{::remarksMaxLength}}" maxlength="{{::remarksMaxLength}}" ng-change="onChange()" disabled="disabled" ng-show="{{::deleteMode}}"/>
+      </div>
+    </div>
+    <div class="row">
+      <div th:include="views/modals/fragments/modal-client-errors :: client-errors" th:remove="tag"></div>
+    </div>
+      <div class="row">
+          <div th:include="views/modals/fragments/modal-server-errors :: server-errors" th:remove="tag"></div>
+        </div>
+  </div>
+  <div th:include="views/modals/fragments/modal-footer :: footer" th:remove="tag"></div>
+   <div th:include="views/modals/fragments/modal-exceptions :: exceptions" th:remove="tag"></div>
+  <div th:include="views/modals/fragments/modal-processing :: processing" th:remove="tag"></div>
+</form>

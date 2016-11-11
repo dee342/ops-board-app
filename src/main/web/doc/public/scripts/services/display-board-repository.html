@@ -1,0 +1,190 @@
+<!DOCTYPE html><html lang="en"><head><title>public\scripts\services\display-board-repository</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../../"><meta name="groc-document-path" content="public\scripts\services\display-board-repository"><meta name="groc-project-path" content="public\scripts\services\display-board-repository.js"><link rel="stylesheet" type="text/css" media="all" href="../../../assets/style.css"><script type="text/javascript" src="../../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">public\scripts\services\display-board-repository.js</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="hljs-pi">'use strict'</span>;
+
+angular.module(<span class="hljs-string">'OpsBoard'</span>)
+    .directive(<span class="hljs-string">'shiftitem'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($timeout)</span> </span>{
+
+      <span class="hljs-keyword">return</span> {
+        replace: <span class="hljs-literal">true</span>,
+        restrict: <span class="hljs-string">'E'</span>,
+        template: <span class="hljs-string">'&lt;div class="item"&gt;&lt;div class="firstheader"&gt;Hello&lt;/div&gt;&lt;/div&gt;'</span>,
+        link: {
+          pre: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">PreLinkingFunction</span><span class="hljs-params">($scope, $element, $attributes)</span> </span>{
+
+
+            $timeout(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+
+              <span class="hljs-keyword">var</span> pathElements = <span class="hljs-built_in">window</span>.location.pathname.split(<span class="hljs-string">'/displayboard'</span>),
+                  pathStart = pathElements[<span class="hljs-number">0</span>],
+                  pathElements = pathElements[<span class="hljs-number">1</span>].split(<span class="hljs-string">'/'</span>),
+                  boardLocation = pathElements[<span class="hljs-number">1</span>];
+
+              <span class="hljs-keyword">var</span> snake = <span class="hljs-string">''</span>;
+
+              <span class="hljs-built_in">console</span>.log($scope.data);
+
+              <span class="hljs-keyword">var</span> shifts = $scope.data.taskContainers[boardLocation].locationShifts;
+
+              angular.forEach(shifts, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(shift)</span> </span>{
+                snake = snake + <span class="hljs-string">'&lt;div class="item" style="height:200px;"&gt;'</span> + shift.id + <span class="hljs-string">'&lt;/div&gt;'</span>;
+              });
+
+
+            }, <span class="hljs-number">2000</span>);
+
+
+
+
+          }
+        }
+      };
+    })
+    .service(<span class="hljs-string">'DisplayBoardRepository'</span>,
+    <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($resource, $filter, $timeout, $window, $interval)</span> </span>{
+
+      refreshBoard($resource, $scope);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Section - WebSocket connection for events/messaging - Start *</p></div></div><div class="code"><div class="wrapper">      <span class="hljs-keyword">var</span> stompClient = <span class="hljs-literal">null</span>;
+      <span class="hljs-keyword">var</span> socket = <span class="hljs-literal">null</span>;
+      <span class="hljs-keyword">var</span> connected = <span class="hljs-literal">false</span>;
+
+      $scope.data = [{foo:<span class="hljs-string">'bar'</span>}];
+
+      <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">setConnection</span><span class="hljs-params">(isConnected)</span> </span>{
+        connected = isConnected;
+        $scope.$broadcast(<span class="hljs-string">'connected'</span>, connected);
+      }
+
+      <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">openWebSocket</span><span class="hljs-params">()</span> </span>{
+
+
+        <span class="hljs-keyword">var</span> pathElements = <span class="hljs-built_in">window</span>.location.pathname.split(<span class="hljs-string">'/displayboard'</span>),
+            pathStart = pathElements[<span class="hljs-number">0</span>],
+            boardLocation = pathElements[<span class="hljs-number">1</span>],
+            pathElements = pathElements[<span class="hljs-number">1</span>].split(<span class="hljs-string">'/'</span>);
+
+        <span class="hljs-keyword">if</span> (!socket) {
+          socket = <span class="hljs-keyword">new</span> SockJS(pathStart + <span class="hljs-string">'/wsdisplayboard/'</span> + pathElements[<span class="hljs-number">1</span>]);
+
+
+          stompClient = Stomp.over(socket);
+          stompClient.connect({}, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(frame)</span> </span>{
+
+            setConnection(<span class="hljs-literal">true</span>);
+
+            stompClient.subscribe(<span class="hljs-string">'/topic/displayboard.'</span> + pathElements[<span class="hljs-number">1</span>].toUpperCase(), <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(message)</span> </span>{
+              receivePublishCommand(message,<span class="hljs-literal">false</span>);
+
+            })
+          }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span> </span>{
+            <span class="hljs-keyword">if</span> (error.headers &amp;&amp; error.headers.message) {
+              <span class="hljs-built_in">console</span>.log(error.headers.message);
+            } <span class="hljs-keyword">else</span> {
+              <span class="hljs-built_in">console</span>.log(error);
+            }
+            setConnection(<span class="hljs-literal">false</span>);
+          });
+        }
+      }
+
+      <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">closeWebSocket</span><span class="hljs-params">()</span> </span>{
+        stompClient.disconnect(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+          setConnection(<span class="hljs-literal">false</span>);
+          <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'Disconnected'</span>);
+        });
+      }
+
+      <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">receivePublishCommand</span> <span class="hljs-params">(message)</span> </span>{
+
+        <span class="hljs-keyword">var</span> command = <span class="hljs-built_in">JSON</span>.parse(message.body);
+
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'received command: '</span> + command);
+
+        refreshBoard($resource, $scope);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Disregard error messages</p></div></div><div class="code"><div class="wrapper">        <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> command.error != <span class="hljs-string">'undefined'</span> &amp;&amp; command.error &gt; <span class="hljs-number">0</span>) {
+          <span class="hljs-keyword">return</span>;
+        }
+      }
+
+      <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">reloadBoard</span><span class="hljs-params">()</span> </span>{
+        <span class="hljs-built_in">window</span>.location.reload()
+      }
+
+      <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">refreshBoard</span><span class="hljs-params">($resource, $scope)</span> </span>{
+
+        <span class="hljs-keyword">var</span> pathElements = <span class="hljs-built_in">window</span>.location.pathname.split(<span class="hljs-string">'/displayboard'</span>),
+            pathStart = pathElements[<span class="hljs-number">0</span>];
+
+        pathElements = pathElements[<span class="hljs-number">1</span>].split(<span class="hljs-string">'/'</span>);
+
+        <span class="hljs-keyword">var</span> boardLocation = pathElements[<span class="hljs-number">1</span>],
+            boardDate = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(),
+            boardDate =  moment(boardDate).format(<span class="hljs-string">'YYYYMMDD'</span>),
+            boardKey = boardLocation + <span class="hljs-string">"_"</span> + boardDate,
+            boardData = {
+              pathStart: pathStart,
+              boardLocation: boardLocation,
+              boardDate: boardDate
+            };
+
+        <span class="hljs-keyword">var</span> resource = $resource(pathStart + <span class="hljs-string">'/:district/:date/load'</span>, {
+          district : <span class="hljs-literal">null</span>,
+          date : <span class="hljs-literal">null</span>
+        });
+
+        <span class="hljs-keyword">var</span> response = resource.get({
+          district : boardLocation,
+          date : boardDate
+        }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span></span>{
+        });
+
+        <span class="hljs-keyword">return</span> response.$promise.then(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span> </span>{
+
+          <span class="hljs-keyword">var</span> dateString = data.date.substring(<span class="hljs-number">4</span>, <span class="hljs-number">6</span>) + <span class="hljs-string">'/'</span> + data.date.substring(<span class="hljs-number">6</span>, <span class="hljs-number">8</span>) + <span class="hljs-string">'/'</span> + data.date.substring(<span class="hljs-number">0</span>, <span class="hljs-number">4</span>);
+
+          $scope.data = data;
+          <span class="hljs-keyword">var</span> shifts = data.taskContainers[boardLocation].locationShifts
+          $scope.shifts = shifts;
+
+          <span class="hljs-keyword">var</span> snakes = [];
+
+          angular.forEach(shifts, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(shift)</span> </span>{
+            snakes.push(<span class="hljs-string">'&lt;div class="firstheader"&gt;'</span> + shift.shift.name + <span class="hljs-string">'&lt;/div&gt;'</span>);
+          });
+
+          $scope.snakes = snakes;
+          $scope.data.boardDate = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(dateString);
+
+          $timeout(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+
+            <span class="hljs-keyword">var</span> $container = $(<span class="hljs-string">'.isotope'</span>).isotope({
+              layoutMode: <span class="hljs-string">'fitColumns'</span>,
+              itemSelector: <span class="hljs-string">'.item'</span>
+            });
+
+            $container.isotope(<span class="hljs-string">'layout'</span>);
+
+          }, <span class="hljs-number">200</span>);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p> $scope.unavailableFilter = function(persons, filterType) {
+ var results = [];</p>
+<p> angular.forEach(persons, function(value, key) {
+ if (value.hasOwnProperty(&#39;state&#39;) &amp;&amp; value.state === states.personnel.unavailable) {
+ results[key] = value;
+ }
+ });</p>
+<p> var results = _.uniq(results);</p>
+<p> if (!results || results.length == 0)
+ return results;</p>
+<p> var sortedResults = $scope.sortPersonnelPanel(results, filterType);</p>
+<p> return sortedResults;
+ };</p>
+<p> makeForm();
+ makeBoard(data);
+ showpage();</p>
+<p> $(&#39;#displayboard&#39;).append(headerlogo);</p></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Load data</p></div></div><div class="code"><div class="wrapper">          <span class="hljs-keyword">if</span> (!socket) {
+            openWebSocket();
+          }
+        }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span> </span>{
+          <span class="hljs-keyword">if</span> (errorFn) {
+            <span class="hljs-keyword">return</span> errorFn(error);
+          }
+          <span class="hljs-keyword">return</span> error;
+        });
+
+      }
+    });</div></div></div></div></body></html>

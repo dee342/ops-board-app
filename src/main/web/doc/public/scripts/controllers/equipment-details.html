@@ -1,0 +1,167 @@
+<!DOCTYPE html><html lang="en"><head><title>public\scripts\controllers\equipment-details</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../../"><meta name="groc-document-path" content="public\scripts\controllers\equipment-details"><meta name="groc-project-path" content="public\scripts\controllers\equipment-details.js"><link rel="stylesheet" type="text/css" media="all" href="../../../assets/style.css"><script type="text/javascript" src="../../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">public\scripts\controllers\equipment-details.js</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="hljs-pi">'use strict'</span>;
+
+angular
+		.module(<span class="hljs-string">'OpsBoard'</span>)
+		.controller(
+				<span class="hljs-string">'EquipmentDetailsCtrl'</span>,
+				<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($scope, $filter, OpsBoardRepository, EquipmentModel)</span> </span>{
+
+						           
+					
+					$scope.toInteger = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(length)</span> </span>{
+						<span class="hljs-keyword">return</span> length + <span class="hljs-number">1</span>;
+					}</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Detail sub-panels </p></div></div><div class="code"><div class="wrapper">					$scope.equipmentInfo = {
+						open : <span class="hljs-literal">true</span>,
+						show : <span class="hljs-literal">true</span>
+					}
+					$scope.equipmentUpDownHist = {
+						open : <span class="hljs-literal">true</span>,
+						show : <span class="hljs-literal">true</span>
+					}
+					$scope.loadStatusDetails = {
+						open : <span class="hljs-literal">true</span>,
+						show : <span class="hljs-literal">true</span>
+					}
+					$scope.devicesDetails = {
+						open : <span class="hljs-literal">true</span>,
+						show : <span class="hljs-literal">true</span>
+					}
+					$scope.snowDetails = {
+						open : <span class="hljs-literal">true</span>,
+						show : <span class="hljs-literal">true</span>
+					}
+					$scope.detachHist = {
+						open : <span class="hljs-literal">true</span>,
+						show : <span class="hljs-literal">true</span>
+					}
+					$scope.showInfo = <span class="hljs-literal">false</span>;
+					$scope.showDetachments = <span class="hljs-literal">false</span>;
+					$scope.materials = OpsBoardRepository.getMaterials();
+
+					$scope.hideInfo = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+						$scope.showInfo = <span class="hljs-literal">true</span>;
+						$scope.showDetachments = <span class="hljs-literal">false</span>;
+					}
+
+					$scope.hideDetachments = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+						$scope.showDetachments = <span class="hljs-literal">true</span>;
+						$scope.showInfo = <span class="hljs-literal">false</span>;
+					}
+
+					$scope.toggleOne = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+						<span class="hljs-keyword">if</span> ($scope.showInfo)
+							$scope.showInfo = !$scope.showInfo;
+						<span class="hljs-keyword">if</span> ($scope.showDetachments)
+							$scope.showDetachments = !$scope.showDetachments;
+					}
+
+					$scope.close = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+						$scope.showInfo = <span class="hljs-literal">false</span>;
+						$scope.showDetachments = <span class="hljs-literal">false</span>;
+						$scope.closeEquipmentDetailsPane();
+					}
+
+					$scope.$on(<span class="hljs-string">'reset-details-pane'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(event, args)</span> </span>{
+						$scope.showInfo = <span class="hljs-literal">false</span>;
+						$scope.showDetachments = <span class="hljs-literal">false</span>;
+					});
+
+					$scope.showBinStatus = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(pieceOfEquipment)</span> </span>{
+						<span class="hljs-keyword">if</span> (pieceOfEquipment &amp;&amp; pieceOfEquipment.bins
+								&amp;&amp; pieceOfEquipment.bins.length &gt; <span class="hljs-number">0</span>)
+							<span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+						<span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+					}
+
+					$scope.showDownCodes = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(pieceOfEquipment, showInfo)</span> </span>{
+						<span class="hljs-keyword">if</span> (pieceOfEquipment
+								&amp;&amp; pieceOfEquipment.upDownHistory
+								&amp;&amp; pieceOfEquipment.upDownHistory.length &gt; <span class="hljs-number">0</span>
+								&amp;&amp; pieceOfEquipment.upDownHistory[<span class="hljs-number">0</span>].down)
+							<span class="hljs-keyword">if</span> (!showInfo)
+								<span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+						<span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+					}
+
+					$scope.showDeviceConditions = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(pieceOfEquipment)</span> </span>{
+						<span class="hljs-keyword">if</span> (pieceOfEquipment
+								&amp;&amp; pieceOfEquipment.deviceConditions
+								&amp;&amp; pieceOfEquipment.deviceConditions.length &gt; <span class="hljs-number">0</span>)
+							<span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+						<span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+					}
+
+					$scope.showInfoTable = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+						<span class="hljs-keyword">if</span> (!$scope.showDetachments &amp;&amp; $scope.showInfo)
+							<span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+						<span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+					}
+
+					$scope.showDetachmentsTable = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+						<span class="hljs-keyword">if</span> ($scope.showDetachments &amp;&amp; !$scope.showInfo)
+							<span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+						<span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+					}
+
+					<span class="hljs-comment">//TODO - commented out by VG. This function was not being used, and would currently return incorrect values.</span>
+					<span class="hljs-comment">//TODO - dressable is no longer a field and is now inferred based on data from the piece of equipment.</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><pre><code>            $scope.showSnow = function(pieceOfEquipment) {
+                    if (pieceOfEquipment
+                            &amp;&amp; (pieceOfEquipment.snowReadiness.dressable == &#39;D&#39; || pieceOfEquipment.snowReadiness.dressable == &#39;E&#39;))
+                        return true;
+                    return false;
+                }</code></pre></div></div><div class="code"><div class="wrapper">					$scope.getEquipmentUpDownCondition = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(
+							pieceOfEquipment)</span> </span>{
+						<span class="hljs-keyword">var</span> results = OpsBoardRepository
+								.getEquipmentUpDownCondition(pieceOfEquipment);
+						<span class="hljs-keyword">return</span> results;
+					}</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Toggles for new re-skinned panels</p></div></div><div class="code"><div class="wrapper">					$scope.toggleEquipmentInfoSubpanel = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+						$scope.equipmentInfo.show = !$scope.equipmentInfo.show;
+					}
+					$scope.toggleEquipmentUpDownHistSubpanel = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+						$scope.equipmentUpDownHist.show = !$scope.equipmentUpDownHist.show;
+					}
+					$scope.toggleLoadStatusDetailsSubpanel = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+						$scope.loadStatusDetails.show = !$scope.loadStatusDetails.show;
+					}
+					$scope.toggleDevicesDetailsSubpanel = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+						$scope.devicesDetails.show = !$scope.devicesDetails.show;
+					}
+					$scope.toggleSnowDetailsSubpanel = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+						$scope.snowDetails.show = !$scope.snowDetails.show;
+					}
+					$scope.toggleDetachHistSubpanel = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+						$scope.detachHist.show = !$scope.detachHist.show;
+					}
+					
+					<span class="hljs-comment">//paginatino for Up/Down history</span>
+					   $scope.upDownPageChanged = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(upDownCurrentPage)</span> </span>{
+					          <span class="hljs-keyword">var</span> begin = ((upDownCurrentPage - <span class="hljs-number">1</span>) * $scope.upDownPerPage),
+					             end = begin + $scope.upDownPerPage;
+
+					          $scope.pieceOfEquipment.upDownPaginationModel = $scope.pieceOfEquipment.FormattedUpDownHistory.slice(begin, end);
+
+					         };
+					         <span class="hljs-comment">//paginatino for detachment hisotry</span>
+					  $scope.detachmentPageChanged = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(detachmentCurrentPage)</span> </span>{
+						          <span class="hljs-keyword">var</span> begin = ((detachmentCurrentPage - <span class="hljs-number">1</span>) * $scope.detachmentPerPage),
+						             end = begin + $scope.detachmentPerPage;
+
+						          $scope.pieceOfEquipment.equipmentDetachmentPaginationModel = $scope.pieceOfEquipment.formattedDetachments.slice(begin, end);
+
+						         };
+
+				});
+
+angular.module(<span class="hljs-string">'OpsBoard'</span>).filter(<span class="hljs-string">'toInteger'</span>,
+		[ <span class="hljs-string">'$filter'</span>, <span class="hljs-string">'$locale'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(filter, locale)</span> </span>{
+			<span class="hljs-keyword">var</span> currencyFilter = filter(<span class="hljs-string">'currency'</span>);
+			<span class="hljs-keyword">var</span> formats = locale.NUMBER_FORMATS;
+			<span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(amount, currencySymbol)</span> </span>{
+				<span class="hljs-keyword">var</span> value = currencyFilter(amount, currencySymbol);
+				<span class="hljs-keyword">var</span> sep = value.indexOf(formats.DECIMAL_SEP);
+				<span class="hljs-keyword">if</span> (amount &gt;= <span class="hljs-number">0</span>) {
+					<span class="hljs-keyword">return</span> value.substring(<span class="hljs-number">1</span>, sep);
+				}
+				<span class="hljs-keyword">return</span> value.substring(<span class="hljs-number">1</span>, sep) + <span class="hljs-string">')'</span>;
+			};
+		} ]);</div></div></div></div></body></html>

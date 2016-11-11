@@ -1,0 +1,31 @@
+toggleReportsPane<!--/* Thymeleaf fragment to display the Task Settings Pane. */-->
+
+<div th:fragment="reports-pane">
+    <div ng-controller="ReportsCtrl" id="reports" class="flex pane no-scroll col-md-12" ng-style="{'width': '100%'}"
+         ng-show="layout.screen1.visible &amp;&amp; panes.reports.active">
+        <div class="header">
+
+            <div class="row" style="margin:0px;">
+                <div class="col-md-12" style="text-align: center; padding: 0px;">
+                <span style="border-left: 1px solid #000; width: 38px; padding: 9px 12px; float:right; ">             
+						<i class="fa fa-times fa-lg" ng-click="toggleReportsPane()"></i>
+          			</span>
+                    <span style="float: left; padding: 5px 0px 3px 10px;" class="paneTitle reports-pane-selenium">Reports</span>
+                    	<span style="border-left: 1px solid #000; text-align: center; padding: 7px 12px 8px; float:right;" >
+					   		<div class="btn-group-xs dropdown">
+					   			<button type="button" class="btn btn-success left">Action</button>
+						    	<button type="button" class="btn btn-success right dropdown-toggle">
+							   		<span class="caret"></span> <span class="sr-only"></span>
+						   		</button>
+						   		<ul class="dropdown-menu right-aligned" role="menu">
+							   		<li  ng-click="addVolunteerCounts()">Add Volunteer Counts</li>
+								</ul>
+					  	  	</div>
+						</span>
+				<div style="clear: both;"></div>
+       			</div>
+        	</div>
+    	</div>
+	</div>
+</div>
+

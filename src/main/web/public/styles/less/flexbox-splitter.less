@@ -1,0 +1,94 @@
+@splitter-background-color: lighten(#1d1e23, 10%);
+@splitter-expander-background-color: #5e5f63;
+@splitter-ghost-background-color: lighten(#6b6969, 10%);
+
+
+.flexbox {
+	display: flex;
+	display: -webkit-box;
+	display: -moz-box;
+	display: -o-flexbox;
+	display: -webkit-flex;
+	&.column {
+		box-orient: vertical;
+		-webkit-box-orient: vertical;
+		-moz-box-orient: vertical;
+		-ms-box-orient: vertical;
+		flex-direction: column;
+		-o-flex-direction: column;
+		-webkit-flex-direction: column;
+	}
+	& .flex {
+		box-flex: 1;
+		-webkit-box-flex: 1;
+		-moz-box-flex: 1;
+		-ms-box-flex: 1; 
+		flex: 1;
+		-webkit-flex: 1;
+		position: relative;
+	}
+	& .ghost {
+		height: 100%;	
+		position: absolute;
+		width: 100%;
+		z-index: 99;
+		&.active {
+			background-color: @splitter-ghost-background-color;
+		}
+		& .expander {
+			background-color: @splitter-expander-background-color;
+			height: 140px;
+			left: 50%;
+			margin-left: -4px;
+			position: absolute;
+			top: 45%;
+			width: 8px;
+			z-index: 100;
+			text-align: center;
+			.fa {
+				display: block;
+				font-size: 16px;
+				line-height: 0.6;
+				margin-left: auto;
+				margin-right: auto;
+			}
+			.fa-angle-left {
+				margin-top: 63px;
+			}
+		}
+	}
+	& [splitter] {
+		background-color: @splitter-background-color;
+		position: relative;
+		overflow: initial;
+		&[fixed=fixed] {
+			cursor: default;
+		}
+	}
+	& [splitter=left], [splitter=right] {
+		cursor: col-resize;	
+		height: auto;
+		width: 4px;	
+	}
+	& [splitter=up], [splitter=down] {
+		cursor: row-resize;	
+		height: auto;
+		width: 4px;	
+	}	
+}
+
+.flexbox-active {
+	user-select: none;
+	-moz-user-select: -moz-none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
+}
+
+.flexbox-content {
+	height: 100%;
+	position: absolute;
+	width: 100%;
+}
+
+
+

@@ -1,0 +1,1352 @@
+<!DOCTYPE html><html lang="en"><head><title>public\scripts\services\ops-board-repository</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../../"><meta name="groc-document-path" content="public\scripts\services\ops-board-repository"><meta name="groc-project-path" content="public\scripts\services\ops-board-repository.js"><link rel="stylesheet" type="text/css" media="all" href="../../../assets/style.css"><script type="text/javascript" src="../../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">public\scripts\services\ops-board-repository.js</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="hljs-pi">'use strict'</span>;
+
+angular.module(<span class="hljs-string">'OpsBoard'</span>).service(
+    <span class="hljs-string">'OpsBoardRepository'</span>,
+    <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($rootScope, $resource, states, $filter, $timeout, $window, $interval, user, titles, 
+        EquipmentModel, PersonModel, WorkUnits, TaskSettingsService, BoardHelperService, 
+        TaskHelperService, ReferenceDataService, RecentActivityLoggingService, 
+        EquipmentHelperService, PersonnelHelperService, ReportsService, OpsBoardInterval, $http)</span> </span>{</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Board key</p></div></div><div class="code"><div class="wrapper">      <span class="hljs-keyword">var</span> pathElements = <span class="hljs-built_in">window</span>.location.pathname.split(<span class="hljs-string">'/'</span>), pathStart = <span class="hljs-string">'/'</span> + pathElements[<span class="hljs-number">1</span>];
+
+        <span class="hljs-keyword">var</span> boardLocation = pathElements[<span class="hljs-number">2</span>],
+        boardDate = pathElements[<span class="hljs-number">3</span>],
+        boardData = {
+            pathStart: pathStart,
+            boardLocation: boardLocation,
+            boardDate: boardDate
+        };
+
+      <span class="hljs-keyword">var</span> uniqueId;</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Core data</p></div></div><div class="code"><div class="wrapper">      <span class="hljs-keyword">var</span> equipment, personnel, shifts, onlineUsers, tasks, volunteerCounts, districtpersonnel, boardEndDate, boardQuota;
+      <span class="hljs-keyword">var</span> linkedTaskMap = [];
+      <span class="hljs-keyword">var</span> actions = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Array</span>();</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Reference data</p></div></div><div class="code"><div class="wrapper">      <span class="hljs-keyword">var</span> equipmentDownCodes, equipmentDownData, locations, materialList,
+      shiftData, categoryData, categories, personnelStatusList, repairLocations,
+      shopLocations,
+      isBoro = <span class="hljs-literal">false</span>,
+      groupCnt = {cnt: <span class="hljs-number">1</span>},
+      timerset = <span class="hljs-literal">false</span>;</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Command counter</p></div></div><div class="code"><div class="wrapper">      <span class="hljs-keyword">var</span> clientSequence = <span class="hljs-number">0</span>;</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>REST connection for initial load or
+refresh</p></div></div><div class="code"><div class="wrapper">      <span class="hljs-keyword">var</span> resource = $resource(pathStart + <span class="hljs-string">'/:district/:date/load'</span>, {
+        district : <span class="hljs-literal">null</span>,
+        date : <span class="hljs-literal">null</span>
+      });
+
+      <span class="hljs-keyword">var</span> response = resource.get({
+        district : boardLocation,
+        date : boardDate
+      });</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Section - WebSocket connection for
+events/messaging - Start *</p></div></div><div class="code"><div class="wrapper">      <span class="hljs-keyword">var</span> stompClient = <span class="hljs-literal">null</span>;
+      <span class="hljs-keyword">var</span> socket = <span class="hljs-literal">null</span>;
+      <span class="hljs-keyword">var</span> connected = <span class="hljs-literal">false</span>;
+
+      <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">setConnection</span><span class="hljs-params">(isConnected)</span> </span>{
+        connected = isConnected;
+        $rootScope.$broadcast(<span class="hljs-string">'connected'</span>, connected);
+      }
+
+      <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">openWebSocket</span><span class="hljs-params">()</span> </span>{
+        <span class="hljs-keyword">if</span> (!socket) {
+          socket = <span class="hljs-keyword">new</span> SockJS(pathStart + <span class="hljs-string">'/wsboard/'</span> + boardLocation + <span class="hljs-string">'/'</span> + boardDate);
+          stompClient = Stomp.over(socket);
+          stompClient.connect({persistant: <span class="hljs-literal">false</span>}, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(frame)</span> </span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'Connected: '</span> + frame);
+            setConnection(<span class="hljs-literal">true</span>);
+            <span class="hljs-keyword">var</span> result = stompClient.subscribe(<span class="hljs-string">'/topic/commands.'</span> + boardLocation.toUpperCase() + <span class="hljs-string">'.'</span> + boardDate, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(message)</span> </span>{
+              receiveCommand(message, <span class="hljs-literal">false</span>, frame);
+            })
+            <span class="hljs-keyword">var</span> result2 = stompClient.subscribe(<span class="hljs-string">'/topic/user-queue-notifications.'</span> + user.username + <span class="hljs-string">'.'</span>+ boardLocation.toUpperCase() + <span class="hljs-string">'.'</span> + boardDate, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(message)</span> </span>{
+                receiveCommand(message, <span class="hljs-literal">false</span>, frame);
+              })
+          }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span> </span>{
+            <span class="hljs-keyword">if</span> (error.headers &amp;&amp; error.headers.message) {
+              <span class="hljs-built_in">console</span>.log(error.headers.message);
+            } <span class="hljs-keyword">else</span> {
+              <span class="hljs-built_in">console</span>.log(error);
+            }
+            setConnection(<span class="hljs-literal">false</span>);
+          });
+        }
+      }
+
+      <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">closeWebSocket</span><span class="hljs-params">()</span> </span>{
+        stompClient.disconnect(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+          setConnection(<span class="hljs-literal">false</span>);
+          <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'Disconnected'</span>);
+        });
+      }
+
+      <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">checkRowcount</span><span class="hljs-params">(itemsheight, itemheight, locationscount)</span> </span>{
+
+        <span class="hljs-keyword">var</span> windowHeight = angular.element($<span class="hljs-built_in">window</span>).height();
+        <span class="hljs-keyword">var</span> colheight = windowHeight - <span class="hljs-number">114</span>;
+
+        <span class="hljs-keyword">if</span>(locationscount &gt; <span class="hljs-number">1</span>) {
+          colheight = windowHeight - <span class="hljs-number">154</span>;
+        }
+
+        itemsheight = itemsheight + itemheight;
+        <span class="hljs-keyword">if</span>(itemsheight &gt; colheight) {
+          itemsheight = <span class="hljs-number">0</span>;
+        }
+
+        <span class="hljs-keyword">return</span> itemsheight;
+      }
+
+      <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">locationtasks</span><span class="hljs-params">(tasksin, personneldistricts)</span> </span>{</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>todo: need to bring in homelocation to filters!</p></div></div><div class="code"><div class="wrapper">        <span class="hljs-keyword">var</span> locationscount =  <span class="hljs-built_in">Object</span>.keys(tasksin.locations).length;
+        <span class="hljs-keyword">var</span> taskcells = [];
+        <span class="hljs-keyword">var</span> shift2 = {};
+        <span class="hljs-keyword">var</span> shiftCategories = {};
+        <span class="hljs-keyword">var</span> shiftcategory2 = {};
+        <span class="hljs-keyword">var</span> subcategorytasks = {};
+        <span class="hljs-keyword">var</span> categorytask2 = {};
+        <span class="hljs-keyword">var</span> task2 = {};
+        <span class="hljs-keyword">var</span> sections = {};
+        <span class="hljs-keyword">var</span> section2 = {};
+        <span class="hljs-keyword">var</span> location2 = {};
+        <span class="hljs-keyword">var</span> tasksobject = [];
+        <span class="hljs-keyword">var</span> locationId = <span class="hljs-string">''</span>;
+        <span class="hljs-keyword">var</span> hassections = <span class="hljs-literal">false</span>;
+        <span class="hljs-keyword">var</span> finalobject = {};
+        <span class="hljs-keyword">var</span> personnelblock = [];
+        <span class="hljs-keyword">var</span> personnelblockcount = <span class="hljs-number">0</span>;
+        <span class="hljs-keyword">var</span> tempcount = <span class="hljs-number">0</span>;
+        <span class="hljs-keyword">var</span> builtpersonnelblock = {};
+
+        <span class="hljs-keyword">var</span> itemsheight = <span class="hljs-number">0</span>;
+        <span class="hljs-keyword">var</span> cols = {};
+        <span class="hljs-keyword">var</span> column = <span class="hljs-number">1</span>;
+        <span class="hljs-keyword">var</span> columnname = <span class="hljs-string">'col'</span> + column;
+        <span class="hljs-keyword">var</span> results = [];
+        <span class="hljs-keyword">var</span> unavailablegroup = [];
+        <span class="hljs-keyword">var</span> unavailablecount = <span class="hljs-number">0</span>;
+        <span class="hljs-keyword">var</span> tasksequence = <span class="hljs-number">0</span>;
+
+
+        <span class="hljs-keyword">var</span> windowHeight = angular.element($<span class="hljs-built_in">window</span>).height();
+
+        <span class="hljs-keyword">var</span> locationsSorted = $filter(<span class="hljs-string">'orderByLocation'</span>)(tasksin.locations);
+
+        _.each(locationsSorted, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(location)</span> </span>{
+          column = <span class="hljs-number">1</span>;
+          itemsheight = <span class="hljs-number">0</span>;
+          columnname = <span class="hljs-string">'col'</span> + column;
+
+          location2 = location;
+
+          location2.locationShiftsCount = <span class="hljs-built_in">Object</span>.keys(location2.locationShifts).length;
+
+          locationId = location2.location.code.trim();
+
+          finalobject[locationId] = {};
+          finalobject[locationId].personnel = {};
+
+
+          <span class="hljs-keyword">if</span>(personneldistricts) {
+            finalobject[locationId].personnel = personneldistricts[locationId];
+          }
+
+          finalobject[locationId].locationId = locationId;
+          finalobject[locationId].cols = {};
+          finalobject[locationId].cols[columnname] = {};
+          finalobject[locationId].cols[columnname].taskcells = [];
+          finalobject[locationId].locationcount = <span class="hljs-built_in">Object</span>.keys(locationsSorted).length;
+
+          <span class="hljs-keyword">var</span> shifts = location2.locationShifts;
+          shifts = $filter(<span class="hljs-string">'orderByShiftId'</span>)(shifts);
+
+
+          <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> shift <span class="hljs-keyword">in</span> shifts) {
+            shift2 = shifts[shift];
+
+            shift2.shift.type = (shift2.shift.sequence &gt; <span class="hljs-number">6</span> &amp;&amp; shift2.shift.sequence &lt; <span class="hljs-number">14</span>) ? <span class="hljs-string">'day'</span> : <span class="hljs-string">'night'</span>;
+
+            finalobject[locationId].cols[columnname].taskcells.push({type:<span class="hljs-string">'shift'</span>,shift: shift2, locationId: locationId, column: column});
+            itemsheight = checkRowcount(itemsheight, <span class="hljs-number">39</span>, locationscount);
+             <span class="hljs-keyword">if</span>(itemsheight === <span class="hljs-number">0</span>) {
+               column++;
+               columnname = <span class="hljs-string">'col'</span> + column;
+               finalobject[locationId].cols[columnname] = {};
+               finalobject[locationId].cols[columnname].taskcells = [];
+             }
+
+
+            shiftCategories = $filter(<span class="hljs-string">'orderByCategoryId'</span>)(shift2.shiftCategories);
+
+            <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> shiftcategory <span class="hljs-keyword">in</span> shiftCategories) {
+              shiftcategory2 = shiftCategories[shiftcategory];
+              shiftcategory2.category.subcategories = <span class="hljs-literal">undefined</span>;
+              subcategorytasks = $filter(<span class="hljs-string">'orderBySubcategorySequence'</span>)(shiftcategory2.subcategoryTasks);
+
+              <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> categorytask <span class="hljs-keyword">in</span> subcategorytasks) {
+                categorytask2 = subcategorytasks[categorytask];
+
+                finalobject[locationId].cols[columnname].taskcells.push({type:<span class="hljs-string">'subcategory'</span>, category: shiftcategory2, subcategory: categorytask2, shift: shift2, location: location2, locationId: locationId, column: column});
+                itemsheight = checkRowcount(itemsheight, <span class="hljs-number">36</span>, locationscount);
+                <span class="hljs-keyword">if</span>(itemsheight === <span class="hljs-number">0</span>) {
+                  column++;
+                  columnname = <span class="hljs-string">'col'</span> + column;
+                  finalobject[locationId].cols[columnname] = {};
+                  finalobject[locationId].cols[columnname].taskcells = [];
+                }
+
+                tasksobject = $filter(<span class="hljs-string">'orderByTaskId'</span>)(categorytask2.tasks);
+
+                tasksequence = <span class="hljs-number">0</span>;
+
+                <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> task <span class="hljs-keyword">in</span> tasksobject) {
+                  tasksequence++;
+                  task2 = tasksobject[task];
+                  finalobject[locationId].cols[columnname].taskcells.push({type:<span class="hljs-string">'task'</span>,task: task2, category: shiftcategory2, subcategory: categorytask2, shift: shift2, location: location2, locationId: locationId, column: column, tasksequence: tasksequence, tasksection: <span class="hljs-number">0</span>});
+                  itemsheight = checkRowcount(itemsheight, <span class="hljs-number">35</span>, locationscount);
+                  <span class="hljs-keyword">if</span>(itemsheight === <span class="hljs-number">0</span>) {
+                    column++;
+                    columnname = <span class="hljs-string">'col'</span> + column;
+                    finalobject[locationId].cols[columnname] = {};
+                    finalobject[locationId].cols[columnname].taskcells = [];
+                  }
+                }
+
+                sections = $filter(<span class="hljs-string">'orderBySection'</span>)(categorytask2.sections);
+                hassections = <span class="hljs-literal">false</span>;
+
+                <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> section <span class="hljs-keyword">in</span> sections) {
+                  section2 = sections[section];
+                  finalobject[locationId].cols[columnname].taskcells.push({type:<span class="hljs-string">'section'</span>, section: section2, category: shiftcategory2, subcategory: categorytask2, shift: shift2, location: location2, locationId: locationId, context: <span class="hljs-string">'supervisor-assignment'</span>, taskIndicator: <span class="hljs-string">''</span>, column: column});
+                  itemsheight = checkRowcount(itemsheight, <span class="hljs-number">25</span>, locationscount);
+                  <span class="hljs-keyword">if</span>(itemsheight === <span class="hljs-number">0</span>) {
+                    column++;
+                    columnname = <span class="hljs-string">'col'</span> + column;
+                    finalobject[locationId].cols[columnname] = {};
+                    finalobject[locationId].cols[columnname].taskcells = [];
+                  }
+
+                  tasksobject = $filter(<span class="hljs-string">'orderByTaskId'</span>)(section2.tasks);
+                  tasksequence = <span class="hljs-number">0</span>;
+
+                  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> task <span class="hljs-keyword">in</span> tasksobject) {
+                    tasksequence++;
+                    task2 = tasksobject[task];
+                    finalobject[locationId].cols[columnname].taskcells.push({type:<span class="hljs-string">'task'</span>,task: task2, category: shiftcategory2, subcategory: categorytask2, shift: shift2, location: location2, section: section2, locationId: locationId, context: <span class="hljs-string">'supervisor-assignment'</span>, taskIndicator: <span class="hljs-string">''</span>, column: column, tasksequence: tasksequence, tasksection: section2.section.name});
+                    itemsheight = checkRowcount(itemsheight, <span class="hljs-number">35</span>, locationscount);
+                    <span class="hljs-keyword">if</span>(itemsheight === <span class="hljs-number">0</span>) {
+                      column++;
+                      columnname = <span class="hljs-string">'col'</span> + column;
+                      finalobject[locationId].cols[columnname] = {};
+                      finalobject[locationId].cols[columnname].taskcells = [];
+                    }
+                  }
+
+                  finalobject[locationId].cols[columnname].taskcells.push({type:<span class="hljs-string">'lastsectiontask'</span>, category: shiftcategory2, column: column});
+                  itemsheight = checkRowcount(itemsheight, <span class="hljs-number">5</span>, locationscount);
+                  <span class="hljs-keyword">if</span>(itemsheight === <span class="hljs-number">0</span>) {
+                    column++;
+                    columnname = <span class="hljs-string">'col'</span> + column;
+                    finalobject[locationId].cols[columnname] = {};
+                    finalobject[locationId].cols[columnname].taskcells = [];
+                  }
+                }
+
+                finalobject[locationId].cols[columnname].taskcells.push({type:<span class="hljs-string">'lasttask'</span>, column: column});
+                itemsheight = checkRowcount(itemsheight, <span class="hljs-number">5</span>, locationscount);
+                <span class="hljs-keyword">if</span>(itemsheight === <span class="hljs-number">0</span>) {
+                  column++;
+                  columnname = <span class="hljs-string">'col'</span> + column;
+                  finalobject[locationId].cols[columnname] = {};
+                  finalobject[locationId].cols[columnname].taskcells = [];
+                }
+              }
+            }
+          }
+
+          personnelblock = [];
+          personnelblockcount = <span class="hljs-number">0</span>;
+
+          <span class="hljs-keyword">if</span>(personneldistricts){
+
+            builtpersonnelblock = buildPersonnelBlock(finalobject[locationId], personneldistricts[locationId], <span class="hljs-string">'availablePersonnelFilter'</span>, <span class="hljs-string">'Available/Unassigned'</span>, itemsheight, personnelblock, personnelblockcount, column, columnname, locationscount, <span class="hljs-string">'available'</span>, <span class="hljs-number">1</span>);
+            finalobject[locationId] = builtpersonnelblock.finalobject;
+            personnelblockcount =  builtpersonnelblock.personnelblockcount;
+            itemsheight = builtpersonnelblock.itemsheight;
+            personnelblock = builtpersonnelblock.personnelblock;
+            personnelblockcount = builtpersonnelblock.personnelblockcount;
+            column = builtpersonnelblock.column;
+            columnname = builtpersonnelblock.columnname;
+
+            personnelblock = [];
+            personnelblockcount = <span class="hljs-number">0</span>;
+
+            builtpersonnelblock = buildPersonnelBlock(finalobject[locationId], personneldistricts[locationId], <span class="hljs-string">'mdaPersonnelFilter'</span>, <span class="hljs-string">'MDA'</span>, itemsheight, personnelblock, personnelblockcount, column, columnname, locationscount, <span class="hljs-string">'mda'</span>);
+            finalobject[locationId] = builtpersonnelblock.finalobject;
+            personnelblockcount =  builtpersonnelblock.personnelblockcount;
+            itemsheight = builtpersonnelblock.itemsheight;
+            personnelblock = builtpersonnelblock.personnelblock;
+            personnelblockcount = builtpersonnelblock.personnelblockcount;
+            column = builtpersonnelblock.column;
+            columnname = builtpersonnelblock.columnname;
+
+            <span class="hljs-keyword">var</span> unavailableCodes = [{code: <span class="hljs-string">'VACATION/CHART'</span>, title:  <span class="hljs-string">'Vacation/Chart'</span>}, {code: <span class="hljs-string">'CHART'</span>, title:  <span class="hljs-string">'Charts'</span>}, {code: <span class="hljs-string">'XWP'</span>, title:  <span class="hljs-string">'XWP'</span>}, {code: <span class="hljs-string">'XWOP'</span>, title:  <span class="hljs-string">'XWOP'</span>}, {code: <span class="hljs-string">'SICK'</span>, title:  <span class="hljs-string">'Sick'</span>}, {code: <span class="hljs-string">'VACATION'</span>, title:  <span class="hljs-string">'Vacation'</span>}, {code: <span class="hljs-string">'LODI'</span>, title:  <span class="hljs-string">'LODI'</span>}, {code: <span class="hljs-string">'APP'</span>, title:  <span class="hljs-string">'APP'</span>}, {code: <span class="hljs-string">'AWOL'</span>, title:  <span class="hljs-string">'AWOL'</span>}, {code: <span class="hljs-string">'DIF'</span>, title:  <span class="hljs-string">'DIF'</span>}, {code: <span class="hljs-string">'SUSPENDED'</span>, title:  <span class="hljs-string">'Suspended'</span>}, {code: <span class="hljs-string">'TERMINAL LEAVE'</span>, title:  <span class="hljs-string">'Terminal Leave'</span>}, {code: <span class="hljs-string">'JURY DUTY'</span>, title:  <span class="hljs-string">'Jury Duty'</span>}, {code: <span class="hljs-string">'Mil Dty w/Pay'</span>, title:  <span class="hljs-string">'Mil Dty w/Pay'</span>}, {code: <span class="hljs-string">'Mil Dty w/o Pay'</span>, title:  <span class="hljs-string">'Mil Dty w/o Pay'</span>}, {code: <span class="hljs-string">'HONOR GUARD'</span>, title:  <span class="hljs-string">'Honor Guard'</span>}, {code: <span class="hljs-string">'FMLA'</span>, title:  <span class="hljs-string">'FMLA'</span>}, {code: <span class="hljs-string">'MATERNITY LEAVE'</span>, title:  <span class="hljs-string">'Maternity Leave'</span>}, {code: <span class="hljs-string">'MULTIPLE'</span>, title:  <span class="hljs-string">'Multiple'</span>}];
+
+            unavailablecount = <span class="hljs-number">0</span>;
+            unavailablegroup = [];
+            _.each(unavailableCodes, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(codeobject)</span> </span>{
+
+              personnelblock = [];
+              personnelblockcount = <span class="hljs-number">0</span>;
+
+              results = $filter(<span class="hljs-string">'unavailablePersonnelFilter'</span>)(personneldistricts[locationId], <span class="hljs-string">''</span>, codeobject.code);
+              results = results.results;
+
+              <span class="hljs-keyword">if</span>(results.length &gt; <span class="hljs-number">0</span>){
+                unavailablecount = unavailablecount + results.length;
+                unavailablegroup.push({type: <span class="hljs-string">'unavailablegroupheader'</span>, title: codeobject.title, column: column, count: results.length});
+
+                <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> result <span class="hljs-keyword">in</span> results) {
+                  personnelblockcount++;
+                  results[result].formattedname = $filter(<span class="hljs-string">'getFormattedName'</span>)(results[result]);
+                  personnelblock.push(results[result]);
+
+                  <span class="hljs-keyword">if</span> (personnelblockcount &gt; <span class="hljs-number">1</span>) {
+                    unavailablegroup.push({type: <span class="hljs-string">'personnelblock'</span>, personnelblock: personnelblock, column: column});
+                    itemsheight = checkRowcount(itemsheight, <span class="hljs-number">21</span>, locationscount);
+                    <span class="hljs-keyword">if</span>(itemsheight === <span class="hljs-number">0</span>) {
+                      column++;
+                      columnname = <span class="hljs-string">'col'</span> + column;
+                      finalobject.cols[columnname] = {};
+                      finalobject.cols[columnname].taskcells = [];
+                    }
+                    personnelblockcount = <span class="hljs-number">0</span>;
+                    personnelblock = [];
+                  }
+                }
+
+                <span class="hljs-keyword">if</span> (personnelblockcount &gt; <span class="hljs-number">0</span>) {
+                  unavailablegroup.push({type: <span class="hljs-string">'personnelblock'</span>, personnelblock: personnelblock, column: column});
+                  itemsheight = checkRowcount(itemsheight, <span class="hljs-number">21</span>, locationscount);
+                  <span class="hljs-keyword">if</span>(itemsheight === <span class="hljs-number">0</span>) {
+                    column++;
+                    columnname = <span class="hljs-string">'col'</span> + column;
+                    finalobject.cols[columnname] = {};
+                    finalobject.cols[columnname].taskcells = [];
+                  }
+                }
+
+              }
+            });
+
+
+            <span class="hljs-keyword">if</span>(unavailablecount &gt; <span class="hljs-number">0</span>) {
+              finalobject[locationId].cols[columnname].taskcells.push({type: <span class="hljs-string">'personnelheader'</span>, title: <span class="hljs-string">'Unavailable'</span>, column: column, headerclass: <span class="hljs-string">'unavailable'</span>, count: unavailablecount});
+              itemsheight = checkRowcount(itemsheight, <span class="hljs-number">38</span>, locationscount);
+              <span class="hljs-keyword">if</span>(itemsheight === <span class="hljs-number">0</span>) {
+                column++;
+                columnname = <span class="hljs-string">'col'</span> + column;
+                finalobject[locationId].cols[columnname] = {};
+                finalobject[locationId].cols[columnname].taskcells = [];
+              }
+
+              finalobject[locationId].cols[columnname].taskcells = finalobject[locationId].cols[columnname].taskcells.concat(unavailablegroup);
+
+              finalobject[locationId].cols[columnname].taskcells.push({type: <span class="hljs-string">'personnelfooter'</span>, title: <span class="hljs-string">''</span>, column: column});
+              itemsheight = checkRowcount(itemsheight, <span class="hljs-number">38</span>, locationscount);
+              <span class="hljs-keyword">if</span>(itemsheight === <span class="hljs-number">0</span>) {
+                column++;
+                columnname = <span class="hljs-string">'col'</span> + column;
+                finalobject[locationId].cols[columnname] = {};
+                finalobject[locationId].cols[columnname].taskcells = [];
+              }
+            }
+
+          }
+        });
+
+        <span class="hljs-keyword">return</span> finalobject;
+      };
+
+      <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">buildPersonnelBlock</span><span class="hljs-params">(finalobject, personneldistricts, filter, title, itemsheight, personnelblock, personnelblockcount, column, columnname, locationscount, headerclass, code, mode)</span> </span>{
+        <span class="hljs-keyword">var</span> filterType = <span class="hljs-string">''</span>;
+        <span class="hljs-keyword">var</span> builtpersonnelblock = {};
+
+        <span class="hljs-keyword">var</span> results = $filter(filter)(personneldistricts, filterType, code);
+
+        <span class="hljs-keyword">if</span>(results.results.length &gt; <span class="hljs-number">0</span>) {
+          finalobject.cols[columnname].taskcells.push({type: <span class="hljs-string">'personnelheader'</span>, title: title, column: column, headerclass: headerclass, count: results.total});
+        }
+
+        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> person <span class="hljs-keyword">in</span> results.results) {
+          personnelblockcount++;
+          results.results[person].formattedname = $filter(<span class="hljs-string">'getFormattedName'</span>)(results.results[person]);
+          personnelblock.push(results.results[person]);
+
+          <span class="hljs-keyword">if</span> (personnelblockcount &gt; <span class="hljs-number">1</span>) {
+            finalobject.cols[columnname].taskcells.push({type: <span class="hljs-string">'personnelblock'</span>, personnelblock: personnelblock, column: column, headerclass: headerclass, title: title});
+            itemsheight = checkRowcount(itemsheight, <span class="hljs-number">21</span>, locationscount);
+            <span class="hljs-keyword">if</span>(itemsheight === <span class="hljs-number">0</span>) {
+              column++;
+              columnname = <span class="hljs-string">'col'</span> + column;
+              finalobject.cols[columnname] = {};
+              finalobject.cols[columnname].taskcells = [];
+            }
+            personnelblockcount = <span class="hljs-number">0</span>;
+            personnelblock = [];
+          }
+        }
+
+        <span class="hljs-keyword">if</span>(personnelblockcount &gt; <span class="hljs-number">0</span>) {
+          finalobject.cols[columnname].taskcells.push({type: <span class="hljs-string">'personnelblock'</span>, personnelblock: personnelblock, column: column, title: title});
+          itemsheight = checkRowcount(itemsheight, <span class="hljs-number">21</span>, locationscount);
+          <span class="hljs-keyword">if</span>(itemsheight === <span class="hljs-number">0</span>) {
+            column++;
+            columnname = <span class="hljs-string">'col'</span> + column;
+            finalobject.cols[columnname] = {};
+            finalobject.cols[columnname].taskcells = [];
+          }
+        }
+
+        <span class="hljs-keyword">if</span>(results.results.length &gt; <span class="hljs-number">0</span>) {
+          finalobject.cols[columnname].taskcells.push({type: <span class="hljs-string">'personnelfooter'</span>, title: title, column: column});
+        }
+
+        builtpersonnelblock.finalobject = finalobject;
+        builtpersonnelblock.itemsheight = itemsheight;
+        builtpersonnelblock.personnelblock = personnelblock;
+        builtpersonnelblock.personnelblockcount = personnelblockcount;
+        builtpersonnelblock.column = column;
+        builtpersonnelblock.columnname = columnname;
+
+        <span class="hljs-keyword">return</span> builtpersonnelblock;
+      };
+
+      <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">receiveCommand</span><span class="hljs-params">(message, boolValue, frame)</span> </span>{
+
+    	uniqueId = frame.headers.session;
+        <span class="hljs-keyword">var</span> command = <span class="hljs-built_in">JSON</span>.parse(message.body);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Disregard error messages</p></div></div><div class="code"><div class="wrapper">        <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> command.error != <span class="hljs-string">'undefined'</span> &amp;&amp; command.error &gt; <span class="hljs-number">0</span>) {
+          <span class="hljs-keyword">return</span>;
+        }
+
+        <span class="hljs-comment">//SaveVolunteerCounts</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Handle command and update model</p></div></div><div class="code"><div class="wrapper">        <span class="hljs-keyword">switch</span> (command.commandName) {
+
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'AddEquipment'</span>:
+          EquipmentHelperService.processAddEquipmentCommand(equipment, command, EquipmentModel);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Added equipment'</span>,  <span class="hljs-string">'equipment'</span>, command.commandContent.equipmentId, equipment[command.commandContent.equipmentId].name, <span class="hljs-string">'from'</span>, equipment[command.commandContent.equipmentId].detachmentHistory[<span class="hljs-number">0</span>].from.code, command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'AutoCompleteEquipment'</span>:
+          EquipmentHelperService.processUpdateEquipmentLoadCommand(equipment, command, materialList);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Auto Completed Equipment'</span>,  <span class="hljs-string">'equipment'</span>, command.commandContent.equipmentId, equipment[command.commandContent.equipmentId].name, <span class="hljs-string">''</span>, command.location, command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'ClearAllLocations'</span>:
+          TaskSettingsService.processClearAllLocationsCommand(tasks,equipment, personnel, command);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Cleared All Locations'</span>,  <span class="hljs-string">'Location'</span>, <span class="hljs-string">''</span>, <span class="hljs-string">''</span>, <span class="hljs-string">'from'</span>, command.location, command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'ClearSpecificLocation'</span>:
+          TaskSettingsService.processClearSpecificLocationCommand(tasks, equipment, personnel, command);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Cleared Location'</span>,  <span class="hljs-string">'Location'</span>, command.commandContent.serviceLocation.code, command.commandContent.serviceLocation.code, <span class="hljs-string">'from'</span>, command.location, command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'CompleteTaskEquipmentAssignment'</span>:
+          TaskHelperService.processCompleteTaskEquipmentAssignmentCommand(tasks, equipment, command);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Completed Equipment Assignment'</span>, <span class="hljs-string">'task'</span>, <span class="hljs-string">''</span>, <span class="hljs-string">''</span>, <span class="hljs-string">'for'</span>, RecentActivityLoggingService.getTaskNameFromTaskCommand(command), command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'AddShift'</span>:
+          TaskSettingsService.processAddShiftCommand(tasks, command);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Added shift'</span>,  <span class="hljs-string">'shift'</span>, command.commandContent.shift.id, command.commandContent.shift.name, <span class="hljs-string">'to '</span>+command.commandContent.serviceLocation.code+<span class="hljs-string">' under '</span>+command.location, <span class="hljs-string">''</span>, command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'RemoveShift'</span>:
+          TaskSettingsService.processRemoveShiftCommand(tasks, equipment, personnel, command);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Removed shift'</span>,  <span class="hljs-string">'shift'</span>, command.commandContent.shift.id, command.commandContent.shift.name, <span class="hljs-string">'from '</span>+command.commandContent.serviceLocation.code+<span class="hljs-string">' under '</span>+command.location, <span class="hljs-string">''</span>, command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'AddCategory'</span> :
+          TaskSettingsService.processAddCategoryCommand(tasks, command);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Added category'</span>,  <span class="hljs-string">'shift category'</span>, command.commandContent.category.id, command.commandContent.category.name, <span class="hljs-string">'to shift '</span>+command.commandContent.shift.name+<span class="hljs-string">' for location '</span>+command.commandContent.serviceLocation.code+<span class="hljs-string">' under '</span>+command.location, <span class="hljs-string">''</span>, command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'RemoveCategory'</span>:
+          TaskSettingsService.processRemoveCategoryCommand(tasks, equipment, personnel, command);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Removed category'</span>,  <span class="hljs-string">'shift category'</span>, command.commandContent.category.id, command.commandContent.category.name, command.commandContent.category.name+ <span class="hljs-string">' from shift '</span>+command.commandContent.shift.name+<span class="hljs-string">' for location '</span>+command.commandContent.serviceLocation.code+<span class="hljs-string">' under '</span>+command.location, <span class="hljs-string">''</span>, command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'UpdateCategory'</span>:
+          TaskSettingsService.processUpdateCategoryCommand(tasks, equipment, personnel, command);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Updated category'</span>,  <span class="hljs-string">'shift category'</span>, command.commandContent.category.id, command.commandContent.oldCategory.name, <span class="hljs-string">'to '</span>+command.commandContent.category.name, <span class="hljs-string">''</span>, command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'AddSubcategory'</span>:
+          TaskSettingsService.processAddSubcategoryCommand(tasks, command);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Added subcategory'</span>,  <span class="hljs-string">'shift subcategory'</span>, command.commandContent.subcategory.id, command.commandContent.subcategory.name, <span class="hljs-string">'to category '</span>+command.commandContent.category.name+<span class="hljs-string">' for shift '</span>+command.commandContent.shift.name+<span class="hljs-string">' for location '</span>+command.commandContent.serviceLocation.code+<span class="hljs-string">' under '</span>+command.location, <span class="hljs-string">''</span>, command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'RemoveSubcategory'</span>:
+          TaskSettingsService.processRemoveSubcategoryCommand(tasks, equipment, personnel, command);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Removed subcategory'</span>,  <span class="hljs-string">'shift subcategory'</span>, command.commandContent.subcategory.id, command.commandContent.subcategory.name, command.commandContent.subcategory.name+<span class="hljs-string">' from category'</span>+command.commandContent.category.name+<span class="hljs-string">' for shift '</span>+command.commandContent.shift.name+<span class="hljs-string">' for location '</span>+command.commandContent.serviceLocation.code+<span class="hljs-string">' under '</span>+command.location, <span class="hljs-string">''</span>, command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'AddSection'</span>:
+          TaskSettingsService.processAddSectionCommand(tasks, command);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Added section'</span>,  <span class="hljs-string">'section'</span>, command.commandContent.section.id, command.commandContent.section.name, <span class="hljs-string">'to subcategory '</span>+command.commandContent.subcategory.name+<span class="hljs-string">' for category '</span>+command.commandContent.category.name+<span class="hljs-string">' for shift '</span>+command.commandContent.shift.name+<span class="hljs-string">' for location '</span>+command.commandContent.serviceLocation.code+<span class="hljs-string">' under '</span>+command.location, <span class="hljs-string">''</span>, command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'RemoveSection'</span>:
+          TaskSettingsService.processRemoveSectionCommand(tasks, equipment, personnel, command);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Removed section'</span>,  <span class="hljs-string">'section'</span>, command.commandContent.section.id, command.commandContent.section.name, <span class="hljs-string">'from subcategory '</span>+command.commandContent.subcategory.name+<span class="hljs-string">' for category '</span>+command.commandContent.category.name+<span class="hljs-string">' for shift '</span>+command.commandContent.shift.name+<span class="hljs-string">' for location '</span>+command.commandContent.serviceLocation.code+<span class="hljs-string">' under '</span>+command.location, <span class="hljs-string">''</span>, command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'AddTasks'</span>:
+          TaskSettingsService.processAddTasksCommand(tasks, command);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Added tasks '</span>,  <span class="hljs-string">'shift subcategory'</span>, <span class="hljs-string">'to subcategory '</span>+command.commandContent.subcategory.name, <span class="hljs-string">' for category '</span>+command.commandContent.category.name, <span class="hljs-string">' for shift '</span>+command.commandContent.shift.name, <span class="hljs-string">' for location '</span>+command.commandContent.serviceLocation.code+<span class="hljs-string">' under '</span>+command.location);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'UpdateTask'</span>:
+          TaskSettingsService.processUpdateTasksCommand(tasks, command);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Updated task'</span>,  <span class="hljs-string">'tash'</span>, command.commandContent.taskId, command.commandContent.taskName, <span class="hljs-string">''</span>, <span class="hljs-string">''</span>, command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'RemoveTasks'</span>:
+          TaskSettingsService.processRemoveTasksCommand(tasks, equipment, personnel, command);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'RemoveSingleTask'</span>:
+          TaskSettingsService.processDeleteSingleTaskCommand(tasks, equipment, personnel, command);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'AddPerson'</span>:
+          PersonnelHelperService.processAddPersonCommand(personnel, command, PersonModel);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Added'</span>,  <span class="hljs-string">'person'</span>, command.commandContent.personId, personnel[command.commandContent.personId].fullName, <span class="hljs-string">'from'</span>, command.commandContent.commandHistoryMessage.actionInfo, command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'AddSpecialPosition'</span>:
+          PersonnelHelperService.processSpecialPositionCommand(personnel, states, command);
+          <span class="hljs-keyword">var</span> duration = <span class="hljs-string">''</span>;
+          <span class="hljs-keyword">if</span>(command.commandContent.specialPosition.endDate != <span class="hljs-literal">null</span>){
+            duration = moment(command.commandContent.specialPosition.startDate).format(<span class="hljs-string">'MM/DD/YYYY HH:mm'</span>) + <span class="hljs-string">' to '</span> + moment(command.commandContent.specialPosition.endDate).format(<span class="hljs-string">'MM/DD/YYYY HH:mm'</span>);
+          } <span class="hljs-keyword">else</span> {
+            duration = moment(command.commandContent.specialPosition.startDate).format(<span class="hljs-string">'MM/DD/YYYY HH:mm'</span>) + <span class="hljs-string">' to indefinite'</span>;
+          }
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Added Special Position '</span> + command.commandContent.specialPosition.code + <span class="hljs-string">' for'</span>,  <span class="hljs-string">'person'</span>, command.commandContent.personId, personnel[command.commandContent.personId].fullName, <span class="hljs-string">'from'</span>, duration , command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'UpdateSpecialPosition'</span>:
+          PersonnelHelperService.processSpecialPositionCommand(personnel, states, command);
+          <span class="hljs-keyword">var</span> duration = <span class="hljs-string">''</span>;
+          <span class="hljs-keyword">if</span>(command.commandContent.specialPosition.endDate != <span class="hljs-literal">null</span>){
+            duration = moment(command.commandContent.specialPosition.startDate).format(<span class="hljs-string">'MM/DD/YYYY HH:mm'</span>) + <span class="hljs-string">' to '</span> + moment(command.commandContent.specialPosition.endDate).format(<span class="hljs-string">'MM/DD/YYYY HH:mm'</span>);
+          } <span class="hljs-keyword">else</span> {
+            duration = moment(command.commandContent.specialPosition.startDate).format(<span class="hljs-string">'MM/DD/YYYY HH:mm'</span>) + <span class="hljs-string">' to indefinite'</span>;
+          }
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Updated Special Position '</span> + command.commandContent.specialPosition.code + <span class="hljs-string">' for'</span>,  <span class="hljs-string">'person'</span>, command.commandContent.personId, personnel[command.commandContent.personId].fullName, <span class="hljs-string">'from'</span>, duration , command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'RemoveSpecialPosition'</span>:
+          PersonnelHelperService.processSpecialPositionCommand(personnel, states, command);
+          <span class="hljs-keyword">var</span> duration = <span class="hljs-string">''</span>;
+          <span class="hljs-keyword">if</span>(command.commandContent.specialPosition.endDate != <span class="hljs-literal">null</span>){
+            duration = moment(command.commandContent.specialPosition.startDate).format(<span class="hljs-string">'MM/DD/YYYY HH:mm'</span>) + <span class="hljs-string">' to '</span> + moment(command.commandContent.specialPosition.endDate).format(<span class="hljs-string">'MM/DD/YYYY HH:mm'</span>);
+          } <span class="hljs-keyword">else</span> {
+            duration = moment(command.commandContent.specialPosition.startDate).format(<span class="hljs-string">'MM/DD/YYYY HH:mm'</span>) + <span class="hljs-string">' to indefinite'</span>;
+          }
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Removed Special Position '</span> + command.commandContent.specialPosition.code + <span class="hljs-string">' for'</span>,  <span class="hljs-string">'person'</span>, command.commandContent.personId, personnel[command.commandContent.personId].fullName, <span class="hljs-string">'from'</span>, duration , command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'AddPersonUnavailability'</span>:
+          PersonnelHelperService.processPersonUnavailabilityCommand(personnel, states, command);
+          <span class="hljs-keyword">var</span> duration = <span class="hljs-string">''</span>;
+          <span class="hljs-keyword">if</span>(command.commandContent.unavailableReason.end != <span class="hljs-literal">null</span>){
+            duration = moment(command.commandContent.unavailableReason.start).format(<span class="hljs-string">'MM/DD/YYYY HH:mm'</span>) + <span class="hljs-string">' to '</span> + moment(command.commandContent.unavailableReason.end).format(<span class="hljs-string">'MM/DD/YYYY HH:mm'</span>);
+          } <span class="hljs-keyword">else</span> {
+            duration = moment(command.commandContent.unavailableReason.start).format(<span class="hljs-string">'MM/DD/YYYY HH:mm'</span>) + <span class="hljs-string">' to indefinite'</span>;
+          }
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Added Unavailability '</span> + command.commandContent.unavailableReason.code + <span class="hljs-string">' for'</span>,  <span class="hljs-string">'person'</span>, command.commandContent.personId, personnel[command.commandContent.personId].fullName, <span class="hljs-string">'from'</span>, duration , command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'UpdatePersonUnavailability'</span>:
+          PersonnelHelperService.processPersonUnavailabilityCommand(personnel, states, command);
+          <span class="hljs-keyword">var</span> duration = <span class="hljs-string">''</span>;
+          <span class="hljs-keyword">if</span>(command.commandContent.unavailableReason.end != <span class="hljs-literal">null</span>){
+            duration = moment(command.commandContent.unavailableReason.start).format(<span class="hljs-string">'MM/DD/YYYY HH:mm'</span>) + <span class="hljs-string">' to '</span> + moment(command.commandContent.unavailableReason.end).format(<span class="hljs-string">'MM/DD/YYYY HH:mm'</span>);
+          } <span class="hljs-keyword">else</span> {
+            duration = moment(command.commandContent.unavailableReason.start).format(<span class="hljs-string">'MM/DD/YYYY HH:mm'</span>) + <span class="hljs-string">' to indefinite'</span>;
+          }
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Updated Unavailability '</span> + command.commandContent.unavailableReason.code + <span class="hljs-string">' for'</span>,  <span class="hljs-string">'person'</span>, command.commandContent.personId, personnel[command.commandContent.personId].fullName, <span class="hljs-string">'from'</span>, duration , command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'RemovePersonUnavailability'</span>:
+          PersonnelHelperService.processPersonUnavailabilityCommand(personnel, states, command);
+          <span class="hljs-keyword">var</span> duration = <span class="hljs-string">''</span>;
+          <span class="hljs-keyword">if</span>(command.commandContent.unavailableReason.end != <span class="hljs-literal">null</span>){
+            duration = moment(command.commandContent.unavailableReason.start).format(<span class="hljs-string">'MM/DD/YYYY HH:mm'</span>) + <span class="hljs-string">' to '</span> + moment(command.commandContent.unavailableReason.end).format(<span class="hljs-string">'MM/DD/YYYY HH:mm'</span>);
+          } <span class="hljs-keyword">else</span> {
+            duration = moment(command.commandContent.unavailableReason.start).format(<span class="hljs-string">'MM/DD/YYYY HH:mm'</span>) + <span class="hljs-string">' to indefinite'</span>;
+          }
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Removed Unavailability '</span> + command.commandContent.unavailableReason.code + <span class="hljs-string">' for'</span>,  <span class="hljs-string">'person'</span>, command.commandContent.personId, personnel[command.commandContent.personId].fullName, <span class="hljs-string">'from'</span>, duration , command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'CancelPersonUnavailability'</span>:
+          PersonnelHelperService.processPersonUnavailabilityCommand(personnel, states, command);
+          <span class="hljs-keyword">var</span> duration = <span class="hljs-string">''</span>;
+          <span class="hljs-keyword">if</span>(command.commandContent.unavailableReason.end != <span class="hljs-literal">null</span>){
+            duration = moment(command.commandContent.unavailableReason.start).format(<span class="hljs-string">'MM/DD/YYYY HH:mm'</span>) + <span class="hljs-string">' to '</span> + moment(command.commandContent.unavailableReason.end).format(<span class="hljs-string">'MM/DD/YYYY HH:mm'</span>);
+          } <span class="hljs-keyword">else</span> {
+            duration = moment(command.commandContent.unavailableReason.start).format(<span class="hljs-string">'MM/DD/YYYY HH:mm'</span>) + <span class="hljs-string">' to indefinite'</span>;
+          }
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'cancelled Unavailability '</span> + command.commandContent.unavailableReason.code + <span class="hljs-string">' for'</span>,  <span class="hljs-string">'person'</span>, command.commandContent.personId, personnel[command.commandContent.personId].fullName, <span class="hljs-string">'from'</span>, duration , command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'ReverseCancelPersonUnavailability'</span>:
+          PersonnelHelperService.processPersonUnavailabilityCommand(personnel, states, command);
+          <span class="hljs-keyword">var</span> duration = <span class="hljs-string">''</span>;
+          <span class="hljs-keyword">if</span>(command.commandContent.unavailableReason.end != <span class="hljs-literal">null</span>){
+            duration = moment(command.commandContent.unavailableReason.start).format(<span class="hljs-string">'MM/DD/YYYY HH:mm'</span>) + <span class="hljs-string">' to '</span> + moment(command.commandContent.unavailableReason.end).format(<span class="hljs-string">'MM/DD/YYYY HH:mm'</span>);
+          } <span class="hljs-keyword">else</span> {
+            duration = moment(command.commandContent.unavailableReason.start).format(<span class="hljs-string">'MM/DD/YYYY HH:mm'</span>) + <span class="hljs-string">' to indefinite'</span>;
+          }
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'reversed cancelled Unavailability '</span> + command.commandContent.unavailableReason.code + <span class="hljs-string">' for'</span>,  <span class="hljs-string">'person'</span>, command.commandContent.personId, personnel[command.commandContent.personId].fullName, <span class="hljs-string">'from'</span>, duration , command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'AssignEquipmentToTask'</span>:
+          TaskHelperService.processEquipmentToTaskCommand(user, states, tasks, equipment, command, $rootScope);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Assigned Equipment'</span>,  <span class="hljs-string">'equipment'</span>, command.commandContent.equipmentId, equipment[command.commandContent.equipmentId].name, <span class="hljs-string">'to'</span>, RecentActivityLoggingService.getTaskNameFromTaskCommand(command), command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'AssignEquipmentToPartialTask'</span>:
+          TaskHelperService.processEquipmentToPartialTaskCommand(user, states, tasks, equipment, command, $rootScope);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Assigned'</span>,  <span class="hljs-string">'equipment'</span>, command.commandContent.equipmentId, equipment[command.commandContent.equipmentId].name, <span class="hljs-string">'to'</span>, RecentActivityLoggingService.getTaskNameFromTaskCommand(command), command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'AssignPersonToTask'</span>:
+          TaskHelperService.processPersonToTaskCommand(user, states, tasks, personnel, command, $rootScope);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Assigned'</span>,  <span class="hljs-string">'person'</span>, command.commandContent.personId, personnel[command.commandContent.personId].fullName, <span class="hljs-string">'to'</span>, RecentActivityLoggingService.getTaskNameFromTaskCommand(command), command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'AssignSupervisor'</span>:
+          TaskHelperService.processSupervisorToTaskCommand(user, states, tasks, personnel, command, $rootScope);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Assigned'</span>,  <span class="hljs-string">'supervisor'</span>, command.commandContent.personId, personnel[command.commandContent.personId].fullName, <span class="hljs-string">'to'</span>, RecentActivityLoggingService.getTaskNameFromTaskCommand(command), command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'AssignPersonToPartialTask'</span>:
+          TaskHelperService.processPersonToPartialTaskCommand(user, states, tasks, personnel, command, $rootScope);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Assigned'</span>,  <span class="hljs-string">'person'</span>, command.commandContent.personId, personnel[command.commandContent.personId].fullName, <span class="hljs-string">'to'</span>, RecentActivityLoggingService.getTaskNameFromTaskCommand(command), command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'AttachEquipment'</span>:
+          EquipmentHelperService.processEquipmentDetachmentCommand(equipment, command);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Attached equipment'</span>,  <span class="hljs-string">'equipment'</span>, command.commandContent.equipmentId, equipment[command.commandContent.equipmentId].name, <span class="hljs-string">''</span>, <span class="hljs-string">''</span>, command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'CancelEquipmentDetachment'</span>:
+          EquipmentHelperService.processEquipmentDetachmentCommand(equipment, command);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Cancelled detachment for equipment'</span>,  <span class="hljs-string">'equipment'</span>, command.commandContent.equipmentId, equipment[command.commandContent.equipmentId].name, <span class="hljs-string">''</span>, <span class="hljs-string">''</span>, command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'DetachEquipment'</span>:
+          EquipmentHelperService.processEquipmentDetachmentCommand(equipment, command);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Detached equipment'</span>,  <span class="hljs-string">'equipment'</span>, command.commandContent.equipmentId, equipment[command.commandContent.equipmentId].name, <span class="hljs-string">'to'</span>, command.commandContent.to.code, command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'DetachPerson'</span>:
+          PersonnelHelperService.processPersonDetachmentCommand(personnel, command, states);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Detached person'</span>,  <span class="hljs-string">'person'</span>, command.commandContent.personId, personnel[command.commandContent.personId].fullName, <span class="hljs-string">'to'</span>, command.commandContent.to.code, command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'DownEquipment'</span>:
+          EquipmentHelperService.processUpDownEquipmentCommand(equipment, command);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Downed equipment'</span>,  <span class="hljs-string">'equipment'</span>, command.commandContent.equipmentId, equipment[command.commandContent.equipmentId].name, <span class="hljs-string">'on'</span>, command.location, command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'UpEquipment'</span>:
+          EquipmentHelperService.processUpDownEquipmentCommand(equipment, command);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Uped equipment'</span>,  <span class="hljs-string">'equipment'</span>, command.commandContent.equipmentId, equipment[command.commandContent.equipmentId].name, <span class="hljs-string">'on'</span>, command.location, command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'UpdateEquipmentSnowReadiness'</span> :
+          EquipmentHelperService.processUpdateSnowEquipmentCommand(equipment, command);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Updated Snow Readiness for equipment'</span>,  <span class="hljs-string">'equipment'</span>, command.commandContent.equipmentId, equipment[command.commandContent.equipmentId].name, <span class="hljs-string">''</span>, <span class="hljs-string">''</span>, command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'MakeNonBinEquipmentAvailable'</span>:
+          <span class="hljs-keyword">var</span> equipmentKey = command.commandContent.equipmentId;
+          <span class="hljs-keyword">var</span> taskId = command.commandContent.task.id;
+          <span class="hljs-keyword">if</span>(equipment[equipmentKey].getUpDownCondition()){
+            <span class="hljs-keyword">if</span>(equipment[equipmentKey].getUpDownCondition().condition==<span class="hljs-string">'Up'</span>){
+              TaskHelperService.processNonBinEquipmentFromTaskCommand(equipment[equipmentKey],states,taskId,command);
+              RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'NonBin equipment'</span>,  <span class="hljs-string">'equipment'</span>, command.commandContent.equipmentId, equipment[command.commandContent.equipmentId].name, <span class="hljs-string">'on'</span>, command.location, command.commandContent.systemDateTime);
+            }
+          }
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'UpdatePersonMdaStatus'</span>:
+          PersonnelHelperService.processPersonMdaStatusCommand(personnel, states, command);
+          <span class="hljs-keyword">var</span> duration = <span class="hljs-string">"for type "</span> + command.commandContent.mdaStatus.subType + <span class="hljs-string">' from '</span> + moment(command.commandContent.mdaStatus.startDate).format(<span class="hljs-string">'MM/DD/YYYY HH:mm'</span>) + <span class="hljs-string">' to '</span>;
+          <span class="hljs-keyword">if</span>(command.commandContent.mdaStatus.endDate != <span class="hljs-literal">null</span>){
+            duration = duration + moment(command.commandContent.mdaStatus.endDate).format(<span class="hljs-string">'MM/DD/YYYY HH:mm'</span>);
+          } <span class="hljs-keyword">else</span> {
+            duration = duration + <span class="hljs-string">'indefinite'</span>;
+          }
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Updated MDA status'</span>,  <span class="hljs-string">'person'</span>, command.commandContent.personId, personnel[command.commandContent.personId].fullName, <span class="hljs-string">''</span>, duration , command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'AddPersonMdaStatus'</span>:
+          PersonnelHelperService.processPersonMdaStatusCommand(personnel, states, command);
+          <span class="hljs-keyword">var</span> duration = <span class="hljs-string">"for type "</span> + command.commandContent.mdaStatus.subType + <span class="hljs-string">' from '</span> + moment(command.commandContent.mdaStatus.startDate).format(<span class="hljs-string">'MM/DD/YYYY HH:mm'</span>) + <span class="hljs-string">' to '</span>;
+          <span class="hljs-keyword">if</span>(command.commandContent.mdaStatus.endDate != <span class="hljs-literal">null</span>){
+            duration = duration + moment(command.commandContent.mdaStatus.endDate).format(<span class="hljs-string">'MM/DD/YYYY HH:mm'</span>);
+          } <span class="hljs-keyword">else</span> {
+            duration = duration + <span class="hljs-string">'indefinite'</span>;
+          }
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Added MDA status'</span>,  <span class="hljs-string">'person'</span>, command.commandContent.personId, personnel[command.commandContent.personId].fullName, <span class="hljs-string">''</span>, duration , command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'RemovePersonMdaStatus'</span>:
+          PersonnelHelperService.processPersonMdaStatusCommand(personnel, states, command);
+          <span class="hljs-keyword">var</span> duration = <span class="hljs-string">"for type "</span> + command.commandContent.mdaStatus.subType + <span class="hljs-string">' from '</span> + moment(command.commandContent.mdaStatus.startDate).format(<span class="hljs-string">'MM/DD/YYYY HH:mm'</span>) + <span class="hljs-string">' to '</span>;
+          <span class="hljs-keyword">if</span>(command.commandContent.mdaStatus.endDate != <span class="hljs-literal">null</span>){
+            duration = duration + moment(command.commandContent.mdaStatus.endDate).format(<span class="hljs-string">'MM/DD/YYYY HH:mm'</span>);
+          } <span class="hljs-keyword">else</span> {
+            duration = duration + <span class="hljs-string">'indefinite'</span>;
+          }
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Removed MDA status'</span>,  <span class="hljs-string">'person'</span>, command.commandContent.personId, personnel[command.commandContent.personId].fullName, <span class="hljs-string">''</span>, duration , command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'RemoveEquipment'</span>:
+          <span class="hljs-keyword">var</span> name = equipment[command.commandContent.equipmentId].name;
+          EquipmentHelperService.processRemoveEquipmentCommand(equipment, command);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Removed equipment'</span>,  <span class="hljs-string">'equipment'</span>, command.commandContent.equipmentId, name, <span class="hljs-string">'from'</span>, command.location, command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'RemovePerson'</span>:
+          <span class="hljs-keyword">var</span> name = personnel[command.commandContent.personId].fullName;
+          PersonnelHelperService.processRemovePersonCommand(personnel, command);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Removed'</span>,  <span class="hljs-string">'person'</span>, command.commandContent.personId, name, <span class="hljs-string">'from'</span>, command.location, command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'UpdateEquipmentLoad'</span>:
+          EquipmentHelperService.processUpdateEquipmentLoadCommand(equipment, command, materialList);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Updated load for'</span>,  <span class="hljs-string">'equipment'</span>, command.commandContent.equipmentId, equipment[command.commandContent.equipmentId].name, <span class="hljs-string">'on'</span>, boardLocation.toUpperCase(), command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'UnassignEquipmentFromTask'</span>:
+          TaskHelperService.processEquipmentFromTaskCommand(states, tasks, equipment, command);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Unassigned'</span>,  <span class="hljs-string">'equipment'</span>, command.commandContent.equipmentId, equipment[command.commandContent.equipmentId].name, <span class="hljs-string">'from'</span>, RecentActivityLoggingService.getTaskNameFromTaskCommand(command), command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'UnassignEquipmentFromPartialTask'</span>:
+          TaskHelperService.processEquipmentFromPartialTaskCommand(states, tasks, equipment, command);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Unassigned'</span>,  <span class="hljs-string">'equipment'</span>, command.commandContent.equipmentId, equipment[command.commandContent.equipmentId].name, <span class="hljs-string">'from'</span>, RecentActivityLoggingService.getTaskNameFromTaskCommand(command), command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'UnassignPersonFromTask'</span>:
+          TaskHelperService.processPersonFromTaskCommand(states, tasks, personnel, command);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Unassigned'</span>,  <span class="hljs-string">'person'</span>, command.commandContent.personId, personnel[command.commandContent.personId].fullName, <span class="hljs-string">'from'</span>, RecentActivityLoggingService.getTaskNameFromTaskCommand(command), command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'UnassignSupervisor'</span>:
+            TaskHelperService.processUnassignSupervisorCommand(user, states, tasks, personnel, command, $rootScope);
+            RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Unassigned'</span>,  <span class="hljs-string">'supervisor'</span>, <span class="hljs-string">''</span>, <span class="hljs-string">'supervisor'</span>, <span class="hljs-string">'from'</span>, RecentActivityLoggingService.getTaskNameFromTaskCommand(command), command.commandContent.systemDateTime);
+            <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'UnassignPersonFromPartialTask'</span>:
+          TaskHelperService.processPersonFromPartialTaskCommand(states, tasks, personnel, command);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Unassigned'</span>,  <span class="hljs-string">'person'</span>, command.commandContent.personId, personnel[command.commandContent.personId].fullName, <span class="hljs-string">'from'</span>, RecentActivityLoggingService.getTaskNameFromTaskCommand(command), command.commandContent.systemDateTime);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'UnlinkPartialTask'</span>:
+          TaskHelperService.processUnlinkPartialTaskCommand(tasks, command, groupCnt, linkedTaskMap);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Unlinked Partial Task'</span>,  <span class="hljs-string">'shift subcategory'</span>, <span class="hljs-string">''</span>, <span class="hljs-string">''</span>, <span class="hljs-string">' '</span>, <span class="hljs-string">' for location '</span> + command.commandContent.locationId);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'AddSessionToBoard'</span>:
+          RecentActivityLoggingService.processAddOnlineUser(onlineUsers, command);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'RemoveSessionFromBoard'</span>:
+          RecentActivityLoggingService.processRemoveOnlineUser(onlineUsers, command);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'ReloadBoard'</span>:
+          processReloadBoard($rootScope);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'SetPartialTask'</span> :
+          TaskHelperService.processSetPartialTaskCommand(tasks, command, groupCnt, linkedTaskMap);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Created Partial Task'</span>,  <span class="hljs-string">'shift subcategory'</span>, <span class="hljs-string">''</span>, <span class="hljs-string">''</span>, <span class="hljs-string">' '</span>, <span class="hljs-string">' for location '</span>+command.commandContent.locationId);
+          <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'ErrorCommand'</span> :
+            TaskHelperService.processErrorCommand(user, equipment, personnel, tasks, states, command, $rootScope, uniqueId);
+            <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'SaveVolunteerCounts'</span>:
+          ReportsService.saveVolunteerCountsCommand(volunteerCounts, command);
+          RecentActivityLoggingService.logAction(actions, command.commandContent.systemUser, <span class="hljs-string">'Added Volunter Counts'</span>,  <span class="hljs-string">'volunteer Counts'</span>, <span class="hljs-string">''</span>, <span class="hljs-string">''</span>, <span class="hljs-string">' '</span>, <span class="hljs-string">' to '</span>+ command.location);
+          <span class="hljs-keyword">break</span>;
+        }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Propagate model changes to views</p></div></div><div class="code"><div class="wrapper">        $rootScope.locationtasks = $filter(<span class="hljs-string">'orderDistrict'</span>)(locationtasks(tasks, districtpersonnel));
+        $rootScope.$apply();</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Push changes to Isotope
+var s=angular.element(&#39;#isotopeContainer&#39;).scope();
+ s.refreshIso();</p></div></div><div class="code"><div class="wrapper">        <span class="hljs-comment">/*var $container = $('#isotopeContainer');
+
+        $container.isotope({
+          layoutMode: 'fitColumns',
+          itemSelector: '.item'
+        });
+
+        $container.isotope('layout');*/</span>
+
+      }
+
+      <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">processReloadBoard</span><span class="hljs-params">($rootScope)</span></span>{
+        $rootScope.$broadcast(<span class="hljs-string">'reload-board'</span>);
+      }
+
+      <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">sendCommand</span><span class="hljs-params">(command)</span> </span>{
+        stompClient.send(<span class="hljs-string">'/app/commands.'</span> + boardLocation.toUpperCase() + <span class="hljs-string">'.'</span> + boardDate, {}, <span class="hljs-built_in">JSON</span>.stringify(command));
+      }
+
+      <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">sendPublishBoardCommand</span><span class="hljs-params">(command)</span> </span>{
+        stompClient.send(<span class="hljs-string">'/app/displayboard.'</span> + boardLocation.toUpperCase(), {}, <span class="hljs-built_in">JSON</span>.stringify(command));
+      }
+
+      <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">processPartialAvailabilitiesAndMdas</span><span class="hljs-params">()</span> </span>{
+        <span class="hljs-keyword">return</span> PersonnelHelperService.processAllPartialAvailabilitiesAndMdas(personnel, states);
+      }
+
+      <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">isBoroLocation</span><span class="hljs-params">(info)</span> </span>{
+        <span class="hljs-comment">//will change this when Dima is done with his changes</span>
+        <span class="hljs-keyword">if</span> (!info) <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+        <span class="hljs-keyword">return</span> info.locationType === <span class="hljs-string">'borough'</span>;
+      }
+
+			<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">renderDistricts</span><span class="hljs-params">(containerObject, data, now)</span> </span>{
+        data.personnelContainers = {};
+
+        ReferenceDataService.loadRepairLocations($resource, pathStart).then(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(locations)</span></span>{
+
+          <span class="hljs-keyword">var</span> districtscount = <span class="hljs-number">0</span>;
+          <span class="hljs-keyword">var</span> districtsloaded = <span class="hljs-number">0</span>;
+
+
+          <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> loc <span class="hljs-keyword">in</span> locations) {
+            <span class="hljs-keyword">if</span> (locations[loc].locationParentCode === boardLocation) {
+              districtscount++;
+              <span class="hljs-keyword">var</span> districtData = {};
+              <span class="hljs-keyword">var</span> fitleredtaskContainers = {};
+              <span class="hljs-keyword">var</span> location = {};
+              <span class="hljs-keyword">var</span> personObject = {};
+
+              $http.get(pathStart + <span class="hljs-string">'/'</span> + locations[loc].locationCode + <span class="hljs-string">'/'</span> + boardDate + <span class="hljs-string">'/district'</span>)
+                .success(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(jsondata)</span> </span>{
+                  <span class="hljs-keyword">if</span> (jsondata.taskContainers[jsondata.location]) {
+                    fitleredtaskContainers[locations[loc].locationCode] = jsondata.taskContainers[jsondata.location];
+                    districtData = $filter(<span class="hljs-string">'filterDistrictObjects'</span>)(fitleredtaskContainers[locations[loc].locationCode]);
+                    data.taskContainers[jsondata.location] = fitleredtaskContainers[locations[loc].locationCode];
+                  }
+
+                  data.personnelContainers[jsondata.location] = {};
+                  data.personnelContainers[jsondata.location] = jsondata.personnel;
+
+                  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> person <span class="hljs-keyword">in</span> jsondata.personnel) {
+                    angular.extend(jsondata.personnel[person], PersonModel);
+                    PersonnelHelperService.processPartialAvailabilityAndMda(jsondata.personnel[person], now, states);
+                    data.personnel[person] = jsondata.personnel[person];
+                    data.personnel[person].activeGroundedStatus = [];
+                  }
+
+                  districtsloaded++;</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>  for (var equipment in jsondata.equipment) {
+    angular.extend(jsondata.equipment[equipment], EquipmentModel);
+    jsondata.equipment[equipment].activeGroundedStatus = [];
+    data.equipment[equipment] = jsondata.equipment[equipment];
+  }</p></div></div><div class="code"><div class="wrapper">                  <span class="hljs-keyword">if</span>(districtsloaded === districtscount) {
+                    tasks = TaskHelperService.marshallTasks({<span class="hljs-string">"locations"</span>: data.taskContainers}, categoryData, linkedTaskMap, groupCnt);
+                    $rootScope.locationtasks = $filter(<span class="hljs-string">'orderDistrict'</span>)(locationtasks(tasks, districtpersonnel))
+
+                    angular.forEach(personnel, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(value, key)</span> </span>{
+                      angular.extend(value, PersonModel);
+                      value.activeGroundedStatus = [];
+                      <span class="hljs-keyword">if</span> (<span class="hljs-built_in">Number</span>(key) % <span class="hljs-number">16</span> === <span class="hljs-number">0</span>)
+                        value.activeGroundedStatus[<span class="hljs-number">0</span>] = {status: <span class="hljs-string">"G"</span>};
+                      PersonnelHelperService.processPartialAvailabilityAndMda(value, now, states);
+                    });
+
+                  }
+                })
+                .error(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(jsondata, status, headers, config)</span> </span>{
+                });
+            }
+          }
+
+
+        }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span></span>{
+          <span class="hljs-built_in">console</span>.log(error)
+        });
+			}</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Section - WebSocket connection for
+events/messaging - End *</p></div></div><div class="code"><div class="wrapper">      <span class="hljs-keyword">return</span> {</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Section - Board load and components -
+Start *</p></div></div><div class="code"><div class="wrapper">				getOpsBoard : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(successFn, errorFn)</span> </span>{
+					<span class="hljs-keyword">return</span> response.$promise.then(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span> </span>{
+						<span class="hljs-keyword">var</span> containerObject = {};</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Used for time point comparisons with server-side dat</p></div></div><div class="code"><div class="wrapper">            <span class="hljs-keyword">var</span> now = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>();
+            </div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Store board end date</p></div></div><div class="code"><div class="wrapper">            boardEndDate = data.shiftsEndDate;
+
+						<span class="hljs-keyword">if</span>(data.locationType === <span class="hljs-string">'borough'</span> &amp;&amp; !$rootScope.renderDistricts) {
+								renderDistricts(containerObject, data, now);
+								$rootScope.renderDistricts = <span class="hljs-literal">true</span>;
+						}
+
+						equipment = data.equipment;</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Add equipment model functions to each piece of equipment in array</p></div></div><div class="code"><div class="wrapper">						angular.forEach(equipment, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(value, key)</span> </span>{
+							angular.extend(value, EquipmentModel);
+						});
+
+            personnel = data.personnel;
+            boardQuota = data.boardQuota;
+            volunteerCounts = data.volunteerCounts;</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Add person model functions to each person in array and process partial availabilities</p></div></div><div class="code"><div class="wrapper">            angular.forEach(personnel, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(value, key)</span> </span>{
+              angular.extend(value, PersonModel);
+              value.activeGroundedStatus = [];
+              <span class="hljs-keyword">if</span> (<span class="hljs-built_in">Number</span>(key) % <span class="hljs-number">16</span> === <span class="hljs-number">0</span>)
+                value.activeGroundedStatus[<span class="hljs-number">0</span>] = {status: <span class="hljs-string">"G"</span>};
+              PersonnelHelperService.processPartialAvailabilityAndMda(value, now, states);
+            });</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Add commands for activity log</p></div></div><div class="code"><div class="wrapper">            <span class="hljs-keyword">var</span> commandHist = data.commandMessagesHistory;
+            <span class="hljs-keyword">if</span>(<span class="hljs-keyword">typeof</span> commandHist != <span class="hljs-literal">undefined</span> &amp;&amp; commandHist!= <span class="hljs-literal">null</span>){
+              TaskHelperService.sortByKey(commandHist,<span class="hljs-string">'clientSequence'</span>);
+              actions = RecentActivityLoggingService.formattedHist(commandHist);
+            }
+
+						isBoro = isBoroLocation(data);
+						tasks = TaskHelperService.marshallTasks({<span class="hljs-string">"locations"</span>: data.taskContainers}, categoryData, linkedTaskMap, groupCnt);
+
+						tasks.settings = {};
+						tasks.settings.locations = {};
+
+            districtpersonnel = data.personnelContainers;
+
+            <span class="hljs-keyword">if</span>(isBoro) {
+							tasks.settings.locations[boardData.boardLocation] = tasks.locations[boardData.boardLocation];
+						} <span class="hljs-keyword">else</span> {
+							tasks.settings.locations = tasks.locations;
+						};
+
+						<span class="hljs-built_in">Object</span>.keys(tasks.locations).forEach(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(location)</span></span>{
+							<span class="hljs-built_in">Object</span>.keys(tasks.locations[location].locationShifts).forEach(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(locationShift)</span></span>{
+								<span class="hljs-built_in">Object</span>.keys(tasks.locations[location].locationShifts[locationShift].shiftCategories).forEach(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(shiftCategory)</span></span>{
+									<span class="hljs-built_in">Object</span>.keys(tasks.locations[location].locationShifts[locationShift].shiftCategories[shiftCategory].subcategoryTasks).forEach(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(subcategoryTask)</span></span>{
+										<span class="hljs-built_in">Object</span>.keys(tasks.locations[location].locationShifts[locationShift].shiftCategories[shiftCategory].subcategoryTasks[subcategoryTask].sections).forEach(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(section)</span></span>{
+											<span class="hljs-built_in">Object</span>.keys(tasks.locations[location].locationShifts[locationShift].shiftCategories[shiftCategory].subcategoryTasks[subcategoryTask].allSections).forEach(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(sectionInAllSections)</span></span>{
+												<span class="hljs-keyword">if</span>(tasks.locations[location].locationShifts[locationShift].shiftCategories[shiftCategory].subcategoryTasks[subcategoryTask].allSections[sectionInAllSections].id == tasks.locations[location].locationShifts[locationShift].shiftCategories[shiftCategory].subcategoryTasks[subcategoryTask].sections[section].sectionName)
+													tasks.locations[location].locationShifts[locationShift].shiftCategories[shiftCategory].subcategoryTasks[subcategoryTask].allSections[sectionInAllSections].numOfTasks 
+													= <span class="hljs-built_in">Object</span>.keys(tasks.locations[location].locationShifts[locationShift].shiftCategories[shiftCategory].subcategoryTasks[subcategoryTask].sections[section].tasks).length;
+											})
+
+                    })
+                  })
+                })
+              })
+            });
+
+            <span class="hljs-comment">//Add online users</span>
+            <span class="hljs-keyword">var</span> curSessions = data.onlineSessions;
+            onlineUsers = {};
+            <span class="hljs-keyword">if</span>(curSessions != <span class="hljs-literal">undefined</span>) {
+              angular.forEach(curSessions, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(value, key)</span> </span>{
+                <span class="hljs-keyword">if</span> (onlineUsers[value.httpSessionId]) {
+                  onlineUsers[value.httpSessionId].sessions = <span class="hljs-built_in">Number</span>(onlineUsers[value.httpSessionId].sessions) + <span class="hljs-number">1</span>;
+                } <span class="hljs-keyword">else</span> {
+                  <span class="hljs-keyword">if</span> (value.httpSessionId)
+                    onlineUsers[value.httpSessionId] = {
+                      userId: value.loggedUserId,
+                      remoteAddr: value.remoteAddr,
+                      sessions: <span class="hljs-string">'1'</span>
+                  }
+                }
+              })
+            }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Instruct timer to process partial availability records</p></div></div><div class="code"><div class="wrapper">            OpsBoardInterval.addToDoList(processPartialAvailabilitiesAndMdas);
+            
+            <span class="hljs-comment">//Will generalize later</span>
+            <span class="hljs-keyword">if</span> (!timerset) {
+              timerset = <span class="hljs-literal">true</span>;
+              $interval( <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+                <span class="hljs-keyword">if</span> (connected) {
+                  <span class="hljs-keyword">var</span> resource = $resource(pathStart + <span class="hljs-string">'/heartbeat'</span>),
+                  response = resource.get();
+                  <span class="hljs-keyword">return</span> response.$promise.then(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span> </span>{
+                    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'poked the server'</span>)
+                  });
+                }
+              }, <span class="hljs-number">15</span>*<span class="hljs-number">1000</span>*<span class="hljs-number">60</span>);
+            }
+
+            openWebSocket();
+
+            <span class="hljs-keyword">if</span> (successFn)
+              <span class="hljs-keyword">return</span> successFn(data)
+              <span class="hljs-keyword">return</span> data;
+
+          }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span> </span>{
+            <span class="hljs-keyword">if</span> (errorFn) {
+              <span class="hljs-keyword">return</span> errorFn(error);
+            }
+            <span class="hljs-keyword">return</span> error;
+          });
+        },
+
+        getBoardDate : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+          <span class="hljs-keyword">return</span> boardDate;
+        },
+        
+        getSessionId : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+        	<span class="hljs-keyword">return</span> uniqueId
+        },
+
+        getBoardLocation : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+          <span class="hljs-keyword">return</span> boardLocation;
+        },
+
+        getErrorMessage : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(opsBoardError)</span> </span>{
+          <span class="hljs-keyword">var</span> message = [];
+          message
+          .push(<span class="hljs-string">'&lt;p&gt;'</span> + opsBoardError.message + <span class="hljs-string">'.&amp;nbsp;&amp;nbsp;Error Code: '</span> + opsBoardError.code + <span class="hljs-string">'.&lt;/p&gt;'</span>);
+          <span class="hljs-keyword">if</span> (opsBoardError.extendedMessages &amp;&amp; opsBoardError.extendedMessages.length &gt; <span class="hljs-number">0</span>) {
+            message.push(<span class="hljs-string">'&lt;p class="server-errors left"&gt;Internal Messages:&lt;/p&gt;'</span>);
+            message.push(<span class="hljs-string">'&lt;ul class="server-errors"&gt;'</span>);
+            <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; opsBoardError.extendedMessages.length; i++) {
+              message.push(<span class="hljs-string">'&lt;li&gt;'</span> + opsBoardError.extendedMessages[<span class="hljs-number">0</span>] + <span class="hljs-string">'&lt;/li&gt;'</span>);
+            }
+            message.push(<span class="hljs-string">'&lt;/ul&gt;'</span>);
+          }
+          <span class="hljs-keyword">if</span> (opsBoardError.debugData) {
+            message.push(<span class="hljs-string">'&lt;p class="server-errors left"&gt;Additional Debug Data:&lt;/p&gt;'</span>);
+            message.push(<span class="hljs-string">'&lt;ul class="server-errors"&gt;'</span>);
+            <span class="hljs-keyword">for</span> ( <span class="hljs-keyword">var</span> key <span class="hljs-keyword">in</span> opsBoardError.debugData) {
+              <span class="hljs-keyword">if</span> (opsBoardError.debugData.hasOwnProperty(key)) {
+                <span class="hljs-keyword">var</span> obj = <span class="hljs-built_in">JSON</span>.parse(opsBoardError.debugData[key]);
+                message.push(<span class="hljs-string">'&lt;li&gt;'</span> + key + <span class="hljs-string">':&lt;br/&gt; '</span> + <span class="hljs-built_in">JSON</span>.stringify(obj, <span class="hljs-literal">undefined</span>, <span class="hljs-number">2</span>) + <span class="hljs-string">'&lt;/li&gt;'</span>);
+              }
+            }
+            message.push(<span class="hljs-string">'&lt;/ul&gt;'</span>);
+          }
+
+          <span class="hljs-keyword">return</span> message.join(<span class="hljs-string">''</span>);
+        },
+
+        getPathStart : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+          <span class="hljs-keyword">return</span> pathStart;
+        },
+
+        isBoroBoard: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+          <span class="hljs-keyword">return</span> isBoro;
+        },
+        
+        isConnected : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+          <span class="hljs-keyword">return</span> connected;
+        },
+        
+        isLocked : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+          <span class="hljs-keyword">if</span> (moment().isAfter(moment(boardEndDate).add(<span class="hljs-number">2</span>, <span class="hljs-string">'days'</span>)))
+            <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+          
+          <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+        },
+
+        containsTasks: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+          <span class="hljs-keyword">return</span> TaskHelperService.containsTasks(tasks);  
+        },
+
+        getTasks: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+          <span class="hljs-keyword">return</span> tasks;
+        },
+
+        getLinkedTaskMap: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+          <span class="hljs-keyword">return</span> linkedTaskMap;
+        },
+
+        setTasks: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(tasksObj)</span> </span>{
+          tasks = tasksObj;
+        },</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Section - Load Board - End * </p></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Section - Core board data - Start * </p></div></div><div class="code"><div class="wrapper">        getActions : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+          <span class="hljs-keyword">return</span> actions;
+        },
+
+        getOnlineUsers : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+          <span class="hljs-keyword">return</span> onlineUsers;
+        },
+
+        getEquipment : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+          <span class="hljs-keyword">return</span> equipment;
+        },
+
+        getPersonnel : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+          <span class="hljs-keyword">return</span> personnel;
+        },
+        
+        getBoardQuota : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+            <span class="hljs-keyword">return</span> boardQuota;
+          },
+
+        getShifts : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+          <span class="hljs-keyword">return</span> shiftData;
+        },
+
+        getvolunteerCounts :<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{
+        	<span class="hljs-keyword">return</span> volunteerCounts;
+        },
+        
+        getShiftData: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+          <span class="hljs-keyword">if</span> (shiftData == <span class="hljs-literal">null</span>) {
+            <span class="hljs-keyword">return</span> ReferenceDataService.loadShifts($resource, pathStart).then(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span></span>{
+              shiftData = data;
+              <span class="hljs-keyword">return</span> data;
+            }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span></span>{
+              <span class="hljs-built_in">console</span>.log(err)
+            })
+          } <span class="hljs-keyword">else</span> {
+            <span class="hljs-keyword">return</span> shiftData;
+          }
+        },
+
+        getCategoryData: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+          <span class="hljs-keyword">if</span> (categoryData == <span class="hljs-literal">null</span>) {
+            <span class="hljs-keyword">return</span> ReferenceDataService.loadCategories($resource, pathStart, boardLocation).then(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span></span>{
+              categoryData = data;
+              <span class="hljs-keyword">return</span> data;
+            }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span></span>{
+              categoryData = <span class="hljs-built_in">window</span>.categories;
+              <span class="hljs-built_in">console</span>.log(err)
+            })
+          } <span class="hljs-keyword">else</span> {
+            <span class="hljs-keyword">return</span> categoryData;
+          }
+        },</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Section - Core board data - End * </p></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Section - Reference data - Start * </p></div></div><div class="code"><div class="wrapper">        getEquipmentDownCodes : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{ <span class="hljs-comment">//had to do this because it has to return promise to board.html or call load method directly which needs some function args</span>
+
+          <span class="hljs-keyword">if</span> (equipmentDownCodes == <span class="hljs-literal">null</span>) {
+            <span class="hljs-keyword">return</span> ReferenceDataService.loadEquipmentDownCodes($resource, pathStart, boardLocation, boardDate).then(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span> </span>{
+              equipmentDownCodes = data;
+              <span class="hljs-keyword">return</span> data;
+            }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span> </span>{
+              <span class="hljs-built_in">console</span>.log(error);
+            });
+          } <span class="hljs-keyword">else</span> {
+            <span class="hljs-keyword">return</span> equipmentDownCodes;
+          }
+        },
+
+        getMappedTitle : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(title)</span> </span>{
+          <span class="hljs-keyword">var</span> tMap = <span class="hljs-string">''</span>
+          <span class="hljs-keyword">if</span> (!title)
+            <span class="hljs-keyword">return</span> <span class="hljs-string">''</span>;
+          <span class="hljs-built_in">Object</span>.keys(titles).forEach(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(key)</span> </span>{
+            <span class="hljs-keyword">var</span> val = titles[key];
+            <span class="hljs-keyword">if</span> (title.toUpperCase() === val.toUpperCase())
+              tMap = key;
+          })
+          <span class="hljs-keyword">return</span> tMap;
+        },
+
+        getMaterials : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+          <span class="hljs-keyword">if</span> (materialList == <span class="hljs-literal">null</span>) {
+            <span class="hljs-keyword">return</span> ReferenceDataService.loadMaterialList($resource, pathStart).then(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span></span>{
+              materialList = data;
+              <span class="hljs-keyword">return</span> data;
+            }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span></span>{
+              <span class="hljs-built_in">console</span>.log(err)
+            })
+          } <span class="hljs-keyword">else</span> {
+            <span class="hljs-keyword">return</span> materialList;
+          }
+        },
+
+       getPersonnelStatusList : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{    	
+            <span class="hljs-keyword">if</span> (personnelStatusList == <span class="hljs-literal">null</span>) {
+                <span class="hljs-keyword">return</span> ReferenceDataService.loadPersonnelStatusList($resource, pathStart).then(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span></span>{
+                  personnelStatusList = data;
+                  <span class="hljs-keyword">return</span> data;
+                }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span></span>{
+                  <span class="hljs-built_in">console</span>.log(err)
+                })
+              } <span class="hljs-keyword">else</span> {
+                <span class="hljs-keyword">return</span> personnelStatusList;
+              }
+        },
+
+        getPersonnelSpecialPositionsList : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{
+          <span class="hljs-keyword">return</span> ReferenceDataService.loadPersonnelSpecialPositionsList();
+        },
+
+        getPersonnelUnavailabilityCodes : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+          <span class="hljs-keyword">return</span> ReferenceDataService.loadPersonnelUnavailabilityCodes();
+        },
+
+        getRepairLocations : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+
+          <span class="hljs-keyword">if</span> (repairLocations == <span class="hljs-literal">null</span>) {
+            <span class="hljs-keyword">return</span> ReferenceDataService.loadRepairLocations($resource, pathStart).then(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span></span>{
+              repairLocations = data;
+              <span class="hljs-keyword">return</span> data;
+            }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span></span>{
+              <span class="hljs-built_in">console</span>.log(error)
+            })
+          } <span class="hljs-keyword">else</span> {
+            <span class="hljs-keyword">return</span> repairLocations;
+          }
+        },</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Section - Reference data - End * </p></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Section - Asynchronous board
+operations - Start *</p></div></div><div class="code"><div class="wrapper">         assignEquipmentToTask : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(task, pieceOfEquipmentId)</span> </span>{   
+           sendCommand(TaskHelperService.createAssignEquipmentToTaskCommand(states, clientSequence++, boardLocation, boardDate, task, equipment[pieceOfEquipmentId], uniqueId));
+         },
+         
+         assignEquipmentToPartialTask : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(task, pieceOfEquipmentId, locationId)</span> </span>{   
+           sendCommand(TaskHelperService.createAssignEquipmentToPartialTaskCommand(states, clientSequence++, boardLocation, boardDate, tasks, linkedTaskMap, task, equipment[pieceOfEquipmentId], locationId));
+         },
+
+         assignPersonToTask : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(task, personId, position)</span> </span>{
+           sendCommand(TaskHelperService.createAssignPersonToTaskCommand(states, clientSequence++, boardLocation, boardDate, task, personnel[personId.split(<span class="hljs-string">'_'</span>)[<span class="hljs-number">0</span>]], position, uniqueId));
+         },
+
+         assignSupervisorToTask: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(task, personId, taskIndicator)</span> </span>{
+          sendCommand(TaskHelperService.createAssignSupervisorToTaskCommand(states, clientSequence++, boardLocation, boardDate, task, personnel[personId.split(<span class="hljs-string">'_'</span>)[<span class="hljs-number">0</span>]], taskIndicator));
+         },
+
+         assignSupervisorToSection: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(section, personId, taskIndicator)</span> </span>{
+          sendCommand(TaskHelperService.createAssignSupervisorToSectionCommand(states, clientSequence++, boardLocation, boardDate, section, personnel[personId.split(<span class="hljs-string">'_'</span>)[<span class="hljs-number">0</span>]], taskIndicator));
+         },
+         
+         assignPersonToPartialTask : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(task, personId, position, locationId)</span> </span>{
+           sendCommand(TaskHelperService.createAssignPersonToPartialTaskCommand(states, clientSequence++, boardLocation, boardDate, tasks, linkedTaskMap, task, personnel[personId.split(<span class="hljs-string">'_'</span>)[<span class="hljs-number">0</span>]], position, locationId));
+         },
+         
+         unlinkPartialTasks : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(route)</span> </span>{   
+           sendCommand(TaskHelperService.createUnlinkPartialTasksCommand(states, clientSequence++, boardLocation, boardDate, equipment, personnel, tasks, linkedTaskMap, route));
+         },
+
+         unassignEquipmentFromTask : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment, task, locationId)</span> </span>{
+           sendCommand(TaskHelperService.createUnassignEquipmentFromTaskCommand(states, clientSequence++, boardLocation, boardDate, equipment, tasks, linkedTaskMap, task, locationId));
+         },
+
+         unassignPersonFromTask : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(person, task, position, locationId)</span> </span>{
+           sendCommand(TaskHelperService.createUnassignPersonFromTaskCommand(states, clientSequence++, boardLocation, boardDate, personnel, tasks, position, linkedTaskMap, task, locationId, person));
+         },
+         
+         unassignSupervisor : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(section, task, locationId)</span> </span>{
+             sendCommand(TaskHelperService.createUnassignSupervisorCommand(states, clientSequence++, boardLocation, boardDate, tasks, section, task));
+           },
+
+         unassignNonBinEquipmentFromTask:<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment, task)</span></span>{
+           sendCommand(TaskHelperService.createUnassignNonBinEquipmentFromTaskCommand(states, clientSequence++, boardLocation, boardDate, personnel, task, position)); 
+         },
+         clearAllLocations:<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{
+           sendCommand(TaskSettingsService.createClearAllLocationsCommand(states, clientSequence++, boardLocation, boardDate)); 
+         },
+         clearSpecificLocation:<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(serviceLocationId)</span></span>{
+           sendCommand(TaskSettingsService.createClearSpecificLocationCommand(states, clientSequence++, boardLocation, boardDate,serviceLocationId)); 
+         },
+         addShift : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(locationShiftId, serviceLocationId, shiftId)</span> </span>{   
+           sendCommand(TaskSettingsService.createAddShiftCommand(states, clientSequence++, boardLocation, boardDate, locationShiftId, serviceLocationId, shiftId));
+         },
+
+         removeShift : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(locationShiftId, serviceLocationId, shiftId)</span> </span>{   
+           sendCommand(TaskSettingsService.createRemoveShiftCommand(states, clientSequence++, boardLocation, boardDate, locationShiftId, serviceLocationId, shiftId));
+         },
+
+         addCategory : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(locationShiftId, shiftCategoryId, serviceLocationId, shiftId, categoryId)</span> </span>{   
+           sendCommand(TaskSettingsService.createAddCategoryCommand(states, clientSequence++, boardLocation, boardDate, locationShiftId, shiftCategoryId, serviceLocationId, shiftId, categoryId));
+         },
+
+         removeCategory : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(locationId, locationShiftId, shiftCategoryId, categoryId, shiftId)</span> </span>{   
+           sendCommand(TaskSettingsService.createRemoveCategoryCommand(states, clientSequence++, boardLocation, boardDate, locationShiftId, shiftCategoryId, locationId, shiftId, categoryId));
+         },
+
+         updateCategory : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(locationId, shiftId, locationShiftId, shiftCategoryId, oldCategory, newCategory)</span> </span>{   
+           sendCommand(TaskSettingsService.createUpdateCategoryCommand(states, clientSequence++, boardLocation, boardDate, locationId, shiftId, locationShiftId, shiftCategoryId, oldCategory, newCategory));
+         },
+
+         addSubcategory : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(locationShiftId, shiftCategoryId, subcategoryTaskId, serviceLocationId, shiftId, categoryId, subCategoryId, containsSections, taskId)</span> </span>{   
+           sendCommand(TaskSettingsService.createAddSubcategoryCommand(states, clientSequence++, boardLocation, boardDate, locationShiftId, shiftCategoryId, subcategoryTaskId, serviceLocationId, shiftId, categoryId, subCategoryId, containsSections, taskId));
+         },
+
+         removeSubcategory : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(locationShiftId, shiftCategoryId, subcategoryTaskId, serviceLocationId, shiftId, categoryId, subCategoryId, containsSections, taskId)</span> </span>{   
+           sendCommand(TaskSettingsService.createRemoveSubcategoryCommand(states, clientSequence++, boardLocation, boardDate, locationShiftId, shiftCategoryId, subcategoryTaskId, serviceLocationId, shiftId, categoryId, subCategoryId, containsSections, taskId));
+         },
+
+         addSection: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(locationShiftId, shiftCategoryId, subcategoryTaskId, sectionTaskId, taskIds, serviceLocationId, shiftId, categoryId, subcategoryId, sectionId)</span> </span>{
+           sendCommand(TaskSettingsService.createAddSectionCommand(states, clientSequence++, boardLocation, boardDate, locationShiftId, shiftCategoryId, subcategoryTaskId, sectionTaskId, taskIds, serviceLocationId, shiftId, categoryId, subcategoryId, sectionId));
+         },
+
+         removeSection: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(locationShiftId, shiftCategoryId, subcategoryTaskId, sectionTaskId, serviceLocationId, shiftId, categoryId, subcategoryId, sectionId)</span> </span>{
+           sendCommand(TaskSettingsService.createRemoveSectionCommand(states, clientSequence++, boardLocation, boardDate, locationShiftId, shiftCategoryId, subcategoryTaskId, sectionTaskId, serviceLocationId, shiftId, categoryId, subcategoryId, sectionId));
+         },
+
+         addTask: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(locationShiftId, shiftCategoryId, subcategoryTaskId, taskIds, serviceLocationId, shiftId, categoryId, subcategoryId, containsSections, sectionTaskId, sectionId)</span> </span>{
+           sendCommand(TaskSettingsService.createAddTaskCommand(states, clientSequence++, boardLocation, boardDate, locationShiftId, shiftCategoryId, subcategoryTaskId, taskIds, serviceLocationId, shiftId, categoryId, subcategoryId, containsSections, sectionTaskId, sectionId));
+         },
+
+         updateTask: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(task, locationShiftId, shiftCategoryId, subcategoryTaskId, taskIds, serviceLocationId, shiftId, categoryId, subcategoryId, containsSections, sectionTaskId, sectionId)</span> </span>{
+           sendCommand(TaskSettingsService.createUpdateTaskCommand(states, clientSequence++, boardLocation, boardDate, task, locationShiftId, shiftCategoryId, subcategoryTaskId, taskIds, serviceLocationId, shiftId, categoryId, subcategoryId, containsSections, sectionTaskId, sectionId));
+         },
+
+         removeTasks: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(locationShiftId, shiftCategoryId, subcategoryTaskId, numOfTasks, serviceLocationId, shiftId, categoryId, subcategoryId, containsSections, sectionTaskId, sectionId)</span> </span>{
+           sendCommand(TaskSettingsService.createRemoveTasksCommand(states, clientSequence++, boardLocation, boardDate, locationShiftId, shiftCategoryId, subcategoryTaskId, numOfTasks, serviceLocationId, shiftId, categoryId, subcategoryId, containsSections, sectionTaskId, sectionId))
+         },
+
+         deleteSingleTask: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(task, section, subcategory, category, shift, location, locationId, containsSection)</span> </span>{
+           sendCommand(TaskSettingsService.createDeleteSingleTaskCommand(states, clientSequence++, boardLocation, boardDate, task, section, subcategory, category, shift, location, locationId, containsSection))
+         },
+
+         publishBoard: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+           sendPublishBoardCommand(TaskSettingsService.createPublishBoardCommand(states, clientSequence++, boardLocation, boardDate))
+         },</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Section - Asynchronous board
+operations - End *</p></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Section - Synchronous board
+operations - Start *</p></div></div><div class="code"><div class="wrapper">         acceptAttachEquipment : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(pieceOfEquipment, receivedBy, receivedDate, receivedTime, remarks, successFn, errorFn)</span> </span>{
+           EquipmentHelperService.acceptAttachEquipmentOnServer($resource, pieceOfEquipment, receivedBy, receivedDate, receivedTime, remarks, boardData, successFn, errorFn);
+         },
+
+         cancelEquipmentDetachment : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(pieceOfEquipment, successFn, errorFn)</span> </span>{
+           EquipmentHelperService.cancelEquipmentDetachmentOnServer($resource, pieceOfEquipment, boardData, successFn, errorFn);
+         },
+
+         detachEquipment : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(pieceOfEquipment, to, time, driver, successFn, errorFn)</span> </span>{
+           EquipmentHelperService.detachEquipmentOnServer($resource, pieceOfEquipment, to, time, driver, boardData, successFn, errorFn);
+         },
+
+         detachPerson : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(person, detachData, successFn, errorFn)</span> </span>{
+           PersonnelHelperService.detachPersonOnServer($resource, person, detachData, boardData, successFn, errorFn);
+         },
+
+         downEquipment : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(pieceOfEquipment, downData, successFn, errorFn)</span> </span>{
+           EquipmentHelperService.downEquipmentOnServer($resource, pieceOfEquipment, downData, boardData, successFn, errorFn);
+         },
+
+         updateEquipmentLoadStatus : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(pieceOfEquipment, loadData, successFn, errorFn)</span> </span>{
+           EquipmentHelperService.updateEquipmentLoadStatusOnServer($resource, pieceOfEquipment, loadData, boardData, successFn, errorFn);
+         },
+
+         upEquipment : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(pieceOfEquipment, upData, successFn, errorFn)</span> </span>{
+           EquipmentHelperService.upEquipmentOnServer($resource, pieceOfEquipment, upData, boardData, successFn, errorFn);
+         },
+         updateSnowEquipment:<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(pieceOfEquipment, snowData, successFn, errorFn)</span> </span>{
+           EquipmentHelperService.updateSnowEquipmentOnServer($resource, pieceOfEquipment, snowData, boardData, successFn, errorFn);
+         },
+
+         updatePersonMdaStatus : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(person, mdaData, successFn, errorFn)</span> </span>{
+           PersonnelHelperService.updatePersonMdaStatusOnServer($resource, person, mdaData, boardData, successFn, errorFn);
+         },
+
+         createPersonMdaStatus : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(person, mdaData, successFn, errorFn)</span> </span>{
+           PersonnelHelperService.createPersonMdaStatusOnServer($resource, person, mdaData, boardData, successFn, errorFn);
+         },
+
+         addSpecialPosition : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(person, specialPositionData, success, error)</span></span>{
+           PersonnelHelperService.addSpecialPositionOnServer($resource, person, specialPositionData, boardData, success, error);
+         },
+
+         updateSpecialPosition : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(person, specialPositionData, success, error)</span></span>{
+           PersonnelHelperService.updateSpecialPositionOnServer($resource, person, specialPositionData, boardData, success, error);
+         },
+
+         removePersonMdaStatus : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(person, mdaData, successFn, errorFn)</span> </span>{
+           PersonnelHelperService.removePersonMdaStatusOnServer($resource, person, mdaData, boardData, successFn, errorFn);
+         },
+
+         createPersonUnavailabilityCode : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(person, unavailabilityData, successFn, errorFn)</span> </span>{
+           PersonnelHelperService.createPersonUnavailabilityOnServer($resource, person, unavailabilityData, boardData, successFn, errorFn);
+         },
+
+
+        saveGroup: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(group, successFn, errorFn)</span> </span>{
+            TaskSettingsService.saveGroupOnServer($resource, group, boardData, successFn, errorFn)
+        },
+
+         updatePersonUnavailabilityCode : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(person, unavailabilityData, successFn, errorFn)</span> </span>{
+           PersonnelHelperService.updatePersonUnavailabilityOnServer($resource, person, unavailabilityData, boardData, successFn, errorFn);
+         },
+
+         removePersonUnavailabilityCode : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(person, unavailabilityData, successFn, errorFn)</span> </span>{
+           PersonnelHelperService.removePersonUnavailabilityOnServer($resource, person, unavailabilityData, boardData, successFn, errorFn);
+         },
+
+         cancelPersonUnavailabilityCode:<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(person, unavailabilityData, successFn, errorFn)</span></span>{
+           PersonnelHelperService.cancelPersonUnavailabilityOnServer($resource, person, unavailabilityData, boardData, successFn, errorFn);  
+         },
+
+         undoCancelPersonUnavailabilityCode:<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(person, unavailabilityData, successFn, errorFn)</span></span>{
+           PersonnelHelperService.undoCancelPersonUnavailabilityOnServer($resource, person, unavailabilityData, boardData, successFn, errorFn);  
+         },
+
+         removeSpecialPosition : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(person, specialPositionData, successFn, errorFn)</span> </span>{
+           PersonnelHelperService.removeSpecialPositionOnServer($resource, person, specialPositionData, boardData, successFn, errorFn);
+         },
+
+             isSame: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(obj1, obj2)</span> </span>{
+                    <span class="hljs-keyword">var</span> masterCopy = angular.copy(obj1),
+                        updatedCopy = angular.copy(obj2);
+                    <span class="hljs-keyword">delete</span> masterCopy.reasonForChange;
+                    <span class="hljs-keyword">delete</span> updatedCopy.reasonForChange;
+                    masterCopy.startTime = masterCopy.startTime ? { hours: masterCopy.startTime.getHours(), mins: masterCopy.startTime.getMinutes()} : <span class="hljs-string">''</span>;
+                    masterCopy.endTime = masterCopy.endTime ? { hours: masterCopy.endTime.getHours(), mins: masterCopy.endTime.getMinutes()} : <span class="hljs-string">''</span>;
+                    updatedCopy.startTime = updatedCopy.startTime ? { hours: updatedCopy.startTime.getHours(), mins: updatedCopy.startTime.getMinutes()} : <span class="hljs-string">''</span>;
+                    updatedCopy.endTime = updatedCopy.endTime ? { hours: updatedCopy.endTime.getHours(), mins: updatedCopy.endTime.getMinutes()} : <span class="hljs-string">''</span>;
+                    <span class="hljs-keyword">return</span> _.isEqual(masterCopy, updatedCopy)
+             },
+
+         copyBoard : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(copyBoardTo, successFn, errorFn)</span> </span>{
+           BoardHelperService.copyBoardOnServer($resource, $<span class="hljs-built_in">window</span>, copyBoardTo, boardData, successFn, errorFn);
+         },
+         
+         saveVolunteerCounts : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(boardId, chartVolunteers, mandatoryChart, VacationVolunteers, successFn, errorFn )</span></span>{
+        	 ReportsService.saveVolunteerCountsOnServer($resource , boardData, chartVolunteers, mandatoryChart, VacationVolunteers, successFn, errorFn )
+         },
+         
+         closeWebSocket: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{
+           closeWebSocket();
+         },
+         
+
+         logCommandMessages : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(commandMessages)</span></span>{
+           $timeout(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{
+             angular.forEach(commandMessages, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(value, key)</span> </span>{
+               receiveCommand(value)
+             });
+           });
+         },
+
+        locationtasks : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(tasksin, personnel)</span> </span>{
+          <span class="hljs-keyword">return</span> locationtasks(tasksin, personnel);
+        }
+      }
+    });</div></div></div></div></body></html>

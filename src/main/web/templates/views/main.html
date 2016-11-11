@@ -1,0 +1,37 @@
+<!--
+- The main Angular view of the OpsBoard.  It is used to lay out all the various panes (using flexbox) and set up splitters.  Pane
+- view logic is delegated to Thymeleaf fragments.
+-->
+
+<div id="board" class="flexbox-content flexbox column" error-hnd="true" ng-style="{'width': layout.screen1.board}">
+	<div class="flexbox flex">
+		<div th:include="views/fragments/navigation-pane :: navigation-pane" th:remove="tag"></div>
+		<div id="screen1" class="flexbox column flex" ng-style="{'width': layout.screen1.width}" ng-show="layout.screen1.visible">
+			<div class="flexbox flex" >
+				<div id="screen1Pane1" class="pane" ng-style="{'width': layout.screen1.pane1.width}" ng-show="layout.screen1.pane1.visible" style="overflow: hidden;">
+					<div th:include="views/fragments/equipment-pane :: equipment-pane" th:remove="tag"></div>
+					<div th:include="views/fragments/personnel-details-pane :: personnel-details-pane" th:remove="tag"></div>
+				</div>
+				<div splitter="left" ng-show="layout.screen1.pane1.visible &amp;&amp; layout.screen1.pane2.visible"></div>
+
+				<div id="screen1Pane2" class="flex pane" ng-style="{'width': layout.screen1.pane2.width}" ng-show="layout.screen1.pane2.visible" style="overflow: hidden;">
+					<div th:include="views/fragments/personnel-pane :: personnel-pane" th:remove="tag"></div>
+					<div th:include="views/fragments/equipment-details-pane :: equipment-details-pane" th:remove="tag"></div>
+				</div>
+
+				<div th:include="views/fragments/task-settings-pane :: task-settings-pane" th:remove="tag"></div>
+				<div th:include="views/fragments/reports-pane :: reports-pane" th:remove="tag"></div>
+			</div>
+		</div>
+		<div splitter="right" ng-show="layout.screen1.visible &amp;&amp; layout.screen2.visible"></div>
+		<div id="screen2" class="flexbox column" ng-style="{'width': layout.screen2.width}" ng-show="layout.screen2.visible">
+			<div id="screen1Pane2" class="pane" ng-show="layout.screen2.pane1.visible" style="overflow: hidden;">
+			  <div th:include="views/fragments/tasks-pane :: tasks-pane" th:remove="tag"></div>
+			</div>
+			<charts-pane layout="layout" panes="panes" personnelpane="personnelpane" ModalCtrl='ModalCtrl' toggleChartsPane="toggleChartsPane"></charts-pane>
+		</div>
+
+		<!--<div th:include="views/fragments/charts-pane :: charts-pane" th:remove="tag"></div>-->
+	</div>
+	<div recent-activity-pane="true" panes="panes" equipments="equipments" persons="persons" shifts="shifts" show-details='showDetails'></div>
+</div>

@@ -1,0 +1,585 @@
+<!DOCTYPE html><html lang="en"><head><title>public\scripts\controllers\display-board-controller</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../../"><meta name="groc-document-path" content="public\scripts\controllers\display-board-controller"><meta name="groc-project-path" content="public\scripts\controllers\display-board-controller.js"><link rel="stylesheet" type="text/css" media="all" href="../../../assets/style.css"><script type="text/javascript" src="../../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">public\scripts\controllers\display-board-controller.js</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="hljs-pi">'use strict'</span>;
+
+angular
+    .module(<span class="hljs-string">'OpsBoard'</span>)
+    .controller(<span class="hljs-string">'DisplayBoardCtrl'</span>,
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">($resource, $scope, $filter, $log, $controller, $timeout, $window, $rootScope, titleHierarchy, titles, ReferenceDataService, durations)</span> </span>{
+
+        refreshBoard($resource, $scope);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Section - WebSocket connection for events/messaging - Start *</p></div></div><div class="code"><div class="wrapper">        <span class="hljs-keyword">var</span> stompClient = <span class="hljs-literal">null</span>;
+        <span class="hljs-keyword">var</span> socket = <span class="hljs-literal">null</span>;
+        <span class="hljs-keyword">var</span> connected = <span class="hljs-literal">false</span>;
+
+        <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">setConnection</span><span class="hljs-params">(isConnected)</span> </span>{
+            connected = isConnected;
+            $scope.$broadcast(<span class="hljs-string">'connected'</span>, connected);
+        }
+
+        <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">openWebSocket</span><span class="hljs-params">()</span> </span>{
+            <span class="hljs-keyword">var</span> pathElements = <span class="hljs-built_in">window</span>.location.pathname.split(<span class="hljs-string">'/displayboard'</span>),
+                pathStart = pathElements[<span class="hljs-number">0</span>],
+                boardLocation = pathElements[<span class="hljs-number">1</span>],
+                pathElements = pathElements[<span class="hljs-number">1</span>].split(<span class="hljs-string">'/'</span>);
+
+            <span class="hljs-keyword">if</span> (!socket) {
+                socket = <span class="hljs-keyword">new</span> SockJS(pathStart + <span class="hljs-string">'/wsdisplayboard/'</span> + pathElements[<span class="hljs-number">1</span>]);
+
+
+                stompClient = Stomp.over(socket);
+                stompClient.connect({}, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(frame)</span> </span>{
+
+                    setConnection(<span class="hljs-literal">true</span>);
+
+                    stompClient.subscribe(<span class="hljs-string">'/topic/displayboard.'</span> + pathElements[<span class="hljs-number">1</span>].toUpperCase(), <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(message)</span> </span>{
+                        receivePublishCommand(message,<span class="hljs-literal">false</span>);
+
+                    })
+                }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span> </span>{
+                    <span class="hljs-keyword">if</span> (error.headers &amp;&amp; error.headers.message) {
+                        <span class="hljs-built_in">console</span>.log(error.headers.message);
+                    } <span class="hljs-keyword">else</span> {
+                        <span class="hljs-built_in">console</span>.log(error);
+                    }
+                    setConnection(<span class="hljs-literal">false</span>);
+                });
+            }
+        }
+
+        <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">closeWebSocket</span><span class="hljs-params">()</span> </span>{
+            stompClient.disconnect(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+                setConnection(<span class="hljs-literal">false</span>);
+                <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'Disconnected'</span>);
+            });
+        }
+
+        <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">receivePublishCommand</span> <span class="hljs-params">(message)</span> </span>{
+            <span class="hljs-keyword">var</span> command = <span class="hljs-built_in">JSON</span>.parse(message.body);
+
+            reloadBoard($resource, $scope, command.date);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Disregard error messages</p></div></div><div class="code"><div class="wrapper">            <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> command.error != <span class="hljs-string">'undefined'</span> &amp;&amp; command.error &gt; <span class="hljs-number">0</span>) {
+                <span class="hljs-keyword">return</span>;
+            }
+        }
+
+        <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">reloadBoard</span><span class="hljs-params">($resource, $scope, commanddate)</span> </span>{
+            <span class="hljs-keyword">var</span> params  = <span class="hljs-built_in">window</span>.location.hash.split(<span class="hljs-string">'/'</span>);
+            <span class="hljs-built_in">window</span>.location.hash = <span class="hljs-string">'#/'</span> + commanddate + <span class="hljs-string">'/screen1'</span>;
+            <span class="hljs-built_in">window</span>.location.reload();</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>refreshBoard($resource, $scope);</p></div></div><div class="code"><div class="wrapper">        }
+
+        <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">refreshBoard</span><span class="hljs-params">($resource, $scope)</span> </span>{
+
+            <span class="hljs-keyword">var</span> params  = <span class="hljs-built_in">window</span>.location.hash.split(<span class="hljs-string">'/'</span>);
+
+            <span class="hljs-keyword">var</span> screen2 = <span class="hljs-built_in">window</span>.location.hash.replace(<span class="hljs-regexp">/^#screen/</span>,<span class="hljs-string">''</span>);
+
+            <span class="hljs-keyword">var</span> pathElements = <span class="hljs-built_in">window</span>.location.pathname.split(<span class="hljs-string">'/displayboard'</span>),
+                pathStart = pathElements[<span class="hljs-number">0</span>];
+
+            pathElements = pathElements[<span class="hljs-number">1</span>].split(<span class="hljs-string">'/'</span>);
+
+            <span class="hljs-keyword">var</span> boardLocation = pathElements[<span class="hljs-number">1</span>],
+                boardDate = params[<span class="hljs-number">1</span>];
+
+                <span class="hljs-keyword">var</span> boardKey = boardLocation + <span class="hljs-string">"_"</span> + boardDate;
+
+
+                <span class="hljs-keyword">var</span> boardData = {
+                    pathStart: pathStart,
+                    boardLocation: boardLocation,
+                    boardDate: boardDate
+                };
+
+            <span class="hljs-keyword">var</span> resource = $resource(pathStart + <span class="hljs-string">'/:district/:date/load'</span>, {
+                district: <span class="hljs-literal">null</span>,
+                date: <span class="hljs-literal">null</span>
+            });
+
+            <span class="hljs-keyword">var</span> response = resource.get({
+                district: boardLocation,
+                date: boardDate
+            }, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(data)</span> </span>{
+            });
+
+            <span class="hljs-keyword">return</span> response.$promise.then(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(data)</span> </span>{
+
+                $scope.data = data;
+
+                <span class="hljs-keyword">var</span> snakes = [];
+                <span class="hljs-keyword">var</span> shift2 = {};
+                <span class="hljs-keyword">var</span> shiftcategory2 = {};
+                <span class="hljs-keyword">var</span> categorytask2 = {};
+                <span class="hljs-keyword">var</span> task2 = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>();
+                <span class="hljs-keyword">var</span> section2 = {};
+                <span class="hljs-keyword">var</span> sections = {};
+                <span class="hljs-keyword">var</span> shiftCategories = {};
+                <span class="hljs-keyword">var</span> subcategorytasks = {};
+                <span class="hljs-keyword">var</span> tasks = {};
+                <span class="hljs-keyword">var</span> person2= {};
+
+                <span class="hljs-keyword">var</span> formatNames = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(task2)</span> </span>{
+
+                    <span class="hljs-keyword">var</span> name1Marker = <span class="hljs-string">''</span>;
+                    <span class="hljs-keyword">var</span> name2Marker = <span class="hljs-string">''</span>;
+                    <span class="hljs-keyword">var</span> multimarker = <span class="hljs-string">'&amp;nbsp;'</span>;
+                    <span class="hljs-keyword">var</span> childclass = <span class="hljs-string">''</span>;
+                    <span class="hljs-keyword">var</span> childmarkerclass = <span class="hljs-string">''</span>;
+
+                    <span class="hljs-keyword">if</span>(task2.multigroup) {
+                        multimarker = <span class="hljs-string">'&lt;i class="fa fa-map-marker partial group'</span> + task2.multigroup + <span class="hljs-string">'"&gt;&lt;/i&gt;'</span>;
+                        <span class="hljs-keyword">if</span>(<span class="hljs-built_in">parseInt</span>(task2.partialTaskSequence) &gt;<span class="hljs-number">1</span> ) {
+                            childclass = <span class="hljs-string">'childclass'</span>;
+                            childmarkerclass = <span class="hljs-string">'childmarkerclass'</span>;
+                        }
+                    }
+
+                    <span class="hljs-keyword">var</span> id = <span class="hljs-built_in">Math</span>.random();
+
+                    <span class="hljs-keyword">if</span>(!task2.assignedEquipment.equipment) {
+                        task2.assignedEquipment.equipment = {};
+                    }
+
+                    <span class="hljs-keyword">if</span>(!task2.assignedEquipment.equipment.name) {
+                        task2.assignedEquipment.equipment.name = <span class="hljs-string">''</span>;
+                    }
+
+                    <span class="hljs-keyword">if</span>(!task2.assignedPerson1.person) {
+                        task2.assignedPerson1.person = {};
+                    } <span class="hljs-keyword">else</span> {
+                        name1Marker = <span class="hljs-string">'&lt;span id="tnm'</span> + id + task + <span class="hljs-string">'"  class="namemarker '</span> + task2.assignedPerson1.person.departmentType + <span class="hljs-string">' '</span> + task2.assignedPerson1.person.civilServiceTitle + <span class="hljs-string">' '</span> + childmarkerclass + <span class="hljs-string">'"&gt;&amp;nbsp;&lt;/span&gt;'</span>;
+                    }
+
+                    <span class="hljs-keyword">if</span>(!task2.assignedPerson1.person.firstName) {
+                        task2.assignedPerson1.person.firstName = <span class="hljs-string">''</span>;
+                    }
+
+                    <span class="hljs-keyword">if</span>(!task2.assignedPerson1.person.lastName) {
+                        task2.assignedPerson1.person.lastName = <span class="hljs-string">''</span>;
+                    }
+
+                    <span class="hljs-keyword">if</span>(!task2.assignedPerson1.person.departmentType) {
+                        task2.assignedPerson1.person.departmentType = <span class="hljs-string">''</span>;
+                    }
+
+                    <span class="hljs-keyword">if</span>(!task2.assignedPerson2.person) {
+                        task2.assignedPerson2.person = {};
+                    } <span class="hljs-keyword">else</span> {
+                        name2Marker = <span class="hljs-string">'&lt;span id="tnm'</span> + id +task + <span class="hljs-string">'"  class="namemarker '</span> + task2.assignedPerson2.person.departmentType + <span class="hljs-string">' '</span> + task2.assignedPerson2.person.civilServiceTitle + <span class="hljs-string">' '</span> +  childmarkerclass + <span class="hljs-string">'"&gt;&amp;nbsp;&lt;/span&gt;'</span>;
+                    }
+
+                    <span class="hljs-keyword">if</span>(!task2.assignedPerson2.person.firstName) {
+                        task2.assignedPerson2.person.firstName = <span class="hljs-string">''</span>;
+                    }
+
+                    <span class="hljs-keyword">if</span>(!task2.assignedPerson2.person.lastName) {
+                        task2.assignedPerson2.person.lastName = <span class="hljs-string">''</span>;
+                    }
+
+                    <span class="hljs-keyword">if</span>(!task2.assignedPerson2.person.departmentType) {
+                        task2.assignedPerson2.person.departmentType = <span class="hljs-string">''</span>;
+                    }
+
+                    task2.assignedPerson1.person.firstName = $filter(<span class="hljs-string">'firstInitial'</span>)(task2.assignedPerson1.person.firstName);
+                    task2.assignedPerson2.person.firstName = $filter(<span class="hljs-string">'firstInitial'</span>)(task2.assignedPerson2.person.firstName);
+
+
+
+
+
+
+                    snakes.push(<span class="hljs-string">'&lt;span id="m'</span> + id +task + <span class="hljs-string">'" class="marker"&gt;'</span> + multimarker + <span class="hljs-string">'&lt;/span&gt;&lt;span id="c'</span> + id +task + <span class="hljs-string">'" class="code '</span> + childclass + <span class="hljs-string">'"&gt;'</span> + task2.taskName + <span class="hljs-string">'&amp;nbsp;&lt;/span&gt;&lt;span id="e'</span> + id +task + <span class="hljs-string">'"  class="equipment '</span> + childclass + <span class="hljs-string">'"&gt;'</span> + task2.assignedEquipment.equipment.name + <span class="hljs-string">'&amp;nbsp;&lt;/span&gt;&lt;span id="n1'</span> + id +task + <span class="hljs-string">'" class="name1 '</span> + childclass + <span class="hljs-string">'"&gt;&lt;span id="n1f'</span> + id +task + <span class="hljs-string">'" class="namefull"&gt;'</span> + name1Marker + <span class="hljs-string">' '</span> + task2.assignedPerson1.person.firstName + <span class="hljs-string">' '</span> + task2.assignedPerson1.person.lastName + <span class="hljs-string">'&amp;nbsp;&lt;/span&gt;&lt;/span&gt;&lt;span id="n2'</span> + task + <span class="hljs-string">'" class="name2 '</span> + childclass + <span class="hljs-string">'"&gt;&lt;span class="namefull"&gt;'</span> + name2Marker + <span class="hljs-string">' '</span> + task2.assignedPerson2.person.firstName + <span class="hljs-string">' '</span> + task2.assignedPerson2.person.lastName + <span class="hljs-string">' &amp;nbsp;&lt;/span&gt;&lt;/span&gt;'</span>);
+
+                };
+
+                <span class="hljs-keyword">var</span> formatSubcategoryName = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(shiftcategory2, categorytask2)</span> </span>{
+
+                    <span class="hljs-keyword">var</span> id = <span class="hljs-built_in">Math</span>.random();
+
+                    snakes.push(<span class="hljs-string">'&lt;div id="cl'</span> + id + <span class="hljs-string">'" class="categoriesline '</span> + shiftcategory2.category.name + <span class="hljs-string">'"&gt;&lt;/div&gt;&lt;span class="categories '</span> + shiftcategory2.category.name + <span class="hljs-string">'"&gt;'</span> + categorytask2.subcategory.name + <span class="hljs-string">'&lt;/span&gt;&lt;div  id="rd'</span> + categorytask + <span class="hljs-string">'"  style="clear:both;"&gt;&lt;/div&gt;'</span>);
+                };
+
+                <span class="hljs-keyword">var</span> formatSectionName = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(section2)</span> </span>{
+
+                    <span class="hljs-keyword">var</span> id = <span class="hljs-built_in">Math</span>.random();
+
+                    snakes.push(<span class="hljs-string">'&lt;div id="sn'</span> + id +task + <span class="hljs-string">'" class="name"&gt;&lt;span id="sm'</span> + id +task + <span class="hljs-string">'"  class="squaremarker section'</span> + section2.sectionName + <span class="hljs-string">'"&gt;&amp;nbsp;&lt;/span&gt;Section '</span> + section2.sectionName + <span class="hljs-string">'&lt;/div&gt;'</span>);
+
+                };
+
+                <span class="hljs-keyword">var</span> formatShiftName = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(shift2)</span> </span>{
+
+                    <span class="hljs-keyword">var</span> id = <span class="hljs-built_in">Math</span>.random();
+
+                    <span class="hljs-keyword">var</span> shitftclass = <span class="hljs-string">'shift1'</span>;
+
+                    <span class="hljs-keyword">if</span> (shift2.shift.sequence &gt; <span class="hljs-number">6</span> &amp;&amp; shift2.shift.sequence &lt; <span class="hljs-number">15</span>) {
+                        shitftclass = <span class="hljs-string">'shift2'</span>;
+                    };
+
+                    snakes.push(<span class="hljs-string">'&lt;div id="s'</span> + id + <span class="hljs-string">'" class="firstheader '</span> + shitftclass+<span class="hljs-string">'"&gt;'</span> + shift2.shift.name + <span class="hljs-string">'&lt;/div&gt;'</span>);
+                };
+
+                <span class="hljs-keyword">var</span> headerLogo = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data, location)</span> </span>{
+
+                    <span class="hljs-keyword">var</span> id = <span class="hljs-built_in">Math</span>.random();
+
+                    <span class="hljs-keyword">var</span> dateString = data.date.substring(<span class="hljs-number">4</span>, <span class="hljs-number">6</span>) + <span class="hljs-string">'/'</span> + data.date.substring(<span class="hljs-number">6</span>, <span class="hljs-number">8</span>) + <span class="hljs-string">'/'</span> + data.date.substring(<span class="hljs-number">0</span>, <span class="hljs-number">4</span>);
+
+                    <span class="hljs-keyword">var</span> logoday = moment(dateString).format(<span class="hljs-string">'dddd'</span>) ;
+                    <span class="hljs-keyword">var</span> logodate = moment(dateString).format(<span class="hljs-string">'MMMM D, YYYY'</span>) ;
+                    snakes.push(<span class="hljs-string">'&lt;div id="hl'</span> + id + <span class="hljs-string">'" class="headerlogo form"&gt;&lt;div id="hl'</span> + id + <span class="hljs-string">'" class="logo '</span> + location.location.code + <span class="hljs-string">'"&gt;'</span> + location.location.code + <span class="hljs-string">'&lt;/div&gt;&lt;div id="hld'</span> + id + <span class="hljs-string">'"  class="logodate"&gt;&lt;p id="hlm'</span> + id + <span class="hljs-string">'" class="month"&gt;'</span> + logoday + <span class="hljs-string">'&lt;/p&gt;&lt;p id="hlmd'</span> + id + <span class="hljs-string">'" class="date"&gt;'</span> + logodate + <span class="hljs-string">'&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;'</span>);
+                };
+
+                <span class="hljs-keyword">var</span> headerLogoDefault = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span> </span>{
+
+                    <span class="hljs-keyword">var</span> id = <span class="hljs-built_in">Math</span>.random();
+
+                    <span class="hljs-keyword">var</span> dateString = data.date.substring(<span class="hljs-number">4</span>, <span class="hljs-number">6</span>) + <span class="hljs-string">'/'</span> + data.date.substring(<span class="hljs-number">6</span>, <span class="hljs-number">8</span>) + <span class="hljs-string">'/'</span> + data.date.substring(<span class="hljs-number">0</span>, <span class="hljs-number">4</span>);
+
+                    <span class="hljs-keyword">var</span> logoday = moment(dateString).format(<span class="hljs-string">'dddd'</span>) ;
+                    <span class="hljs-keyword">var</span> logodate = moment(dateString).format(<span class="hljs-string">'MMMM D, YYYY'</span>) ;
+                    snakes.push(<span class="hljs-string">'&lt;div id="dhl'</span> + id + <span class="hljs-string">'"  class="headerlogo form"&gt;&lt;div class="logo '</span> + data.location + <span class="hljs-string">'"&gt;'</span> + data.location + <span class="hljs-string">'&lt;/div&gt;&lt;div class="logodate"&gt;&lt;p id="dhl'</span> + id + <span class="hljs-string">'"  class="month"&gt;'</span> + logoday + <span class="hljs-string">'&lt;/p&gt;&lt;p id="dhl'</span> + id + <span class="hljs-string">'"  class="date"&gt;'</span> + logodate + <span class="hljs-string">'&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;'</span>);
+                };
+
+                <span class="hljs-keyword">var</span> headerLogoMulti = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data, location)</span> </span>{
+                    <span class="hljs-keyword">var</span> id = <span class="hljs-built_in">Math</span>.random();
+                    <span class="hljs-keyword">var</span> dateString = data.date.substring(<span class="hljs-number">4</span>, <span class="hljs-number">6</span>) + <span class="hljs-string">'/'</span> + data.date.substring(<span class="hljs-number">6</span>, <span class="hljs-number">8</span>) + <span class="hljs-string">'/'</span> + data.date.substring(<span class="hljs-number">0</span>, <span class="hljs-number">4</span>);
+                    <span class="hljs-keyword">var</span> logoday = moment(dateString).format(<span class="hljs-string">'dddd'</span>) ;
+                    <span class="hljs-keyword">var</span> logodate = moment(dateString).format(<span class="hljs-string">'MMMM D, YYYY'</span>) ;
+                    snakes.push(<span class="hljs-string">'&lt;div id="hl'</span> + id + <span class="hljs-string">'" class="headerlogo form"&gt;&lt;div id="hl'</span> + id + <span class="hljs-string">'" class="logomulti '</span> + location.location.code + <span class="hljs-string">'"&gt;'</span> + location.location.code + <span class="hljs-string">'&lt;/div&gt;&lt;/div&gt;'</span>);
+                };
+
+                <span class="hljs-keyword">var</span> headerLogoDefaultMulti = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span> </span>{
+                    <span class="hljs-keyword">var</span> id = <span class="hljs-built_in">Math</span>.random();
+                    <span class="hljs-keyword">var</span> dateString = data.date.substring(<span class="hljs-number">4</span>, <span class="hljs-number">6</span>) + <span class="hljs-string">'/'</span> + data.date.substring(<span class="hljs-number">6</span>, <span class="hljs-number">8</span>) + <span class="hljs-string">'/'</span> + data.date.substring(<span class="hljs-number">0</span>, <span class="hljs-number">4</span>);
+                    <span class="hljs-keyword">var</span> logoday = moment(dateString).format(<span class="hljs-string">'dddd'</span>) ;
+                    <span class="hljs-keyword">var</span> logodate = moment(dateString).format(<span class="hljs-string">'MMMM D, YYYY'</span>) ;
+                    snakes.push(<span class="hljs-string">'&lt;div id="dhl'</span> + id + <span class="hljs-string">'" class="headerlogo form"&gt;&lt;div class="logomulti '</span> + data.location + <span class="hljs-string">'"&gt;'</span> + data.location + <span class="hljs-string">'&lt;/div&gt;&lt;div id="ldl'</span> + id + <span class="hljs-string">'" class="logodate"&gt;&lt;/div&gt;&lt;/div&gt;'</span>);
+                };
+
+                <span class="hljs-keyword">var</span> footerMulti = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span> </span>{
+                    <span class="hljs-keyword">var</span> id = <span class="hljs-built_in">Math</span>.random();
+                    <span class="hljs-keyword">var</span> dateString = data.date.substring(<span class="hljs-number">4</span>, <span class="hljs-number">6</span>) + <span class="hljs-string">'/'</span> + data.date.substring(<span class="hljs-number">6</span>, <span class="hljs-number">8</span>) + <span class="hljs-string">'/'</span> + data.date.substring(<span class="hljs-number">0</span>, <span class="hljs-number">4</span>);
+                    <span class="hljs-keyword">var</span> logoday = moment(dateString).format(<span class="hljs-string">'dddd'</span>) ;
+                    <span class="hljs-keyword">var</span> logodate = moment(dateString).format(<span class="hljs-string">'MMMM D, YYYY'</span>) ;
+                    snakes.push(<span class="hljs-string">'&lt;div id="fl'</span> + id + <span class="hljs-string">'"  class="header footer"&gt;&lt;p id="dhl'</span> + id + <span class="hljs-string">'"  class="month"&gt;'</span> + logoday + <span class="hljs-string">'&lt;/p&gt;&lt;p id="dhl'</span> + id + <span class="hljs-string">'"  class="date"&gt;'</span> + logodate + <span class="hljs-string">'&lt;/p&gt;&lt;/div&gt;'</span>);
+                };
+
+                <span class="hljs-keyword">var</span> miscelaneousHeader = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span> </span>{
+                    snakes.push(<span class="hljs-string">'&lt;div class="header footer"&gt;Miscellaneous&lt;/div&gt;'</span>);
+                };
+
+                <span class="hljs-keyword">var</span> unvailable = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span> </span>{
+
+                    <span class="hljs-keyword">var</span> unavailablecodes = ReferenceDataService.loadPersonnelUnavailabilityCodes();
+                    <span class="hljs-keyword">var</span> id = <span class="hljs-built_in">Math</span>.random();
+
+                    snakes.push(<span class="hljs-string">'&lt;div id="uall'</span> + id + <span class="hljs-string">'" class="categoriesline UA "&gt;&lt;/div&gt;&lt;span id="cl'</span> + id + <span class="hljs-string">'" class="categories UA"&gt;Unavailable&lt;/span&gt;'</span>);
+                    <span class="hljs-keyword">var</span> firstInitial = <span class="hljs-string">''</span>;
+                    <span class="hljs-keyword">var</span> reason = <span class="hljs-string">''</span>;
+                    <span class="hljs-keyword">var</span> unavailable = <span class="hljs-string">''</span>;
+
+                    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> code <span class="hljs-keyword">in</span> unavailablecodes) {
+
+                        <span class="hljs-keyword">var</span> persons = $filter(<span class="hljs-string">'unavailablePersonnel'</span>)(data.personnel, unavailablecodes[code].code);
+                        <span class="hljs-keyword">if</span>(<span class="hljs-built_in">Object</span>.keys(persons).length &gt; <span class="hljs-number">0</span>) {
+                            unavailable = <span class="hljs-string">'&lt;span class="unavailableName"&gt;'</span> + unavailablecodes[code].code + <span class="hljs-string">':&lt;/span&gt;'</span>;
+                            <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> person <span class="hljs-keyword">in</span> persons) {
+                                person2 = persons[person];
+                                firstInitial = $filter(<span class="hljs-string">'firstInitial'</span>)(person2.firstName);
+                                reason = <span class="hljs-string">''</span>;
+
+                                <span class="hljs-keyword">if</span> (person2.activeUnavailabilityReasons[<span class="hljs-number">0</span>]) {
+                                    reason = <span class="hljs-string">' ('</span> + person2.activeUnavailabilityReasons[<span class="hljs-number">0</span>].code + <span class="hljs-string">')'</span>;
+                                }
+
+                                <span class="hljs-keyword">if</span> (person2.mdaStatusHistory[<span class="hljs-number">0</span>]) {
+                                    reason = <span class="hljs-string">' ('</span> + person2.mdaStatusHistory[<span class="hljs-number">0</span>].type + <span class="hljs-string">')'</span>;
+                                }
+                                unavailable = unavailable + <span class="hljs-string">'&lt;span class="unavailableName"&gt;&lt;span class="namemarker '</span> + person2.departmentType + <span class="hljs-string">' '</span> + person2.civilServiceTitle + <span class="hljs-string">' }}"&gt;&amp;nbsp;&lt;/span&gt; '</span> + firstInitial + <span class="hljs-string">' '</span> + person2.lastName + <span class="hljs-string">'&lt;/span&gt;'</span>;
+                            }
+
+                            snakes.push(unavailable);
+                        }
+                    }
+                };
+
+                <span class="hljs-keyword">var</span> detachedIn = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span> </span>{
+                    <span class="hljs-keyword">var</span> id = <span class="hljs-built_in">Math</span>.random();
+                    <span class="hljs-keyword">var</span> person2 = {};
+                    <span class="hljs-keyword">var</span> firstInitial = <span class="hljs-string">''</span>;
+
+                    snakes.push(<span class="hljs-string">'&lt;div id="dil'</span> + id + <span class="hljs-string">'" c class="categoriesline DET"&gt;&lt;/div&gt;&lt;span class="categories DET"&gt;Detached - Within Zone&lt;/span&gt;'</span>);
+
+                    <span class="hljs-keyword">var</span> persons = $filter(<span class="hljs-string">'detachedWithinZonePersonnel'</span>)(data.personnel);
+                    <span class="hljs-keyword">var</span> taskspersons = $filter(<span class="hljs-string">'detachedZoneTasks'</span>)(data.taskContainers, <span class="hljs-number">263</span>);
+
+                    persons = persons.concat(taskspersons);
+
+                    <span class="hljs-keyword">var</span> personsSorted = sortPersonnelPanel(persons, <span class="hljs-string">'Location Seniority'</span>, $scope.data.location);
+
+                    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> person <span class="hljs-keyword">in</span> personsSorted) {
+                        person2 = personsSorted[person];
+                        firstInitial = $filter(<span class="hljs-string">'firstInitial'</span>)(person2.firstName);
+                        <span class="hljs-keyword">if</span>(person2.departmentType) {
+                            snakes.push(<span class="hljs-string">'&lt;div class="detatt"&gt;&lt;span class="detattloc"&gt;'</span> + person2.activeDetachment.shift + <span class="hljs-string">'&lt;/span&gt;&lt;span class="detattsec"&gt;'</span> + person2.activeDetachment.to.code + <span class="hljs-string">'&lt;/span&gt;&lt;span class="detattcat"&gt;'</span> +
+                            <span class="hljs-string">'&lt;span class="namemarker '</span> + person2.departmentType + <span class="hljs-string">' '</span> + person2.civilServiceTitle + <span class="hljs-string">'"&gt;&amp;nbsp;&lt;/span&gt; '</span> + firstInitial + <span class="hljs-string">' '</span> + person2.lastName + <span class="hljs-string">'&lt;/span&gt;&lt;/div&gt;'</span>);
+                        } <span class="hljs-keyword">else</span> {
+                            snakes.push(<span class="hljs-string">'&lt;div class="detatt"&gt;&lt;span class="detattloc"&gt;'</span> + person2.activeDetachment.shift + <span class="hljs-string">'&lt;/span&gt;&lt;span class="detattsec"&gt;'</span> + person2.activeDetachment.to.code + <span class="hljs-string">'&lt;/span&gt;&lt;/div&gt;'</span>);
+                        }
+                    }
+                };
+
+                <span class="hljs-keyword">var</span> detachedOut = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span> </span>{
+                    <span class="hljs-keyword">var</span> id = <span class="hljs-built_in">Math</span>.random();
+                    <span class="hljs-keyword">var</span> person2 = {};
+                    snakes.push(<span class="hljs-string">'&lt;div class="categoriesline DET"&gt;&lt;/div&gt;&lt;span class="categories DET"&gt;Detached - Out of Zone&lt;/span&gt;'</span>);
+
+                    <span class="hljs-keyword">var</span> persons = $filter(<span class="hljs-string">'detachedOutsideZonePersonnel'</span>)(data.personnel);
+
+                    <span class="hljs-keyword">var</span> firstInitial = <span class="hljs-string">''</span>;
+                    <span class="hljs-keyword">var</span> taskspersons = $filter(<span class="hljs-string">'detachedZoneTasks'</span>)(data.taskContainers, <span class="hljs-number">264</span>);
+                    persons = persons.concat(taskspersons);
+
+                    persons = sortPersonnelPanel(persons, <span class="hljs-string">'Location Seniority'</span>, $scope.data.location);
+
+                    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> person <span class="hljs-keyword">in</span> persons) {
+                        person2 = persons[person];
+                        firstInitial = $filter(<span class="hljs-string">'firstInitial'</span>)(person2.firstName);
+
+                        <span class="hljs-keyword">if</span>(person2.departmentType) {
+                            snakes.push(<span class="hljs-string">'&lt;div class="detatt"&gt;&lt;span class="detattloc"&gt;'</span> + person2.activeDetachment.shift + <span class="hljs-string">'&lt;/span&gt;&lt;span class="detattsec"&gt;'</span> + person2.activeDetachment.to.code + <span class="hljs-string">'&lt;/span&gt;&lt;span class="detattcat"&gt;'</span> +
+                            <span class="hljs-string">'&lt;span class="namemarker '</span> + person2.departmentType + <span class="hljs-string">' '</span> + person2.civilServiceTitle + <span class="hljs-string">'"&gt;&amp;nbsp;&lt;/span&gt; '</span> + firstInitial + <span class="hljs-string">' '</span> + person2.lastName + <span class="hljs-string">'&lt;/span&gt;&lt;/div&gt;'</span>);
+                        } <span class="hljs-keyword">else</span> {
+                            snakes.push(<span class="hljs-string">'&lt;div class="detatt"&gt;&lt;span class="detattloc"&gt;'</span> + person2.activeDetachment.shift + <span class="hljs-string">'&lt;/span&gt;&lt;span class="detattsec"&gt;'</span> + person2.activeDetachment.to.code + <span class="hljs-string">'&lt;/span&gt;&lt;/div&gt;'</span>);
+                        }
+
+
+                    }
+                };
+
+                <span class="hljs-keyword">var</span> multiroute = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(multiroutes)</span> </span>{
+                    <span class="hljs-keyword">var</span> id = <span class="hljs-built_in">Math</span>.random();
+                    <span class="hljs-keyword">var</span> route = <span class="hljs-string">''</span>;
+                    <span class="hljs-keyword">var</span> to = <span class="hljs-string">''</span>;
+                    <span class="hljs-keyword">var</span> task2 = {};
+                    <span class="hljs-keyword">var</span> duration = <span class="hljs-string">''</span>;
+
+                    snakes.push(<span class="hljs-string">'&lt;div id="mrl'</span> + id + <span class="hljs-string">'" c class="categoriesline DET"&gt;&lt;/div&gt;&lt;span class="categories DET"&gt;Multi-Route&lt;/span&gt;'</span>);
+
+                    <span class="hljs-keyword">for</span>(<span class="hljs-keyword">var</span> i=<span class="hljs-number">0</span>; i&lt;multiroutes.length; i++) {
+                        route = <span class="hljs-string">''</span>;
+                        to = <span class="hljs-string">''</span>;
+
+                        <span class="hljs-keyword">for</span>(<span class="hljs-keyword">var</span> s=<span class="hljs-number">0</span>; s&lt;multiroutes[i].length; s++) {
+                            duration = <span class="hljs-string">''</span>;
+                            task2 = multiroutes[i][s];
+
+                            <span class="hljs-keyword">if</span>(s &lt; multiroutes[i].length - <span class="hljs-number">1</span>) {
+                                to = <span class="hljs-string">' to '</span>;
+
+                                <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> j = <span class="hljs-number">0</span>; j &lt; durations.length; j++) {
+                                    <span class="hljs-keyword">if</span> (durations[j].duration == task2.hours) {
+                                        duration = <span class="hljs-string">' '</span> + durations[j].label + <span class="hljs-string">' '</span>;
+                                        <span class="hljs-keyword">break</span>;
+                                    }
+                                }
+
+                            } <span class="hljs-keyword">else</span> {
+                                to = <span class="hljs-string">''</span>;
+                            }
+
+                            route = route + <span class="hljs-string">'&lt;span class="segment"&gt;&lt;span class="routemarker"&gt;&lt;i class="fa fa-map-marker partial group'</span> + task2.multigroup + <span class="hljs-string">'"&gt;&lt;/i&gt;&lt;/span&gt;&lt;span class="segmenttitle"&gt;'</span> + task2.taskName + <span class="hljs-string">'&lt;/span&gt;&lt;span class="duration"&gt;'</span> + duration +  to + <span class="hljs-string">'&lt;/span&gt;&lt;/span&gt;'</span>;
+                        }
+                        snakes.push(<span class="hljs-string">'&lt;div class="multirouteroute"&gt;'</span> + route + <span class="hljs-string">'&lt;/div&gt;'</span>);
+                    }
+                };
+
+                <span class="hljs-keyword">var</span> mapgroups = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(orderByLocation)</span> </span>{
+                    <span class="hljs-keyword">var</span> taskmap = {};
+                    <span class="hljs-keyword">var</span> startmap = {};
+                    <span class="hljs-keyword">var</span> group = <span class="hljs-number">0</span>;
+                    <span class="hljs-keyword">var</span> taskmapSorted = [];
+                    <span class="hljs-keyword">var</span> multiroutes = [];
+                    <span class="hljs-keyword">var</span> mapgroups = {};
+                    <span class="hljs-keyword">var</span> tasks = [];
+
+                    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> location <span class="hljs-keyword">in</span> orderByLocation) {
+
+                        <span class="hljs-keyword">var</span> shifts = orderByLocation[location].locationShifts;
+                        shifts = $filter(<span class="hljs-string">'orderByShiftId'</span>)(shifts);
+
+                        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> shift <span class="hljs-keyword">in</span> shifts) {
+                            shift2 = shifts[shift];
+                            shiftCategories = $filter(<span class="hljs-string">'orderByCategoryId'</span>)(shift2.shiftCategories);
+
+                            <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> shiftcategory <span class="hljs-keyword">in</span> shiftCategories) {
+
+                                shiftcategory2 = shiftCategories[shiftcategory];
+                                subcategorytasks = $filter(<span class="hljs-string">'orderBySubcategorySequence'</span>)(shiftcategory2.subcategoryTasks);
+
+                                <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> categorytask <span class="hljs-keyword">in</span> subcategorytasks) {
+                                    categorytask2 = subcategorytasks[categorytask];
+                                    tasks = $filter(<span class="hljs-string">'orderByTaskId'</span>)(categorytask2.tasks);
+                                    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> task <span class="hljs-keyword">in</span> tasks) {
+                                        task2 = tasks[task];
+                                        <span class="hljs-keyword">if</span>(<span class="hljs-built_in">parseInt</span>(task2.partialTaskSequence) &gt; <span class="hljs-number">0</span>) {
+                                            <span class="hljs-keyword">if</span>(task2.linkedTaskParentId === <span class="hljs-literal">null</span>) {
+                                                group++;
+                                                task2.multigroup = group;
+                                                startmap[task2.id] = task2;
+                                            }
+
+                                            taskmap[task2.id] = task2;
+                                        }
+                                    }
+
+                                    sections = $filter(<span class="hljs-string">'orderBySection'</span>)(categorytask2.sections);
+
+                                    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> section <span class="hljs-keyword">in</span> sections) {
+                                        section2 = sections[section];
+                                        tasks = $filter(<span class="hljs-string">'orderByTaskId'</span>)(section2.tasks);
+                                        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> task <span class="hljs-keyword">in</span> tasks) {
+                                            task2 = tasks[task];
+                                            <span class="hljs-keyword">if</span>(<span class="hljs-built_in">parseInt</span>(task2.partialTaskSequence) &gt; <span class="hljs-number">0</span>) {
+                                                <span class="hljs-keyword">if</span>(task2.linkedTaskParentId === <span class="hljs-literal">null</span>) {
+                                                    group++;
+                                                    task2.multigroup = group;
+                                                    startmap[task2.id] = task2;
+                                                }
+
+                                                taskmap[task2.id] = task2;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    taskmapSorted = $filter(<span class="hljs-string">'orderBySequence'</span>)(taskmap);
+                    <span class="hljs-keyword">var</span> multiroutindex = <span class="hljs-number">0</span>;
+
+                    <span class="hljs-keyword">for</span>(<span class="hljs-keyword">var</span> i=<span class="hljs-number">0</span>; i&lt;taskmapSorted.length; i++) {
+                        <span class="hljs-keyword">if</span>(taskmapSorted[i].linkedTaskParentId) {
+                            taskmapSorted[i].multigroup = taskmap[taskmapSorted[i].linkedTaskParentId].multigroup;
+                        }
+
+                        multiroutindex = taskmapSorted[i].multigroup -<span class="hljs-number">1</span>;
+
+                        <span class="hljs-keyword">if</span>(!multiroutes[multiroutindex]) {
+                            multiroutes[multiroutindex] = [];
+                        }
+
+                        multiroutes[multiroutindex].push(taskmapSorted[i]);
+                    }
+                    mapgroups.orderByLocation = orderByLocation;
+                    mapgroups.multiroutes = multiroutes;
+
+                    <span class="hljs-keyword">return</span> mapgroups;
+
+                };</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>BUILD SNAKING ARRAY</p></div></div><div class="code"><div class="wrapper">                <span class="hljs-keyword">var</span> multi = <span class="hljs-number">0</span>;
+                <span class="hljs-keyword">var</span> mapgroupobject = {};
+                <span class="hljs-keyword">var</span> orderByLocation = $filter(<span class="hljs-string">'orderByLocation'</span>)(data.taskContainers);
+
+                mapgroupobject = mapgroups(orderByLocation);
+
+                <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> location <span class="hljs-keyword">in</span> mapgroupobject.orderByLocation) {
+
+                    <span class="hljs-keyword">if</span>(<span class="hljs-built_in">Object</span>.keys(data.taskContainers).length &gt; <span class="hljs-number">1</span>) {
+                        headerLogoMulti(data, orderByLocation[location]);
+                        multi = <span class="hljs-number">1</span>;
+                    }
+
+                    <span class="hljs-keyword">var</span> shifts = orderByLocation[location].locationShifts;
+                    shifts = $filter(<span class="hljs-string">'orderByShiftId'</span>)(shifts);
+
+                    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> shift <span class="hljs-keyword">in</span> shifts) {
+                        shift2 = shifts[shift];
+
+                        formatShiftName(shift2);
+
+                        shiftCategories = $filter(<span class="hljs-string">'orderByCategoryId'</span>)(shift2.shiftCategories);
+
+                        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> shiftcategory <span class="hljs-keyword">in</span> shiftCategories) {
+
+                            shiftcategory2 = shiftCategories[shiftcategory];
+                            subcategorytasks = $filter(<span class="hljs-string">'orderBySubcategorySequence'</span>)(shiftcategory2.subcategoryTasks);
+
+                            <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> categorytask <span class="hljs-keyword">in</span> subcategorytasks) {
+                                categorytask2 = subcategorytasks[categorytask];
+
+                                formatSubcategoryName(shiftcategory2, categorytask2);
+
+                                tasks = $filter(<span class="hljs-string">'orderByTaskId'</span>)(categorytask2.tasks);
+
+                                <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> task <span class="hljs-keyword">in</span> tasks) {
+                                    task2 = tasks[task];
+                                    formatNames(task2, <span class="hljs-string">'st'</span>);
+                                }
+
+                                sections = $filter(<span class="hljs-string">'orderBySection'</span>)(categorytask2.sections);
+
+                                <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> section <span class="hljs-keyword">in</span> sections) {
+                                    section2 = sections[section];
+                                    formatSectionName(section2);
+                                    tasks = $filter(<span class="hljs-string">'orderByTaskId'</span>)(section2.tasks);
+
+                                    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> task <span class="hljs-keyword">in</span> tasks) {
+
+                                        task2 = tasks[task];
+                                        formatNames(task2, <span class="hljs-string">'tt'</span>);
+
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                miscelaneousHeader();
+                unvailable(data);
+                detachedIn(data);
+                detachedOut(data);
+                multiroute(mapgroupobject.multiroutes);
+
+                <span class="hljs-keyword">if</span>(<span class="hljs-built_in">Object</span>.keys(data.taskContainers).length &lt; <span class="hljs-number">2</span>) {
+                    headerLogoDefault(data);
+                }
+
+                <span class="hljs-keyword">if</span>(multi === <span class="hljs-number">1</span>) {
+                    footerMulti(data);
+                }
+
+                $scope.snakes = snakes;
+
+                $timeout(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+
+                    $scope.showboard = <span class="hljs-number">1</span>;
+
+                    <span class="hljs-keyword">var</span> $container = $(<span class="hljs-string">'.isotope'</span>).isotope({
+                        layoutMode: <span class="hljs-string">'fitColumns'</span>,
+                        itemSelector: <span class="hljs-string">'.item'</span>
+                    });
+
+                    $container.isotope(<span class="hljs-string">'layout'</span>);
+                    $scope.$apply();
+                    showpage();
+
+                }, <span class="hljs-number">500</span>);
+
+                <span class="hljs-keyword">if</span> (!socket) {
+                    openWebSocket();
+                }
+            }, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(error)</span> </span>{
+                <span class="hljs-keyword">if</span> (errorFn) {
+                    <span class="hljs-keyword">return</span> errorFn(error);
+                }
+                <span class="hljs-keyword">return</span> error;
+            });
+        }
+
+
+    }
+).controller(<span class="hljs-string">'boardcontroller'</span>,
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">($scope, $filter, $log, $controller, $timeout, $window, $rootScope, DisplayBoardRepository)</span> </span>{
+
+    }
+);</div></div></div></div></body></html>

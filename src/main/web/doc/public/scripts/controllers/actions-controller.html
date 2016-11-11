@@ -1,0 +1,31 @@
+<!DOCTYPE html><html lang="en"><head><title>public\scripts\controllers\actions-controller</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../../"><meta name="groc-document-path" content="public\scripts\controllers\actions-controller"><meta name="groc-project-path" content="public\scripts\controllers\actions-controller.js"><link rel="stylesheet" type="text/css" media="all" href="../../../assets/style.css"><script type="text/javascript" src="../../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">public\scripts\controllers\actions-controller.js</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="hljs-pi">'use strict'</span>;
+
+angular.module(<span class="hljs-string">'OpsBoard'</span>)
+  .controller(<span class="hljs-string">'ActionPanelCtrl'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($scope, OpsBoardRepository, $rootScope)</span> </span>{
+    
+    $scope.equipments = OpsBoardRepository.getEquipment();
+    $scope.persons = OpsBoardRepository.getPersonnel();
+
+    $scope.getActions = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+      <span class="hljs-keyword">return</span> OpsBoardRepository.getActions();
+    } 
+
+    $scope.getOnlineUsers = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+      <span class="hljs-keyword">return</span> OpsBoardRepository.getOnlineUsers(); 
+    }
+    
+    $scope.actionDay = <span class="hljs-string">""</span>;
+    $scope.createHeader = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(index, day)</span> </span>{
+      <span class="hljs-keyword">if</span>(index == <span class="hljs-number">0</span>){
+      	 $scope.actionDay = <span class="hljs-string">""</span>;
+      }	
+       <span class="hljs-keyword">var</span> showHeader = <span class="hljs-literal">false</span>;
+       <span class="hljs-keyword">if</span>(day !== $scope.actionDay){
+    	   showHeader = <span class="hljs-literal">true</span>;
+       }
+       $scope.actionDay = day;
+      <span class="hljs-keyword">return</span> showHeader;
+          
+    }
+    
+  });</div></div></div></div></body></html>

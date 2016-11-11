@@ -1,0 +1,1 @@
+16:40:59  http://127.0.0.1/smart-opsboard/libs/sockjs-0.3.4.js 1223:59 WebSocket connection to 'ws://127.0.0.1/smart-opsboard/hello/BKN01/20140826/086/ywkedxp0/websocket' failed: WebSocket is closed before the connection is established.

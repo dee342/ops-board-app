@@ -1,0 +1,13 @@
+<!--/* Modal window view for canceling a piece of equipment detachment. */-->
+
+<form id="modal" name="modal" class="container-fluid" novalidate="true" centered-modal="true">
+	<div th:include="views/modals/fragments/modal-header :: header" th:remove="tag"></div>
+	<div class="modal-body" ng-show="showContent">
+		<div class="row">
+			<label class="col-md-12 text-center confirmation">{{opData.message}}</label>
+		</div>
+	</div>
+	<div th:include="views/modals/fragments/modal-footer :: footer" th:remove="tag"></div>
+	 <div th:include="views/modals/fragments/modal-exceptions :: exceptions" th:remove="tag"></div>
+	<div th:include="views/modals/fragments/modal-processing :: processing" th:remove="tag"></div>
+</form>

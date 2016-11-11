@@ -1,0 +1,105 @@
+// Spring Boot plugin = enable main class and bootrun
+bootRepackage.enabled = true;
+bootRun.enabled = true;
+
+apply plugin: 'war'
+
+configurations {
+  jaxws
+  providedRuntime
+}
+
+dependencies {
+    compile("org.springframework.boot:spring-boot-starter-amqp:${springBootVersion}")
+    compile("org.springframework.boot:spring-boot-starter-thymeleaf:${springBootVersion}")
+    compile("org.springframework.boot:spring-boot-starter-websocket:${springBootVersion}")    
+    compile("org.springframework.boot:spring-boot-starter-test")
+   
+    compile("org.aspectj:aspectjrt")
+    compile("org.aspectj:aspectjweaver")
+
+    compile("org.springframework:spring-messaging")
+    compile("org.springframework:spring-websocket")
+    compile("org.springframework.security:spring-security-ldap")
+    
+    compile("org.apache.directory.server:apacheds-server-jndi:1.5.5")
+    
+    compile("org.quartz-scheduler:quartz:${quartzVersion}")
+    
+    compile("org.apache.httpcomponents:httpclient")
+    compile("org.apache.poi:poi:3.10-FINAL");
+    
+    compile("org.projectreactor:reactor-core")
+    compile("org.projectreactor:reactor-net")
+
+    compile("org.aspectj:aspectjrt")
+
+    compile("net.logstash.logback:logstash-logback-encoder:3.0")
+
+    compile("com.rometools:rome:1.5.0")
+
+    compile("org.apache.cxf:cxf-rt-frontend-jaxws:${cxfVersion}")
+    compile("org.apache.cxf:cxf-rt-transports-http:${cxfVersion}")
+
+    providedRuntime("org.springframework.boot:spring-boot-starter-tomcat")
+
+    testCompile("org.springframework.boot:spring-boot-starter-test:${springBootVersion}")
+    testCompile("org.springframework:spring-jdbc:${springBootVersion}")
+    testCompile("org.dbunit:dbunit:2.4.9")
+    testCompile("com.github.springtestdbunit:spring-test-dbunit:1.1.0")
+    testCompile("org.powermock:powermock-mockito-release-full:1.6.1")
+    testCompile("info.cukes:cucumber-java:1.2.2")
+    testCompile("info.cukes:cucumber-junit:1.2.2")
+    testCompile("info.cukes:cucumber-spring:1.2.2")
+  }
+
+springBoot {
+    mainClass = "gov.nyc.dsny.smart.opsboard.Application"
+}
+
+jar {
+    baseName = 'smart-opsboard'
+    version =  "${appVersion}"
+}
+
+war {
+	manifest {
+	        attributes 'AppVersion': "${appVersion}"
+	}
+	baseName = 'smart-opsboard'
+	version =  ''
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ["src/main/java"]
+        }
+        resources {
+            srcDirs = ["src/main/resources", "src/main/web"]
+        }
+    }
+}
+
+sourceSets {
+  cucumberTest { sourceSet ->
+    ["java", "resources"].each {
+      if (!sourceSet.hasProperty(it)) return
+      if (sourceSet.equals("resources"))
+      	sourceSet."$it".srcDir file(["src/cucumber-test/${it}", "src/main/${it}"])
+      else
+    	sourceSet."$it".srcDir file("src/cucumber-test/${it}")
+     
+     
+    }
+  }
+}
+
+// Define integration test task
+task cucumberTest(type: Test) {
+  testClassesDir = sourceSets.cucumberTest.output.classesDir
+  classpath = sourceSets.cucumberTest.runtimeClasspath
+}
+
+// Make sure 'check' task calls cucumber test
+check.dependsOn cucumberTest

@@ -1,0 +1,134 @@
+<!--/* Modal window view for editing an individual task. */-->
+
+<form id="modal" name="modal" class="edit-task-modal container-fluid form-horizontal" novalidate="true" centered-modal="true">
+    <!-- novalidate disables HTML5 native validation -->
+    <div class="modal-header modal-header-override">
+        <div class="row">
+            <div class="col-md-7 action norowpadding">
+                <h4>Task Details</h4>
+            </div>
+            <div class="col-md-5 text-right entity-id norowpadding" style="color: #fff;">
+                <h4 class="editTaskSection">
+                    <span class="sectionname">{{ opData.sectionname }}</span>
+                    <span class="squaremarker editTaskSection S{{ opData.section.sectionId }}" ng-show="opData.sectionmarker">&nbsp;</span>
+                </h4>
+            </div>
+        </div>
+    </div>
+    <div class="modal-body" ng-show="showContent">
+        <div class="row">
+            <div class="col-md-3 norowpadding"><span class="edit-task-label">Shift:</span> {{ shift.shift.name }}</div>
+            <div class="col-md-5 norowpadding"><span class="edit-task-label">Sub-Category:</span> {{ category.category.name }}/{{ subcategory.subcategory.name }}</div>
+            <div class="col-md-4 norowpadding">
+                <span class="edit-task-label edit-task-label-supervisors">Supervisors:</span>
+                <div class="edit-task-label edit-task-supervisors" ng-repeat="supervisor in opData.assigned.supervisors">
+                     {{ supervisor.personFullName }}.
+                </div>
+                <div class="clear"></div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4 edit-task-task-name-div norowpadding">
+                    <span class="edit-task-label edit-task-label-right">Task Description:</span>
+                    <span class="edit-task-name">
+                        <input type="text" id="taskName" name="taskName" class="form-control aligncenter" ng-model="opData.taskname" ng-maxlength="{{::opData.taskNameMaxLength}}" maxlength="{{::opData.taskNameMaxLength}}" />
+                    </span>
+                    <div class="clear"></div>
+            </div>
+
+            <div class="col-md-4 norowpadding">
+                <span class="edit-task-label edit-task-label-time">Start Time:</span>
+                <timepicker class="timepicker down" ng-model="opData.startdate" show-meridian="false"></timepicker>
+                <div class="clear"></div>
+            </div>
+
+            <div class="col-md-4 norowpadding">
+                <span class="edit-task-label edit-task-label-time">End Time:</span>
+                    <timepicker class="timepicker down" ng-model="opData.enddate" show-meridian="false"></timepicker>
+            </div>
+        </div>
+
+        <div class="row comment-row">
+            <div class="col-md-12 norowpadding">
+                <span class="edit-task-label edit-task-label-comment">Comment:</span>
+                <span class="edit-task-comment">
+                    <input type="text" id="comment" name="comment" class="form-control edit-task-comment" ng-model="opData.comments" ng-maxlength="{{::opData.taskCommentMaxLength}}" maxlength="{{::opData.taskCommentMaxLength}}" />
+                </span>
+                <div class="clear"></div>
+            </div>
+        </div>
+
+        <div class="row multiroute-row">
+            <div class="col-md-12 norowpadding">
+                <div ng-show="opData.mutliroutes.length &gt; 0">
+                    <span class="edit-task-label edit-task-multiroute-label">Partial Tasks:</span>
+                    <span class="edit-task-multiroute">
+                        <div ng-repeat="routeSegment in opData.mutliroutes | orderObjectBy: 'partialTaskSequence'" class="multiroute">
+
+                            <span class="marker">
+                                <i class="fa fa-map-marker fa-custom  partial group{{ routeSegment.groupId }}" ng-show="routeSegment.highlight === true"></i>
+                            </span>
+
+                            <span class="segmentRow" ng-class="{highlight: routeSegment.highlight === true}">
+                                <span class="number">{{ $index + 1 }}.</span>
+                                <span class="description">{{ routeSegment.category.name }}/ {{ routeSegment.subcategory.name }}<span ng-show="routeSegment.section.sectionName">/ Section {{ routeSegment.section.sectionName }}</span>/ {{ routeSegment.taskName }}</span>
+                                <span class="fraction">{{ routeSegment.duration }}</span>
+                                <span class="hours">({{ routeSegment.hours }}h)</span>
+                            </span>
+
+                            <div class="clear"></div>
+
+                        </div>
+                    </span>
+                    <div class="clear"></div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="new-code">
+            <div class="row details-row">
+                <div class="col-md-4">
+                    <span class="edit-task-label">Equipment:</span>
+                    <span class="edit-task-equipment {{ opData.assigned.equipment.type }}">
+                        {{ opData.assigned.equipment.name }}
+                    </span>
+                </div>
+                <div class="col-md-4">
+                    <span class="edit-task-label">Personnel:</span>
+                    <span class="edit-task-personnel {{ opData.assigned.person1.departmentType }}" ng-show="opData.assigned.person1.id">
+                        {{ opData.assigned.person1.formattedName }}
+                    </span>
+                    <span class="{{ opData.typeClass1 }} iconsleftpadding iconsleftMargin" ng-show="opData.typeIcon1">
+                        <i class="fa {{ opData.typeIconClass1 }}"></i>
+                    </span>
+                    <span class="{{ opData.typeClass1 }}" ng-show="opData.typeIcon1">
+                        {{ opData.typeTitle1 }}
+                    </span>
+                </div>
+                <div class="col-md-4">
+                    <span class="edit-task-personnel {{ opData.assigned.person2.departmentType }}" ng-show="opData.assigned.person2.id">
+                        {{ opData.assigned.person2.formattedName }}
+                    </span>
+                     <span class="{{ opData.typeClass2 }} iconsleftpadding iconsleftMargin" ng-show="opData.typeIcon2">
+                        <i class="fa {{ opData.typeIconClass2 }}"></i>
+                    </span>
+                    <span class="{{ opData.typeClass2 }}" ng-show="opData.typeIcon2">
+                        {{ opData.typeTitle2 }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div th:include="views/modals/fragments/modal-client-errors :: client-errors" th:remove="tag"></div>
+            </div>
+            <div class="row">
+                <div th:include="views/modals/fragments/modal-server-errors :: server-errors" th:remove="tag"></div>
+            </div>
+        </div>
+    </div>
+    <div th:include="views/modals/fragments/modal-footer :: footer" th:remove="tag"></div>
+    <div th:include="views/modals/fragments/modal-exceptions :: exceptions" th:remove="tag"></div>
+    <div th:include="views/modals/fragments/modal-processing :: processing" th:remove="tag"></div>
+</form>

@@ -1,0 +1,1336 @@
+<!--/* Thymeleaf fragment to display the Equipment Pane. */-->
+
+<div th:fragment="equipment-pane">
+  <div ng-controller="EquipmentCtrl" id="equipment" ng-hide="panes.personDetails.active" style="overflow: hidden;" class=" noSelect">
+
+    <div class="header pane-header">
+      <div class="row" style="margin:0px;">
+          <div class="col-md-12" style="text-align: center; padding: 0px;">
+              <span class="paneTitle equipment-pane-selenium">
+                Equipment
+              </span>
+              <div class="pane-header-actions">
+                <button class="btn btn-default btn-sm dropdown" type="button" ng-click="toggleEquipmentSummary()" ng-class="{ dropup: EquipmentSummary.active }">
+                  Summary<i class="caret"></i>
+                </button>
+                
+                  <div class="dropdown sort-control dropdown-toggle" ng-show="equipmentLocations.length &gt; 1">
+                      <button ng-model="toggle" class="btn btn-default btn-sm dropdown" ng-class="{ dropup: toggle }" ng-click="toggle = !toggle" ng-blur="toggle = false">
+                          <span style="color: #98ff00;">Showing:</span> {{ equipmentLocation }}
+                          <i class="caret"></i>
+                      </button>
+                      <ul class="dropdown-menu">
+                          <li ng-repeat="loc in equipmentLocations">
+                              <a href="javascript:;" ng-click="changeEquipmentLocation(loc)" ng-class="{ active: loc === equipmentLocation }">
+                                  <i class="fa fa-check"></i>
+                                  <span>{{loc}}</span>
+                              </a>
+                          </li>
+                      </ul>
+                  </div>
+
+                <button class="btn btn-default btn-sm" type="button" ng-click="toggleEquipmentPane()" ng-class="{summaryActive: EquipmentSummary.active}">
+                  <i class="fa fa-times fa-lg"></i>
+                </button>
+              </div>
+          </div>
+      </div>
+    </div>
+
+   <div th:include="views/fragments/equipment-summary:: equipment-summary" th:remove="tag"></div>
+      <perfect-scrollbar class="scroller" style="overflow: hidden; position: relative;" ng-style="{'height': layout.scrollpanel.height}" min-scrollbar-length="5" max-scrollbar-length="20" wide-scrollbar="true" use-both-wheel-axes="true">
+          <div class="scrollerpadding">
+              <div id="equipment-panel-body">
+                <div id="allUnavailableEquipment"  class="all-unavail-panel-grouping">
+                  <div class="pane-subpane pane-subpane-equip pane-subpane-unavailable flex pending">
+                   <a href="" ng-click="togglePendingSubpanel()">
+                    <div class="header">
+                      <span class="title-text">Pending</span>
+                      <span class="arrowleft">
+                        <i class="fa" ng-class="pending.open ? 'fa-caret-down' : 'fa-caret-right'"></i>
+                      </span>
+                    </div>
+                    </a>
+                    <div class="body">
+                      <accordion class="sub-categories" close-others="false">
+
+                       <accordion-group id="equipPendingLoad" is-open="pendingLoad.open"
+                                 ng-show="numPendingLoad!=0">
+                          <accordion-heading>
+                            <i class="fa"
+                               ng-class="pendingLoad.open ? 'fa-minus-square-o' : 'fa-plus-square-o'"
+                               ng-click="togglerOpen()"></i>
+                            Pending Load <span>({{numPendingLoad}})</span>
+                          </accordion-heading>
+
+                          <div ng-repeat="(id,pieceOfEquipment) in equipmentpane.pendingLoad | toArray | orderBy: ['type', '$key'] track by pieceOfEquipment.id" ng-click="showEquipmentDetails($event, pieceOfEquipment.id)" class="equipment-container" ng-class="{large : pieceOfEquipment.bins.length &gt; 1}" context-menu="true" data-target="equipment-context-menu-{{pieceOfEquipment.name}}">
+                            <span class="piece-of-equipment {{pieceOfEquipment.type | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}}" ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1,snowUpdated:pieceOfEquipment.snowReadinessProperty}">
+                                {{pieceOfEquipment.name}}
+                            </span>
+
+                            <div ng-if="!pieceOfEquipment.snowReadinessIndicator" ng-repeat="bins in pieceOfEquipment.materialTypes track by $index">
+                                <span class="flag {{pieceOfEquipment.type | lowercase}} notReady {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypes[$index].material}} {{pieceOfEquipment.materialTypes[$index].color}}" ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1}">
+                                    {{pieceOfEquipment.materialTypes[$index].material}}
+                                </span>
+                            </div>
+
+                            <div ng-if="pieceOfEquipment.snowReadinessIndicator" >
+                                <span class="flag2 {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                                    {{pieceOfEquipment.plowType}}
+                                </span>
+
+                                <span ng-show="pieceOfEquipment.secondIndicator" class="flagLoadType {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                                {{pieceOfEquipment.loadType}}
+                                </span>
+                            </div>
+
+                            <div id="equipment-context-menu-{{pieceOfEquipment.name}}" class="context-menu" ng-show="pieceOfEquipment.isLoadStatusUpdatable">
+                              <ul class="dropdown-menu">
+                                <li><a class="menu-item" tabindex="-1" ng-click="updateLoadStatus(pieceOfEquipment);">Update Load</a></li>
+                              </ul>
+                            </div>
+                          </div>
+                        </accordion-group>
+
+                        <accordion-group id="equipPendingAttach" is-open="pendingAttach.open"
+                                 ng-show="pendingAttach.show">
+                          <accordion-heading>
+                            <i class="fa"
+                               ng-class="pendingAttach.open ? 'fa-minus-square-o' : 'fa-plus-square-o'"
+                               ng-click="togglerOpen()"></i>
+                            Pending Attach <span>({{numPendingAttach}})</span>
+                          </accordion-heading>
+
+                          <div ng-repeat="(id,pieceOfEquipment) in equipmentpane.pendingAttach | toArray | orderBy: ['type', '$key'] track by pieceOfEquipment.id"
+                             ng-click="showEquipmentDetails($event, pieceOfEquipment.id)"
+                             class="equipment-container"
+                             ng-class="{large : pieceOfEquipment.bins.length &gt; 1}" context-menu="true"
+                             data-target="equipment-context-menu-{{pieceOfEquipment.name}}">
+                                  <span class="piece-of-equipment {{pieceOfEquipment.type | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}}"
+                                      ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1,snowUpdated:pieceOfEquipment.snowReadinessProperty}">{{pieceOfEquipment.name}}</span>
+
+
+                              <div ng-if="!pieceOfEquipment.snowReadinessIndicator" ng-repeat="bins in pieceOfEquipment.materialTypes track by $index">
+                                <span class="flag {{pieceOfEquipment.type | lowercase}} notReady {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypes[$index].material}} {{pieceOfEquipment.materialTypes[$index].color}}" ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1}">
+                                    {{pieceOfEquipment.materialTypes[$index].material}}
+                                </span>
+                              </div>
+
+                         <div ng-if="pieceOfEquipment.snowReadinessIndicator" >
+                                        <span class="flag2 {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                                        {{pieceOfEquipment.plowType}}</span>
+
+                                        <span ng-show="pieceOfEquipment.secondIndicator" class="flagLoadType {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                                        {{pieceOfEquipment.loadType}}</span>
+                       </div>
+                            <div id="equipment-context-menu-{{pieceOfEquipment.name}}" class="context-menu">
+                              <ul class="dropdown-menu">
+                                <li><a class="menu-item" tabindex="-1" ng-click="acceptEquipmentAttachment(pieceOfEquipment);">Accept Attach</a></li>
+                              </ul>
+                            </div>
+                          </div>
+                        </accordion-group>
+                        <accordion-group id="equipPendingDetach" is-open="pendingDetach.open"
+                                 ng-show="pendingDetach.show">
+                          <accordion-heading>
+                            <i class="fa"
+                               ng-class="pendingDetach.open ? 'fa-minus-square-o' : 'fa-plus-square-o'"
+                               ng-click="togglerOpen()"></i>
+                            Pending Detach <span>({{numPendingDetach}})</span>
+                          </accordion-heading>
+                          <div ng-repeat="(id,pieceOfEquipment) in equipmentpane.pendingDetach | toArray | orderBy: ['type', '$key'] track by pieceOfEquipment.id"
+                             ng-click="showEquipmentDetails($event, pieceOfEquipment.id)"
+                             class="equipment-container"
+                             ng-class="{large : pieceOfEquipment.bins.length &gt; 1}" context-menu="true"
+                             data-target="equipment-context-menu-{{pieceOfEquipment.name}}">
+                                  <span class="piece-of-equipment {{pieceOfEquipment.type | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}}"
+                                      ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1,snowUpdated:pieceOfEquipment.snowReadinessProperty}">{{pieceOfEquipment.name}}</span>
+
+                              <div ng-if="!pieceOfEquipment.snowReadinessIndicator" ng-repeat="bins in pieceOfEquipment.materialTypes track by $index">
+                                <span class="flag {{pieceOfEquipment.type | lowercase}} notReady {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypes[$index].material}} {{pieceOfEquipment.materialTypes[$index].color}}" ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1}">
+                                    {{pieceOfEquipment.materialTypes[$index].material}}
+                                </span>
+                              </div>
+                         <div ng-if="pieceOfEquipment.snowReadinessIndicator" >
+                                        <span class="flag2 {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                                        {{pieceOfEquipment.plowType}}</span>
+
+                                        <span ng-show="pieceOfEquipment.secondIndicator" class="flagLoadType {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                                        {{pieceOfEquipment.loadType}}</span>
+                       </div>
+                            <div id="equipment-context-menu-{{pieceOfEquipment.name}}" class="context-menu">
+                              <ul class="dropdown-menu">
+                                <li><a class="menu-item" tabindex="-1" ng-click="cancelEquipmentDetachment(pieceOfEquipment);">Cancel Detach</a></li>
+                              </ul>
+                            </div>
+                          </div>
+                        </accordion-group>
+                      </accordion>
+                    </div>
+                  </div>
+                  <div class="pane-subpane pane-subpane-equip pane-subpane-unavailable flex detached">
+                  <a href="" ng-click="toggleDetachedSubpanel()">
+                    <div class="header">
+                      <span class="title-text">Detached</span> <span class="badge badgeMod">{{numDetached}}</span>
+                      <span class="arrowleft">
+                              <i class="fa" ng-class="detached.open ? 'fa-caret-down' : 'fa-caret-right'"></i>
+                            </span>
+                    </div>
+                    </a>
+                    <div class="body">
+                      <div id="equipDetached" class="no-categories" ng-show="detached.open">
+                        <div ng-repeat="(id,pieceOfEquipment) in equipmentpane.detached | toArray | orderBy: ['type', '$key'] track by pieceOfEquipment.id"
+                           ng-click="showEquipmentDetails($event, pieceOfEquipment.id)" class="equipment-container"
+                           ng-class="{large : pieceOfEquipment.bins.length &gt; 1}">
+                                <span class="piece-of-equipment {{pieceOfEquipment.type | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}}"
+                                    ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1,snowUpdated:pieceOfEquipment.snowReadinessProperty}">{{pieceOfEquipment.name}}</span>
+
+                            <div ng-if="!pieceOfEquipment.snowReadinessIndicator" ng-repeat="bins in pieceOfEquipment.materialTypes track by $index">
+                                <span class="flag {{pieceOfEquipment.type | lowercase}} notReady {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypes[$index].material}} {{pieceOfEquipment.materialTypes[$index].color}}" ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1}">
+                                    {{pieceOfEquipment.materialTypes[$index].material}}
+                                </span>
+                            </div>
+                         <div ng-if="pieceOfEquipment.snowReadinessIndicator" >
+                                        <span class="flag2 {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                                        {{pieceOfEquipment.plowType}}</span>
+
+                                        <span ng-show="pieceOfEquipment.secondIndicator" class="flagLoadType {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                                        {{pieceOfEquipment.loadType}}</span>
+                       </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="pane-subpane pane-subpane-equip pane-subpane-unavailable flex down">
+                  <a href="" ng-click="toggleDownSubpanel()">
+                    <div class="header">
+                      <span class="title-text">Down</span> <span class="badge badgeMod">{{equipmentpane.numDown}}</span>
+                      <span class="arrowleft">
+                        <i class="fa" ng-class="down.open ? 'fa-caret-down' : 'fa-caret-right'"></i>
+                      </span>
+                    </div>
+                    </a>
+                    <div class="body">
+                      <div id="equipDown" class="no-categories" ng-show="down.open">
+                        <div ng-repeat="(id,pieceOfEquipment) in equipmentpane.down | toArray | orderBy: ['type', '$key'] track by pieceOfEquipment.id"
+                           ng-click="showEquipmentDetails($event, pieceOfEquipment.id)" class="equipment-container"
+                           ng-class="{large : pieceOfEquipment.bins.length &gt; 1}" context-menu="true"
+                           data-target="equipment-context-menu-{{pieceOfEquipment.name}}">
+                                <span class="piece-of-equipment {{pieceOfEquipment.type | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}}"
+                                    ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1,snowUpdated:pieceOfEquipment.snowReadinessProperty}">{{pieceOfEquipment.name}}</span>
+                            <div ng-if="!pieceOfEquipment.snowReadinessIndicator" ng-repeat="bins in pieceOfEquipment.materialTypes track by $index">
+                                <span class="flag {{pieceOfEquipment.type | lowercase}} notReady {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypes[$index].material}} {{pieceOfEquipment.materialTypes[$index].color}}" ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1}">
+                                    {{pieceOfEquipment.materialTypes[$index].material}}
+                                </span>
+                            </div>
+                         <div ng-if="pieceOfEquipment.snowReadinessIndicator" >
+                            <span class="flag2 {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                            {{pieceOfEquipment.plowType}}</span>
+
+                            <span ng-show="pieceOfEquipment.secondIndicator" class="flagLoadType {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                            {{pieceOfEquipment.loadType}}</span>
+                       </div>
+                          <div id="equipment-context-menu-{{pieceOfEquipment.name}}" class="context-menu">
+                            <ul class="dropdown-menu">
+                              <li><a class="menu-item" tabindex="-1" ng-click="upEquipment(pieceOfEquipment)">Up Equipment</a></li>
+                                 <li><a class="menu-item" tabindex="-1" ng-click="detachEquipment(pieceOfEquipment)">Detach Equipment</a></li>
+                                 <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isEquipmentDressable"
+                                  ng-click="UpdateSnowReadinessEquipment(pieceOfEquipment)">Snow Update</a></li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div id="allAvailableEquipment"  class="all-avail-panel-grouping">
+                  <div class="pane-subpane pane-subpane-equip pane-subpane-available flex available">
+
+                  <a href="" ng-click="toggleAvailableSubpanel()">
+
+                    <div class="header">
+                        <span class="arrowleft">
+                            <i class="fa" ng-class="available.open ? 'fa-caret-down' : 'fa-caret-right'"></i>
+                        </span>
+                        <span class="title-text">Available</span> <span class="badge badgeMod">{{equipmentpane.availableEquipment}}</span>
+
+                    </div>
+                    </a>
+                    <div class="body panelpadding" style="padding-bottom: 10px;">
+                    <accordion class="sub-categories" close-others="false">
+                    <accordion-group id="equipRearLoaders" is-open="rearLoaders.open" ng-show="rearLoaders.show">
+                      <accordion-heading>
+                        <i class="fa" ng-class="rearLoaders.open ? 'fa-minus-square-o' : 'fa-plus-square-o'"
+                           ng-click="togglerOpen()"></i>
+                        Rear Loaders <span>({{rearLoaders.total}} - Empty)</span></accordion-heading>
+                      <div ng-repeat="(id,pieceOfEquipment) in equipmentpane.rearLoader | toArray | orderBy: ['type', '$key'] track by pieceOfEquipment.id"
+                         ng-click="showEquipmentDetails($event, pieceOfEquipment.id)" class="equipment-container"
+                         ng-class="{large : pieceOfEquipment.bins.length &gt; 1}" lvl-draggable="true"
+                         context-menu="true" data-target="equipment-context-menu-{{pieceOfEquipment.name}}">
+                            <span class="piece-of-equipment {{pieceOfEquipment.type | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}}"
+                                ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1,snowUpdated:pieceOfEquipment.snowReadinessProperty }">
+                                    {{pieceOfEquipment.name}}
+                            </span>
+
+                          <div ng-if="!pieceOfEquipment.snowReadinessIndicator" ng-repeat="bins in pieceOfEquipment.materialTypes track by $index">
+                            <span class="flag {{pieceOfEquipment.type | lowercase}} notReady {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypes[$index].material}}" ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1}">
+                                {{pieceOfEquipment.materialTypes[$index].material}}
+                            </span>
+                          </div>
+
+                           <div ng-if="pieceOfEquipment.snowReadinessOneIndicator" >
+                                <span class="flag {{'snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                                {{pieceOfEquipment.plowType}}
+                                </span>
+                           </div>
+
+                            <div ng-show="pieceOfEquipment.secondIndicator" >
+                                <span class="flag2 {{'snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                                {{pieceOfEquipment.plowType}}</span>
+                                <span ng-show="pieceOfEquipment.secondIndicator" class="flagLoadType {{'snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                              {{pieceOfEquipment.loadType}}</span>
+                           </div>
+
+                        <div id="equipment-context-menu-{{pieceOfEquipment.name}}" class="context-menu">
+                          <ul class="dropdown-menu">
+                            <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isLoadStatusUpdatable" ng-click="updateLoadStatus(pieceOfEquipment);">Update Load</a></li>
+                            <li><a class="menu-item" tabindex="-1" ng-click="detachEquipment(pieceOfEquipment)">Detach
+                              Equipment</a></li>
+                            <li><a class="menu-item" tabindex="-1" ng-click="downEquipment(pieceOfEquipment)" ng-show="!pieceOfEquipment.snowReadiness.workingDown">Down
+                              Equipment</a></li>
+                                 <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isEquipmentDressable"
+                                  ng-click="UpdateSnowReadinessEquipment(pieceOfEquipment)">Snow
+                                 Update</a></li>
+                          </ul>
+                        </div>
+                      </div>
+                    </accordion-group>
+                    <accordion-group id="equipDualBins" is-open="dualBins.open" ng-show="dualBins.show">
+                      <accordion-heading>
+                        <i class="fa" ng-class="dualBins.open ? 'fa-minus-square-o' : 'fa-plus-square-o'"
+                           ng-click="togglerOpen()"></i>
+                        Dual Bins <span>({{dualBins.total}} - Empty)</span></accordion-heading>
+                      <div ng-repeat="(id,pieceOfEquipment) in equipmentpane.dualBin | toArray | orderBy: ['type', '$key'] track by pieceOfEquipment.id"
+                         ng-click="showEquipmentDetails($event, pieceOfEquipment.id)" class="equipment-container"
+                         ng-class="{large : pieceOfEquipment.bins.length &gt; 1}" lvl-draggable="true"
+                         context-menu="true" data-target="equipment-context-menu-{{pieceOfEquipment.name}}">
+                                        <span class="piece-of-equipment {{pieceOfEquipment.type | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}}"
+                                            ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1,snowUpdated:pieceOfEquipment.snowReadinessProperty}">{{pieceOfEquipment.name}}</span>
+
+                          <div ng-if="!pieceOfEquipment.snowReadinessIndicator" ng-repeat="bins in pieceOfEquipment.materialTypes track by $index">
+                                <span class="flag {{pieceOfEquipment.type | lowercase}} notReady {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypes[$index].material}}" ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1}">
+                                    {{pieceOfEquipment.materialTypes[$index].material}}
+                                </span>
+                          </div>
+                         <div ng-if="pieceOfEquipment.snowReadinessIndicator" >
+                                        <span class="flag2 {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                                        {{pieceOfEquipment.plowType}}</span>
+
+                                        <span ng-show="pieceOfEquipment.secondIndicator" class="flagLoadType {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                                        {{pieceOfEquipment.loadType}}</span>
+                       </div>
+                        <div id="equipment-context-menu-{{pieceOfEquipment.name}}" class="context-menu">
+                          <ul class="dropdown-menu">
+                            <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isLoadStatusUpdatable" ng-click="updateLoadStatus(pieceOfEquipment);">Update Load</a></li>
+                            <li><a class="menu-item" tabindex="-1" ng-click="detachEquipment(pieceOfEquipment)">Detach
+                              Equipment</a></li>
+                            <li><a class="menu-item" tabindex="-1" ng-click="downEquipment(pieceOfEquipment)" ng-show="!pieceOfEquipment.snowReadiness.workingDown">Down
+                              Equipment</a></li>
+                                 <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isEquipmentDressable"
+                                  ng-click="UpdateSnowReadinessEquipment(pieceOfEquipment)">Snow
+                                 Update</a></li>
+                          </ul>
+                        </div>
+                      </div>
+                    </accordion-group>
+                    <accordion-group id="equipAlleyTrucks" is-open="alleyTrucks.open" ng-show="alleyTrucks.show">
+                      <accordion-heading>
+                        <i class="fa" ng-class="alleyTrucks.open ? 'fa-minus-square-o' : 'fa-plus-square-o'"
+                           ng-click="togglerOpen()"></i>
+                        Alley Trucks <span>({{alleyTrucks.total}} - Empty)</span></accordion-heading>
+                      <div ng-repeat="(id,pieceOfEquipment) in equipmentpane.alleyTruck | toArray | orderBy: ['type', '$key'] track by pieceOfEquipment.id"
+                         ng-click="showEquipmentDetails($event, pieceOfEquipment.id)" class="equipment-container"
+                         ng-class="{large : pieceOfEquipment.bins.length &gt; 1}" lvl-draggable="true"
+                         context-menu="true" data-target="equipment-context-menu-{{pieceOfEquipment.name}}">
+                                        <span class="piece-of-equipment {{pieceOfEquipment.type | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}}"
+                                            ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1,snowUpdated:pieceOfEquipment.snowReadinessProperty}">{{pieceOfEquipment.name}}</span>
+
+                          <div ng-if="!pieceOfEquipment.snowReadinessIndicator" ng-repeat="bins in pieceOfEquipment.materialTypes track by $index">
+                                <span class="flag {{pieceOfEquipment.type | lowercase}} notReady {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypes[$index].material}}" ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1}">
+                                    {{pieceOfEquipment.materialTypes[$index].material}}
+                                </span>
+                          </div>
+                           <div ng-if="pieceOfEquipment.snowReadinessOneIndicator" >
+                          <span class="flag {{'snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                          {{pieceOfEquipment.plowType}}</span>
+                       </div>
+                        <div ng-show="pieceOfEquipment.secondIndicator" >
+                          <span class="flag2 {{'snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                          {{pieceOfEquipment.plowType}}</span>
+
+                          <span ng-show="pieceOfEquipment.secondIndicator" class="flagLoadType {{'snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                        {{pieceOfEquipment.loadType}}</span>
+                       </div>
+                        <div id="equipment-context-menu-{{pieceOfEquipment.name}}" class="context-menu">
+                          <ul class="dropdown-menu">
+                            <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isLoadStatusUpdatable" ng-click="updateLoadStatus(pieceOfEquipment);">Update Load</a></li>
+                            <li><a class="menu-item" tabindex="-1" ng-click="detachEquipment(pieceOfEquipment)">Detach
+                              Equipment</a></li>
+                            <li><a class="menu-item" tabindex="-1" ng-click="downEquipment(pieceOfEquipment)" ng-show="!pieceOfEquipment.snowReadiness.workingDown">Down
+                              Equipment</a></li>
+                                 <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isEquipmentDressable"
+                                  ng-click="UpdateSnowReadinessEquipment(pieceOfEquipment)">Snow
+                                 Update</a></li>
+                          </ul>
+                        </div>
+                      </div>
+                    </accordion-group>
+                    <accordion-group id="equiphoistFittedChassis" is-open="hoistFittedChassis.open" ng-show="hoistFittedChassis.show">
+                      <accordion-heading>
+                        <i class="fa" ng-class="hoistFittedChassis.open ? 'fa-minus-square-o' : 'fa-plus-square-o'"
+                           ng-click="togglerOpen()"></i>
+                        Hoist-Fitted Chassis <span>({{hoistFittedChassis.total}})</span>
+                      </accordion-heading>
+                      <div ng-repeat="(id,pieceOfEquipment) in equipmentpane.hoistFittedChassis | toArray | orderBy: ['type', '$key'] track by pieceOfEquipment.id"
+                         ng-click="showEquipmentDetails($event, pieceOfEquipment.id)"
+                         class="equipment-container" ng-class="{large : pieceOfEquipment.bins.length &gt; 1}"
+                         lvl-draggable="true" context-menu="true"
+                         data-target="equipment-context-menu-{{pieceOfEquipment.name}}">
+                                        <span class="piece-of-equipment {{pieceOfEquipment.type | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}}"
+                                            ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1,snowUpdated:pieceOfEquipment.snowReadinessProperty}">{{pieceOfEquipment.name}}</span>
+
+                          <div ng-if="!pieceOfEquipment.snowReadinessIndicator" ng-repeat="bins in pieceOfEquipment.materialTypes track by $index">
+                                <span class="flag {{pieceOfEquipment.type | lowercase}} notReady {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypes[$index].material}}" ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1}">
+                                    {{pieceOfEquipment.materialTypes[$index].material}}
+                                </span>
+                          </div>
+                           <div ng-if="pieceOfEquipment.snowReadinessOneIndicator" >
+                          <span class="flag {'snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                          {{pieceOfEquipment.plowType}}</span>
+                       </div>
+                        <div ng-show="pieceOfEquipment.secondIndicator" >
+                          <span class="flag2 {{'snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                          {{pieceOfEquipment.plowType}}</span>
+
+                          <span ng-show="pieceOfEquipment.secondIndicator" class="flagLoadType {{'snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                        {{pieceOfEquipment.loadType}}</span>
+                       </div>
+                        <div id="equipment-context-menu-{{pieceOfEquipment.name}}" class="context-menu">
+                          <ul class="dropdown-menu">
+                            <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isLoadStatusUpdatable" ng-click="updateLoadStatus(pieceOfEquipment);">Update Load</a></li>
+                            <li><a class="menu-item" tabindex="-1" ng-click="detachEquipment(pieceOfEquipment)">Detach
+                              Equipment</a></li>
+                            <li><a class="menu-item" tabindex="-1" ng-click="downEquipment(pieceOfEquipment)" ng-show="!pieceOfEquipment.snowReadiness.workingDown">Down
+                              Equipment</a></li>
+                                 <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isEquipmentDressable"
+                                  ng-click="UpdateSnowReadinessEquipment(pieceOfEquipment)">Snow
+                                 Update</a></li>
+                          </ul>
+                        </div>
+                      </div>
+                    </accordion-group>
+                    <accordion-group id="equipMechanicalBrooms" is-open="mechanicalBrooms.open" ng-show="mechanicalBrooms.show">
+                      <accordion-heading>
+                        <i class="fa" ng-class="mechanicalBrooms.open ? 'fa-minus-square-o' : 'fa-plus-square-o'"
+                           ng-click="togglerOpen()"></i>
+                        Mechanical Brooms <span>({{mechanicalBrooms.total}})</span>
+                      </accordion-heading>
+                      <div ng-repeat="(id,pieceOfEquipment) in equipmentpane.mechanicalBroom | toArray | orderBy: ['type', '$key'] track by pieceOfEquipment.id"
+                         ng-click="showEquipmentDetails($event, pieceOfEquipment.id)"
+                         class="equipment-container" ng-class="{large : pieceOfEquipment.bins.length &gt; 1}"
+                         lvl-draggable="true" context-menu="true"
+                         data-target="equipment-context-menu-{{pieceOfEquipment.name}}">
+                                        <span class="piece-of-equipment {{pieceOfEquipment.type | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}}"
+                                            ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1,snowUpdated:pieceOfEquipment.snowReadinessProperty}">{{pieceOfEquipment.name}}</span>
+
+                          <div ng-if="!pieceOfEquipment.snowReadinessIndicator" ng-repeat="bins in pieceOfEquipment.materialTypes track by $index">
+                                <span class="flag {{pieceOfEquipment.type | lowercase}} notReady {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypes[$index].material}}" ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1}">
+                                    {{pieceOfEquipment.materialTypes[$index].material}}
+                                </span>
+                          </div>
+                           <div ng-if="pieceOfEquipment.snowReadinessOneIndicator" >
+                          <span class="flag {{'snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                          {{pieceOfEquipment.plowType}}</span>
+                       </div>
+                        <div ng-show="pieceOfEquipment.secondIndicator" >
+                          <span class="flag2 {{'snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                          {{pieceOfEquipment.plowType}}</span>
+
+                          <span ng-show="pieceOfEquipment.secondIndicator" class="flagLoadType {{'snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                        {{pieceOfEquipment.loadType}}</span>
+                       </div>
+                        <div id="equipment-context-menu-{{pieceOfEquipment.name}}" class="context-menu">
+                          <ul class="dropdown-menu">
+                            <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isLoadStatusUpdatable" ng-click="updateLoadStatus(pieceOfEquipment);">Update Load</a></li>
+                            <li><a class="menu-item" tabindex="-1" ng-click="detachEquipment(pieceOfEquipment)">Detach
+                              Equipment</a></li>
+                            <li><a class="menu-item" tabindex="-1" ng-click="downEquipment(pieceOfEquipment)" ng-show="!pieceOfEquipment.snowReadiness.workingDown">Down
+                              Equipment</a></li>
+                                 <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isEquipmentDressable"
+                                  ng-click="UpdateSnowReadinessEquipment(pieceOfEquipment)">Snow
+                                 Update</a></li>
+                          </ul>
+                        </div>
+                      </div>
+                    </accordion-group>
+                    <accordion-group id="equipRoRos" is-open="roRos.open" ng-show="roRos.show">
+                      <accordion-heading>
+                        <i class="fa" ng-class="roRos.open ? 'fa-minus-square-o' : 'fa-plus-square-o'"
+                           ng-click="togglerOpen()"></i>
+                        Ro-Ros <span>({{roRos.total}})</span>
+                      </accordion-heading>
+                      <div ng-repeat="(id,pieceOfEquipment) in equipmentpane.roRo | toArray | orderBy: ['type', '$key'] track by pieceOfEquipment.id"
+                         ng-click="showEquipmentDetails($event, pieceOfEquipment.id)" class="equipment-container"
+                         ng-class="{large : pieceOfEquipment.bins.length &gt; 1}" lvl-draggable="true"
+                         context-menu="true" data-target="equipment-context-menu-{{pieceOfEquipment.name}}">
+                                        <span class="piece-of-equipment {{pieceOfEquipment.type | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}}"
+                                            ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1,snowUpdated:pieceOfEquipment.snowReadinessProperty}">{{pieceOfEquipment.name}}</span>
+
+                          <div ng-if="!pieceOfEquipment.snowReadinessIndicator" ng-repeat="bins in pieceOfEquipment.materialTypes track by $index">
+                                <span class="flag {{pieceOfEquipment.type | lowercase}} notReady {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypes[$index].material}}" ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1}">
+                                    {{pieceOfEquipment.materialTypes[$index].material}}
+                                </span>
+                          </div>
+                           <div ng-if="pieceOfEquipment.snowReadinessOneIndicator" >
+                          <span class="flag {{'snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                          {{pieceOfEquipment.plowType}}</span>
+                       </div>
+                        <div ng-show="pieceOfEquipment.secondIndicator" >
+                          <span class="flag2 {{'snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                          {{pieceOfEquipment.plowType}}</span>
+
+                          <span ng-show="pieceOfEquipment.secondIndicator" class="flagLoadType {{'snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                        {{pieceOfEquipment.loadType}}</span>
+                       </div>
+                        <div id="equipment-context-menu-{{pieceOfEquipment.name}}" class="context-menu">
+                          <ul class="dropdown-menu">
+                            <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isLoadStatusUpdatable" ng-click="updateLoadStatus(pieceOfEquipment);">Update Load</a></li>
+                            <li><a class="menu-item" tabindex="-1" ng-click="detachEquipment(pieceOfEquipment)">Detach
+                              Equipment</a></li>
+                            <li><a class="menu-item" tabindex="-1" ng-click="downEquipment(pieceOfEquipment)" ng-show="!pieceOfEquipment.snowReadiness.workingDown">Down
+                              Equipment</a></li>
+                                 <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isEquipmentDressable"
+                                  ng-click="UpdateSnowReadinessEquipment(pieceOfEquipment)">Snow
+                                 Update</a></li>
+                          </ul>
+                        </div>
+                      </div>
+                    </accordion-group>
+                    <accordion-group id="equipEzPacks" is-open="ezPacks.open" ng-show="ezPacks.show">
+                      <accordion-heading>
+                        <i class="fa" ng-class="ezPacks.open ? 'fa-minus-square-o' : 'fa-plus-square-o'"
+                           ng-click="togglerOpen()"></i>
+                        E-Z Packs <span>({{ezPacks.total}} - Empty)</span>
+                      </accordion-heading>
+                      <div ng-repeat="(id,pieceOfEquipment) in equipmentpane.ezPack | toArray | orderBy: ['type', '$key'] track by pieceOfEquipment.id"
+                         ng-click="showEquipmentDetails($event, pieceOfEquipment.id)" class="equipment-container"
+                         ng-class="{large : pieceOfEquipment.bins.length &gt; 1}" lvl-draggable="true"
+                         context-menu="true" data-target="equipment-context-menu-{{pieceOfEquipment.name}}">
+                                        <span class="piece-of-equipment {{pieceOfEquipment.type | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}}"
+                                            ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1,snowUpdated:pieceOfEquipment.snowReadinessProperty}">{{pieceOfEquipment.name}}</span>
+
+                          <div ng-if="!pieceOfEquipment.snowReadinessIndicator" ng-repeat="bins in pieceOfEquipment.materialTypes track by $index">
+                                <span class="flag {{pieceOfEquipment.type | lowercase}} notReady {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypes[$index].material}}" ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1}">
+                                    {{pieceOfEquipment.materialTypes[$index].material}}
+                                </span>
+                          </div>
+                           <div ng-if="pieceOfEquipment.snowReadinessOneIndicator" >
+                          <span class="flag {{'snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                          {{pieceOfEquipment.plowType}}</span>
+                       </div>
+                        <div ng-show="pieceOfEquipment.secondIndicator" >
+                          <span class="flag2 {{'snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                          {{pieceOfEquipment.plowType}}</span>
+
+                          <span ng-show="pieceOfEquipment.secondIndicator" class="flagLoadType {{'snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                        {{pieceOfEquipment.loadType}}</span>
+                       </div>
+                        <div id="equipment-context-menu-{{pieceOfEquipment.name}}" class="context-menu">
+                          <ul class="dropdown-menu">
+                            <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isLoadStatusUpdatable" ng-click="updateLoadStatus(pieceOfEquipment);">Update Load</a></li>
+                            <li><a class="menu-item" tabindex="-1" ng-click="detachEquipment(pieceOfEquipment)">Detach
+                              Equipment</a></li>
+                            <li><a class="menu-item" tabindex="-1" ng-click="downEquipment(pieceOfEquipment)" ng-show="!pieceOfEquipment.snowReadiness.workingDown">Down
+                              Equipment</a></li>
+                                 <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isEquipmentDressable"
+                                  ng-click="UpdateSnowReadinessEquipment(pieceOfEquipment)">Snow
+                                 Update</a></li>
+                          </ul>
+                        </div>
+                      </div>
+                    </accordion-group>
+                    <accordion-group id="equipMiscellaneous" is-open="miscellaneous.open" ng-show="miscellaneous.show">
+                      <accordion-heading>
+                        <i class="fa" ng-class="miscellaneous.open ? 'fa-minus-square-o' : 'fa-plus-square-o'"
+                           ng-click="togglerOpen()"></i>
+                        Miscellaneous <span>({{miscellaneous.total}})</span>
+                      </accordion-heading>
+                      <div ng-repeat="(id,pieceOfEquipment) in equipmentpane.miscellaneous | toArray | orderBy: ['type', '$key'] track by pieceOfEquipment.id"
+                         ng-click="showEquipmentDetails($event, pieceOfEquipment.id)" class="equipment-container"
+                         ng-class="{large : pieceOfEquipment.bins.length &gt; 1}" lvl-draggable="true"
+                         context-menu="true" data-target="equipment-context-menu-{{pieceOfEquipment.name}}">
+                                        <span class="piece-of-equipment {{pieceOfEquipment.type | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}}"
+                                            ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1,snowUpdated:pieceOfEquipment.snowReadinessProperty}">{{pieceOfEquipment.name}}</span>
+
+                          <div ng-if="!pieceOfEquipment.snowReadinessIndicator" ng-repeat="bins in pieceOfEquipment.materialTypes track by $index">
+                                <span class="flag {{pieceOfEquipment.type | lowercase}} notReady {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypes[$index].material}}" ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1}">
+                                    {{pieceOfEquipment.materialTypes[$index].material}}
+                                </span>
+                          </div>
+
+                           <div ng-if="pieceOfEquipment.snowReadinessOneIndicator" >
+                          <span class="flag {{'snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                          {{pieceOfEquipment.plowType}}</span>
+                       </div>
+                        <div ng-show="pieceOfEquipment.secondIndicator" >
+                          <span class="flag2 {{'snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                          {{pieceOfEquipment.plowType}}</span>
+
+                          <span ng-show="pieceOfEquipment.secondIndicator" class="flagLoadType {{'snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                        {{pieceOfEquipment.loadType}}</span>
+                       </div>
+                        <div id="equipment-context-menu-{{pieceOfEquipment.name}}" class="context-menu">
+                          <ul class="dropdown-menu">
+                            <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isLoadStatusUpdatable" ng-click="updateLoadStatus(pieceOfEquipment);">Update Load</a></li>
+                            <li><a class="menu-item" tabindex="-1" ng-click="detachEquipment(pieceOfEquipment)">Detach
+                              Equipment</a></li>
+                            <li><a class="menu-item" tabindex="-1" ng-click="downEquipment(pieceOfEquipment)" ng-show="!pieceOfEquipment.snowReadiness.workingDown">Down
+                              Equipment</a></li>
+                                 <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isEquipmentDressable"
+                                  ng-click="UpdateSnowReadinessEquipment(pieceOfEquipment)">Snow Update</a></li>
+                          </ul>
+                        </div>
+                      </div>
+                    </accordion-group>
+                    <accordion-group id="equipSnow" is-open="snow.open" ng-show="snow.show">
+                      <accordion-heading>
+                        <i class="fa" ng-class="snow.open ? 'fa-minus-square-o' : 'fa-plus-square-o'"
+                           ng-click="togglerOpen()"></i>
+                        Snow <span>({{snow.total}})</span></accordion-heading>
+                      <div ng-repeat="(id,pieceOfEquipment) in equipmentpane.snow | toArray | orderBy: ['type', '$key'] track by pieceOfEquipment.id"
+                         ng-click="showEquipmentDetails($event, pieceOfEquipment.id)" class="equipment-container"
+                         ng-class="{large : pieceOfEquipment.bins.length &gt; 1}" lvl-draggable="true"
+                         context-menu="true" data-target="equipment-context-menu-{{pieceOfEquipment.name}}">
+                                        <span class="piece-of-equipment {{pieceOfEquipment.type | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}}"
+                                            ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1}">{{pieceOfEquipment.name}}</span>
+
+
+                          <div ng-if="!pieceOfEquipment.snowReadinessIndicator" ng-repeat="bins in pieceOfEquipment.materialTypes track by $index">
+                                <span class="flag {{pieceOfEquipment.type | lowercase}} notReady {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypes[$index].material}}" ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1}">
+                                    {{pieceOfEquipment.materialTypes[$index].material}}
+                                </span>
+                          </div>
+
+                           <div ng-if="pieceOfEquipment.snowReadinessOneIndicator" >
+                          <span class="flag {{'snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                          {{pieceOfEquipment.plowType}}</span>
+                       </div>
+                        <div ng-show="pieceOfEquipment.secondIndicator" >
+                          <span class="flag2 {{'snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                          {{pieceOfEquipment.plowType}}</span>
+
+                          <span ng-show="pieceOfEquipment.secondIndicator" class="flagLoadType {{'snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                        {{pieceOfEquipment.loadType}}</span>
+                       </div>
+                        <div  id="equipment-context-menu-{{pieceOfEquipment.name}}" class="context-menu">
+                          <ul class="dropdown-menu">
+                            <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isLoadStatusUpdatable" ng-click="updateLoadStatus(pieceOfEquipment);">Update Load</a></li>
+                            <li><a class="menu-item" tabindex="-1" ng-click="detachEquipment(pieceOfEquipment)">Detach
+                              Equipment</a></li>
+                            <li><a class="menu-item" tabindex="-1" ng-click="downEquipment(pieceOfEquipment)" ng-show="!pieceOfEquipment.snowReadiness.workingDown">Down
+                              Equipment</a></li>
+                                 <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isEquipmentDressable"
+                                  ng-click="UpdateSnowReadinessEquipment(pieceOfEquipment)">Snow
+                                 Update</a></li>
+                          </ul>
+                        </div>
+                      </div>
+                    </accordion-group>
+                    </accordion>
+                    </div>
+                  </div>
+                  <div class="pane-subpane pane-subpane-equip pane-subpane-available flex relay">
+                  <a href="" ng-click="toggleRelaySubpanel()">
+                    <div class="header">
+                      <span class="title-text">Relay</span>  <span class="badge badgeMod">{{equipmentpane.relayEquipment}}</span>
+                      <span class="arrowleft"><i class="fa" ng-class="relay.open ? 'fa-caret-down' : 'fa-caret-right'"></i></span>
+                    </div>
+                    </a>
+                    <div class="body" ng-class="{equipPad:relay.open}">
+                      <accordion class="sub-categories panel-main" close-others="false">
+                        <accordion-group class="collapsible-heading" is-open="relay.open" ng-show="relay.show">
+                          <accordion-group id="relayCollection" is-open="relayCollection.open"
+                                   ng-show="relayCollection.show">
+                            <accordion-heading>
+                              <i class="fa"
+                                 ng-class="relayCollection.open ? 'fa-minus-square-o' : 'fa-plus-square-o'"
+                                 ng-click="togglerOpen()"></i>
+                              Collection ({{relayCollection.total}})
+                            </accordion-heading>
+                            <div ng-repeat="(id,pieceOfEquipment) in equipmentpane.relayCollection | toArray | orderBy: ['type', '$key'] track by pieceOfEquipment.id"
+                               ng-click="showEquipmentDetails($event, pieceOfEquipment.id)"
+                               class="equipment-container"
+                               ng-class="{large : pieceOfEquipment.bins.length &gt; 1}"
+                               lvl-draggable="true" context-menu="true"
+                               data-target="equipment-context-menu-{{pieceOfEquipment.name}}">
+                                      <span class="piece-of-equipment {{pieceOfEquipment.type | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}}"
+                                          ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1,snowUpdated:pieceOfEquipment.snowReadinessProperty}">{{pieceOfEquipment.name}}</span>
+                                <div ng-if="!pieceOfEquipment.snowReadinessIndicator" ng-repeat="bins in pieceOfEquipment.materialTypes track by $index">
+                                <span class="flag {{pieceOfEquipment.type | lowercase}} notReady {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypes[$index].material}} {{pieceOfEquipment.materialTypes[$index].color}}" ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1}">
+                                    {{pieceOfEquipment.materialTypes[$index].material}}
+                                </span>
+                                </div>
+                        <div ng-if="pieceOfEquipment.snowReadinessIndicator">
+                          <span
+                            class="flag2 {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                            {{pieceOfEquipment.plowType}}</span> <span
+                            ng-show="pieceOfEquipment.secondIndicator"
+                            class="flagLoadType {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                            {{pieceOfEquipment.loadType}}</span>
+                        </div>
+                        <div id="equipment-context-menu-{{pieceOfEquipment.name}}" class="context-menu">
+                                <ul class="dropdown-menu">
+                                  <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isLoadStatusUpdatable" ng-click="updateLoadStatus(pieceOfEquipment);">Update Load</a></li>
+                                  <li><a class="menu-item" tabindex="-1"
+                                       ng-click="detachEquipment(pieceOfEquipment)">Detach Equipment</a>
+                                  </li>
+                                  <li><a class="menu-item" tabindex="-1"
+                                       ng-click="downEquipment(pieceOfEquipment)" ng-show="!pieceOfEquipment.snowReadiness.workingDown">Down Equipment</a></li>
+                                          <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isEquipmentDressable"
+                                  ng-click="UpdateSnowReadinessEquipment(pieceOfEquipment)">Snow
+                                 Update</a></li>
+                                </ul>
+                              </div>
+                            </div>
+                          </accordion-group>
+                                             <accordion-group id="relaySnow" is-open="relaySnow.open"
+                                   ng-show="relaySnow.show">
+                            <accordion-heading>
+                              <i class="fa"
+                                 ng-class="relaySnow.open ? 'fa-minus-square-o' : 'fa-plus-square-o'"
+                                 ng-click="togglerOpen()"></i>
+                              Snow ({{relaySnow.total}})
+                            </accordion-heading>
+
+
+                            <div ng-repeat="(id,pieceOfEquipment) in equipmentpane.relaySnow| toArray | orderBy: ['type', '$key'] track by pieceOfEquipment.id"
+                               ng-click="showEquipmentDetails($event, pieceOfEquipment.id)"
+                               class="equipment-container"
+                               ng-class="{large : pieceOfEquipment.bins.length &gt; 1}"
+                               lvl-draggable="true" context-menu="true"
+                               data-target="equipment-context-menu-{{pieceOfEquipment.name}}">
+                                      <span class="piece-of-equipment {{pieceOfEquipment.type | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}}"
+                                          ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1,snowUpdated:pieceOfEquipment.snowReadinessProperty}">{{pieceOfEquipment.name}}</span>
+
+                                <div ng-if="!pieceOfEquipment.snowReadinessIndicator" ng-repeat="bins in pieceOfEquipment.materialTypes track by $index">
+                                <span class="flag {{pieceOfEquipment.type | lowercase}} notReady {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypes[$index].material}} {{pieceOfEquipment.materialTypes[$index].color}}" ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1}">
+                                    {{pieceOfEquipment.materialTypes[$index].material}}
+                                </span>
+                                </div>
+                        <div ng-if="pieceOfEquipment.snowReadinessIndicator">
+                          <span
+                            class="flag2 {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                            {{pieceOfEquipment.plowType}}</span> <span
+                            ng-show="pieceOfEquipment.secondIndicator"
+                            class="flagLoadType {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                            {{pieceOfEquipment.loadType}}</span>
+                        </div>
+                        <div id="equipment-context-menu-{{pieceOfEquipment.name}}" class="context-menu">
+                                <ul class="dropdown-menu">
+                                  <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isLoadStatusUpdatable" ng-click="updateLoadStatus(pieceOfEquipment);">Update Load</a></li>
+                                  <li><a class="menu-item" tabindex="-1"
+                                       ng-click="detachEquipment(pieceOfEquipment)">Detach Equipment</a>
+                                  </li>
+                                  <li><a class="menu-item" tabindex="-1"
+                                       ng-click="downEquipment(pieceOfEquipment)" ng-show="!pieceOfEquipment.snowReadiness.workingDown">Down Equipment</a></li>
+                                          <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isEquipmentDressable"
+                                  ng-click="UpdateSnowReadinessEquipment(pieceOfEquipment)">Snow
+                                 Update</a></li>
+                                </ul>
+                              </div>
+                            </div>
+                          </accordion-group>
+                          <accordion-group id="relayRecycling" is-open="relayRecycling.open"
+                                   ng-show="relayRecycling.show">
+                            <accordion-heading>
+                              <i class="fa"
+                                 ng-class="relayRecycling.open ? 'fa-minus-square-o' : 'fa-plus-square-o'"
+                                 ng-click="togglerOpen()"></i>
+                              Recycling ({{equipmentpane.numRelayRecycling}})
+                            </accordion-heading>
+                            <accordion-group is-open="relayRecyclingPaper.open" ng-show="relayRecyclingPaper.show">
+                              <accordion-heading>
+                              <i class="fa"
+                                   ng-class="relayRecyclingPaper.open ? 'fa-minus-square-o' : 'fa-plus-square-o'"
+                                   ng-click="togglerOpen()"></i>
+                              Paper ({{relayRecyclingPaper.total}})
+                              </accordion-heading>
+                              <div ng-repeat="(id,pieceOfEquipment) in equipmentpane.relayRecycling | toArray | orderBy: ['type', '$key'] track by pieceOfEquipment.id"
+                                 ng-click="showEquipmentDetails($event, pieceOfEquipment.id)"
+                                 class="equipment-container"
+                                 ng-class="{large : pieceOfEquipment.bins.length &gt; 1}" lvl-draggable="true"
+                                 context-menu="true"
+                                 data-target="equipment-context-menu-{{pieceOfEquipment.name}}">
+                                        <span class="piece-of-equipment {{pieceOfEquipment.type | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}}"
+                                            ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1,snowUpdated:pieceOfEquipment.snowReadinessProperty}">{{pieceOfEquipment.name}}</span>
+                                  <div ng-if="!pieceOfEquipment.snowReadinessIndicator" ng-repeat="bins in pieceOfEquipment.materialTypes track by $index">
+                                <span class="flag {{pieceOfEquipment.type | lowercase}} notReady {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypes[$index].material}} {{pieceOfEquipment.materialTypes[$index].color}}" ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1}">
+                                    {{pieceOfEquipment.materialTypes[$index].material}}
+                                </span>
+                                  </div>
+                        <div ng-if="pieceOfEquipment.snowReadinessIndicator">
+                          <span
+                            class="flag2 {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                            {{pieceOfEquipment.plowType}}</span> <span
+                            ng-show="pieceOfEquipment.secondIndicator"
+                            class="flagLoadType {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                            {{pieceOfEquipment.loadType}}</span>
+                        </div>
+                        <div id="equipment-context-menu-{{pieceOfEquipment.name}}" class="context-menu">
+                                  <ul class="dropdown-menu">
+                                    <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isLoadStatusUpdatable" ng-click="updateLoadStatus(pieceOfEquipment);">Update Load</a></li>
+                                    <li><a class="menu-item" tabindex="-1"
+                                         ng-click="detachEquipment(pieceOfEquipment)">Detach Equipment</a>
+                                    </li>
+                                    <li><a class="menu-item" tabindex="-1"
+                                         ng-click="downEquipment(pieceOfEquipment)" ng-show="!pieceOfEquipment.snowReadiness.workingDown">Down Equipment</a>
+                                    </li>
+                                       <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isEquipmentDressable"
+                                  ng-click="UpdateSnowReadinessEquipment(pieceOfEquipment)">Snow
+                                 Update</a></li>
+                                  </ul>
+                                </div>
+                              </div>
+                            </accordion-group>
+                            <accordion-group is-open="relayRecyclingOrganics.open"
+                                     ng-show="relayRecyclingOrganics.show">
+                              <accordion-heading>
+                                <i class="fa"
+                                   ng-class="relayRecyclingOrganics.open ? 'fa-minus-square-o' : 'fa-plus-square-o'"
+                                   ng-click="togglerOpen()"></i>
+                                Organics ({{relayRecyclingOrganics.total}})
+                              </accordion-heading>
+                              <div ng-repeat="(id,pieceOfEquipment) in equipmentpane.relayRecyclingOrganics | toArray | orderBy: ['type', '$key'] track by pieceOfEquipment.id"
+                                 ng-click="showEquipmentDetails($event, pieceOfEquipment.id)"
+                                 class="equipment-container"
+                                 ng-class="{large : pieceOfEquipment.bins.length &gt; 1}" lvl-draggable="true"
+                                 context-menu="true"
+                                 data-target="equipment-context-menu-{{pieceOfEquipment.name}}">
+                                        <span class="piece-of-equipment {{pieceOfEquipment.type | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}}"
+                                            ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1,snowUpdated:pieceOfEquipment.snowReadinessProperty}">{{pieceOfEquipment.name}}</span>
+                                  <div ng-if="!pieceOfEquipment.snowReadinessIndicator" ng-repeat="bins in pieceOfEquipment.materialTypes track by $index">
+                                <span class="flag {{pieceOfEquipment.type | lowercase}} notReady {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypes[$index].material}} {{pieceOfEquipment.materialTypes[$index].color}}" ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1}">
+                                    {{pieceOfEquipment.materialTypes[$index].material}}
+                                </span>
+                                  </div>
+                                <div ng-if="pieceOfEquipment.snowReadinessIndicator">
+                                  <span
+                                    class="flag2 {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                                    {{pieceOfEquipment.plowType}}</span> <span
+                                    ng-show="pieceOfEquipment.secondIndicator"
+                                    class="flagLoadType {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                                    {{pieceOfEquipment.loadType}}</span>
+                                </div>
+                        <div id="equipment-context-menu-{{pieceOfEquipment.name}}" class="context-menu">
+                                  <ul class="dropdown-menu">
+                                    <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isLoadStatusUpdatable" ng-click="updateLoadStatus(pieceOfEquipment);">Update Load</a></li>
+                                    <li><a class="menu-item" tabindex="-1"
+                                         ng-click="detachEquipment(pieceOfEquipment)">Detach Equipment</a>
+                                    </li>
+                                    <li><a class="menu-item" tabindex="-1"
+                                         ng-click="downEquipment(pieceOfEquipment)" ng-show="!pieceOfEquipment.snowReadiness.workingDown">Down Equipment</a>
+                                    </li>
+                                       <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isEquipmentDressable"
+                                  ng-click="UpdateSnowReadinessEquipment(pieceOfEquipment)">Snow
+                                 Update</a></li>
+                                  </ul>
+                                </div>
+                              </div>
+                            </accordion-group>
+                            <accordion-group id="relayRecyclingMGP" is-open="relayRecyclingMGP.open"
+                                     ng-show="relayRecyclingMGP.show">
+                              <accordion-heading>
+                                <i class="fa"
+                                   ng-class="relayRecyclingMGP.open ? 'fa-minus-square-o' : 'fa-plus-square-o'"
+                                   ng-click="togglerOpen()"></i>
+                                MGP ({{relayRecyclingMGP.total}})
+                              </accordion-heading>
+                              <div ng-repeat="(id,pieceOfEquipment) in equipmentpane.relayRecyclingMGP | toArray | orderBy: ['type', '$key'] track by pieceOfEquipment.id"
+                                 ng-click="showEquipmentDetails($event, pieceOfEquipment.id)"
+                                 class="equipment-container"
+                                 ng-class="{large : pieceOfEquipment.bins.length &gt; 1}" lvl-draggable="true"
+                                 context-menu="true"
+                                 data-target="equipment-context-menu-{{pieceOfEquipment.name}}">
+                                        <span class="piece-of-equipment {{pieceOfEquipment.type | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}}"
+                                            ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1,snowUpdated:pieceOfEquipment.snowReadinessProperty}">{{pieceOfEquipment.name}}</span>
+                                  <div ng-if="!pieceOfEquipment.snowReadinessIndicator" ng-repeat="bins in pieceOfEquipment.materialTypes track by $index">
+                                <span class="flag {{pieceOfEquipment.type | lowercase}} notReady {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypes[$index].material}} {{pieceOfEquipment.materialTypes[$index].color}}" ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1}">
+                                    {{pieceOfEquipment.materialTypes[$index].material}}
+                                </span>
+                                  </div>
+                        <div ng-if="pieceOfEquipment.snowReadinessIndicator">
+                          <span
+                            class="flag2 {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                            {{pieceOfEquipment.plowType}}</span> <span
+                            ng-show="pieceOfEquipment.secondIndicator"
+                            class="flagLoadType {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                            {{pieceOfEquipment.loadType}}</span>
+                        </div>
+                        <div id="equipment-context-menu-{{pieceOfEquipment.name}}" class="context-menu">
+                                  <ul class="dropdown-menu">
+                                    <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isLoadStatusUpdatable" ng-click="updateLoadStatus(pieceOfEquipment);">Update Load</a></li>
+                                    <li><a class="menu-item" tabindex="-1"
+                                         ng-click="detachEquipment(pieceOfEquipment)">Detach Equipment</a>
+                                    </li>
+                                    <li><a class="menu-item" tabindex="-1"
+                                         ng-click="downEquipment(pieceOfEquipment)" ng-show="!pieceOfEquipment.snowReadiness.workingDown">Down Equipment</a>
+                                    </li>
+                                       <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isEquipmentDressable"
+                                  ng-click="UpdateSnowReadinessEquipment(pieceOfEquipment)">Snow
+                                 Update</a></li>
+                                  </ul>
+                                </div>
+                              </div>
+                            </accordion-group>
+                            <accordion-group id="relayRecyclingMisc" is-open="relayRecyclingMisc.open"
+                                     ng-show="relayRecyclingMisc.show">
+                              <accordion-heading>
+                                <i class="fa"
+                                   ng-class="relayRecyclingMisc.open ? 'fa-minus-square-o' : 'fa-plus-square-o'"
+                                   ng-click="togglerOpen()"></i>
+                                Recycling Misc ({{relayRecyclingMisc.total}})
+                              </accordion-heading>
+                              <div ng-repeat="(id,pieceOfEquipment) in equipmentpane.relayRecyclingMisc | toArray | orderBy: ['type', '$key'] track by pieceOfEquipment.id"
+                                 ng-click="showEquipmentDetails($event, pieceOfEquipment.id)"
+                                 class="equipment-container"
+                                 ng-class="{large : pieceOfEquipment.bins.length &gt; 1}" lvl-draggable="true"
+                                 context-menu="true"
+                                 data-target="equipment-context-menu-{{pieceOfEquipment.name}}">
+                                        <span class="piece-of-equipment {{pieceOfEquipment.type | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}}"
+                                            ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1,snowUpdated:pieceOfEquipment.snowReadinessProperty}">{{pieceOfEquipment.name}}</span>
+                                  <div ng-if="!pieceOfEquipment.snowReadinessIndicator" ng-repeat="bins in pieceOfEquipment.materialTypes track by $index">
+                                    <span class="flag {{pieceOfEquipment.type | lowercase}} notReady {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypes[$index].material}} {{pieceOfEquipment.materialTypes[$index].color}}" ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1}">
+                                        {{pieceOfEquipment.materialTypes[$index].material}}
+                                    </span>
+                                  </div>
+                        <div ng-if="pieceOfEquipment.snowReadinessIndicator">
+                          <span
+                            class="flag2 {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                            {{pieceOfEquipment.plowType}}</span> <span
+                            ng-show="pieceOfEquipment.secondIndicator"
+                            class="flagLoadType {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                            {{pieceOfEquipment.loadType}}</span>
+                        </div>
+                        <div id="equipment-context-menu-{{pieceOfEquipment.name}}" class="context-menu">
+                                  <ul class="dropdown-menu">
+                                    <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isLoadStatusUpdatable" ng-click="updateLoadStatus(pieceOfEquipment);">Update Load</a></li>
+                                    <li><a class="menu-item" tabindex="-1"
+                                         ng-click="detachEquipment(pieceOfEquipment)">Detach Equipment</a>
+                                    </li>
+                                    <li><a class="menu-item" tabindex="-1"
+                                         ng-click="downEquipment(pieceOfEquipment)" ng-show="!pieceOfEquipment.snowReadiness.workingDown">Down Equipment</a>
+                                    </li>
+                                       <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isEquipmentDressable"
+                                  ng-click="UpdateSnowReadinessEquipment(pieceOfEquipment)">Snow
+                                 Update</a></li>
+                                  </ul>
+                                </div>
+                              </div>
+                            </accordion-group>
+                          </accordion-group>
+                          <accordion-group id="relayMiscellaneous" is-open="relayMiscellaneous.open"
+                                   ng-show="relayMiscellaneous.show">
+                            <accordion-heading>
+                              <i class="fa"
+                                 ng-class="relayMiscellaneous.open ? 'fa-minus-square-o' : 'fa-plus-square-o'"
+                                 ng-click="togglerOpen()"></i>
+                              Miscellaneous ({{relayMiscellaneous.total}})
+                            </accordion-heading>
+
+
+                            <div ng-repeat="(id,pieceOfEquipment) in equipmentpane.relayMiscellaneous | toArray | orderBy: ['type', '$key'] track by pieceOfEquipment.id"
+                               ng-click="showEquipmentDetails($event, pieceOfEquipment.id)"
+                               class="equipment-container"
+                               ng-class="{large : pieceOfEquipment.bins.length &gt; 1}"
+                               lvl-draggable="true" context-menu="true"
+                               data-target="equipment-context-menu-{{pieceOfEquipment.name}}">
+                                      <span class="piece-of-equipment {{pieceOfEquipment.type | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}}"
+                                          ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1,snowUpdated:pieceOfEquipment.snowReadinessProperty}">{{pieceOfEquipment.name}}</span>
+
+                                <div ng-if="!pieceOfEquipment.snowReadinessIndicator" ng-repeat="bins in pieceOfEquipment.materialTypes track by $index">
+                                <span class="flag {{pieceOfEquipment.type | lowercase}} notReady {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypes[$index].material}} {{pieceOfEquipment.materialTypes[$index].color}}" ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1}">
+                                    {{pieceOfEquipment.materialTypes[$index].material}}
+                                </span>
+                                </div>
+                        <div ng-if="pieceOfEquipment.snowReadinessIndicator">
+                          <span
+                            class="flag2 {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                            {{pieceOfEquipment.plowType}}</span> <span
+                            ng-show="pieceOfEquipment.secondIndicator"
+                            class="flagLoadType {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                            {{pieceOfEquipment.loadType}}</span>
+                        </div>
+                        <div id="equipment-context-menu-{{pieceOfEquipment.name}}" class="context-menu">
+                                <ul class="dropdown-menu">
+                                  <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isLoadStatusUpdatable" ng-click="updateLoadStatus(pieceOfEquipment);">Update Load</a></li>
+                                  <li><a class="menu-item" tabindex="-1"
+                                       ng-click="detachEquipment(pieceOfEquipment)">Detach Equipment</a>
+                                  </li>
+                                  <li><a class="menu-item" tabindex="-1"
+                                       ng-click="downEquipment(pieceOfEquipment)" ng-show="!pieceOfEquipment.snowReadiness.workingDown">Down Equipment</a></li>
+                                          <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isEquipmentDressable"
+                                  ng-click="UpdateSnowReadinessEquipment(pieceOfEquipment)">Snow
+                                 Update</a></li>
+                                </ul>
+                              </div>
+                            </div>
+                          </accordion-group>
+                        </accordion-group>
+                      </accordion>
+                    </div>
+                  </div>
+                  <div class="pane-subpane pane-subpane-equip pane-subpane-available flex rollover">
+                  <a href="" ng-click="toggleRolloverSubpanel()">
+                    <div class="header">
+                      <span class="title-text">Rollover</span> <span class="badge badgeMod">{{equipmentpane.rolloverEquipment}}</span>
+                      <span class="arrowleft"><i class="fa" ng-class="rollover.open ? 'fa-caret-down' : 'fa-caret-right'"></i></span>
+                    </div>
+                    </a>
+                    <div class="body" ng-class="{equipPad:rollover.open}">
+                      <accordion class="sub-categories panel-main" close-others="false">
+                        <accordion-group id="rollover" class="collapsible-heading" is-open="rollover.open"
+                                 ng-show="rollover.show">
+                          <accordion-group id="rolloverCollection" is-open="rolloverCollection.open"
+                                   ng-show="rolloverCollection.show">
+                            <accordion-heading>
+                              <i class="fa"
+                                 ng-class="rolloverCollection.open ? 'fa-minus-square-o' : 'fa-plus-square-o'"
+                                 ng-click="togglerOpen()"></i>
+                              Collection ({{rolloverCollection.total}})
+                            </accordion-heading>
+                            <div ng-repeat="(id,pieceOfEquipment) in equipmentpane.rolloverCollection | toArray | orderBy: ['type', '$key'] track by pieceOfEquipment.id"
+                               ng-click="showEquipmentDetails($event, pieceOfEquipment.id)"
+                               class="equipment-container"
+                               ng-class="{large : pieceOfEquipment.bins.length &gt; 1}"
+                               lvl-draggable="true" context-menu="true"
+                               data-target="equipment-context-menu-{{pieceOfEquipment.name}}">
+                                    <span class="piece-of-equipment {{pieceOfEquipment.type | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}}"
+                                        ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1,snowUpdated:pieceOfEquipment.snowReadinessProperty}">{{pieceOfEquipment.name}}</span>
+                                <div ng-if="!pieceOfEquipment.snowReadinessIndicator" ng-repeat="bins in pieceOfEquipment.materialTypes track by $index">
+                                <span class="flag {{pieceOfEquipment.type | lowercase}} notReady {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypes[$index].material}} {{pieceOfEquipment.materialTypes[$index].color}}" ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1}">
+                                    {{pieceOfEquipment.materialTypes[$index].material}}
+                                </span>
+                                </div>
+                        <div ng-if="pieceOfEquipment.snowReadinessIndicator">
+                          <span
+                            class="flag2 {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                            {{pieceOfEquipment.plowType}}</span> <span
+                            ng-show="pieceOfEquipment.secondIndicator"
+                            class="flagLoadType {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                            {{pieceOfEquipment.loadType}}</span>
+                        </div>
+                        <div id="equipment-context-menu-{{pieceOfEquipment.name}}" class="context-menu">
+                                <ul class="dropdown-menu">
+                                  
+                                  <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isLoadStatusUpdatable" ng-click="updateLoadStatus(pieceOfEquipment);">Update Load</a></li><li><a class="menu-item" tabindex="-1"
+                                       ng-click="detachEquipment(pieceOfEquipment)">Detach Equipment</a>
+                                  </li>
+                                  <li><a class="menu-item" tabindex="-1"
+                                       ng-click="downEquipment(pieceOfEquipment)" ng-show="!pieceOfEquipment.snowReadiness.workingDown">Down Equipment</a></li>
+                                          <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isEquipmentDressable"
+                                  ng-click="UpdateSnowReadinessEquipment(pieceOfEquipment)">Snow
+                                 Update</a></li>
+                                </ul>
+                              </div>
+                            </div>
+                          </accordion-group>
+                          <accordion-group id="rolloverRecycling" is-open="rolloverRecycling.open"
+                                   ng-show="rolloverRecycling.show">
+                            <accordion-heading>
+                              <i class="fa"
+                                 ng-class="rolloverRecycling.open ? 'fa-minus-square-o' : 'fa-plus-square-o'"
+                                 ng-click="togglerOpen()"></i>
+                              Recycling ({{equipmentpane.numRolloverRecycling}})
+                            </accordion-heading>
+                            <accordion-group id="rolloverRecyclingPaper"
+                                     is-open="rolloverRecyclingPaper.open"
+                                     ng-show="rolloverRecyclingPaper.show">
+                              <accordion-heading>
+                              <i class="fa"
+                                   ng-class="rolloverRecyclingPaper.open ? 'fa-minus-square-o' : 'fa-plus-square-o'"
+                                   ng-click="togglerOpen()"></i>
+                              Paper ({{rolloverRecyclingPaper.total}})
+                              </accordion-heading>
+                              <div ng-repeat="(id,pieceOfEquipment) in equipmentpane.rolloverRecyclingPaper | toArray | orderBy: ['type', '$key'] track by pieceOfEquipment.id"
+                                 ng-click="showEquipmentDetails($event, pieceOfEquipment.id)"
+                                 class="equipment-container"
+                                 ng-class="{large : pieceOfEquipment.bins.length &gt; 1}" lvl-draggable="true"
+                                 context-menu="true"
+                                 data-target="equipment-context-menu-{{pieceOfEquipment.name}}">
+                                      <span class="piece-of-equipment {{pieceOfEquipment.type | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}}"
+                                          ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1,snowUpdated:pieceOfEquipment.snowReadinessProperty}">{{pieceOfEquipment.name}}</span>
+                                  <div ng-if="!pieceOfEquipment.snowReadinessIndicator" ng-repeat="bins in pieceOfEquipment.materialTypes track by $index">
+                                <span class="flag {{pieceOfEquipment.type | lowercase}} notReady {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypes[$index].material}} {{pieceOfEquipment.materialTypes[$index].color}}" ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1}">
+                                    {{pieceOfEquipment.materialTypes[$index].material}}
+                                </span>
+                                  </div>
+                        <div ng-if="pieceOfEquipment.snowReadinessIndicator">
+                          <span
+                            class="flag2 {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                            {{pieceOfEquipment.plowType}}</span> <span
+                            ng-show="pieceOfEquipment.secondIndicator"
+                            class="flagLoadType {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                            {{pieceOfEquipment.loadType}}</span>
+                        </div>
+                        <div id="equipment-context-menu-{{pieceOfEquipment.name}}" class="context-menu">
+                                  <ul class="dropdown-menu">
+                                    <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isLoadStatusUpdatable" ng-click="updateLoadStatus(pieceOfEquipment);">Update Load</a></li>
+                                    <li><a class="menu-item" tabindex="-1"
+                                         ng-click="detachEquipment(pieceOfEquipment)">Detach Equipment</a>
+                                    </li>
+                                    <li><a class="menu-item" tabindex="-1"
+                                         ng-click="downEquipment(pieceOfEquipment)" ng-show="!pieceOfEquipment.snowReadiness.workingDown">Down Equipment</a>
+                                    </li>
+                                       <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isEquipmentDressable"
+                                  ng-click="UpdateSnowReadinessEquipment(pieceOfEquipment)">Snow
+                                 Update</a></li>
+                                  </ul>
+                                </div>
+                              </div>
+                            </accordion-group>
+                            <accordion-group id="rolloverRecyclingOrganics"
+                                     is-open="rolloverRecyclingOrganics.open"
+                                     ng-show="rolloverRecyclingOrganics.show">
+                              <accordion-heading>
+                                <i class="fa"
+                                   ng-class="rolloverRecyclingOrganics.open ? 'fa-minus-square-o' : 'fa-plus-square-o'"
+                                   ng-click="togglerOpen()"></i>
+                                Organics ({{rolloverRecyclingOrganics.total}})
+                              </accordion-heading>
+                              <div ng-repeat="(id,pieceOfEquipment) in equipmentpane.rolloverRecyclingOrganics | toArray | orderBy: ['type', '$key'] track by pieceOfEquipment.id"
+                                 ng-click="showEquipmentDetails($event, pieceOfEquipment.id)"
+                                 class="equipment-container"
+                                 ng-class="{large : pieceOfEquipment.bins.length &gt; 1}" lvl-draggable="true"
+                                 context-menu="true"
+                                 data-target="equipment-context-menu-{{pieceOfEquipment.name}}">
+                                      <span class="piece-of-equipment {{pieceOfEquipment.type | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}}"
+                                          ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1,snowUpdated:pieceOfEquipment.snowReadinessProperty}">{{pieceOfEquipment.name}}</span>
+                                  <div ng-if="!pieceOfEquipment.snowReadinessIndicator" ng-repeat="bins in pieceOfEquipment.materialTypes track by $index">
+
+                                <span class="flag {{pieceOfEquipment.type | lowercase}} notReady {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypes[$index].material}} {{pieceOfEquipment.materialTypes[$index].color}}" ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1}">
+                                    {{pieceOfEquipment.materialTypes[$index].material}}
+                                </span>
+                                  </div>
+                        <div ng-if="pieceOfEquipment.snowReadinessIndicator">
+                          <span
+                            class="flag2 {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                            {{pieceOfEquipment.plowType}}</span> <span
+                            ng-show="pieceOfEquipment.secondIndicator"
+                            class="flagLoadType {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}  {{pieceOfEquipment.materialTypeClass}}">
+                            {{pieceOfEquipment.loadType}}</span>
+                        </div>
+
+                        <div id="equipment-context-menu-{{pieceOfEquipment.name}}" class="context-menu">
+                                  <ul class="dropdown-menu">
+                                  <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isLoadStatusUpdatable" ng-click="updateLoadStatus(pieceOfEquipment);">Update Load</a></li>
+                                    <li><a class="menu-item" tabindex="-1"
+                                         ng-click="detachEquipment(pieceOfEquipment)">Detach Equipment</a>
+                                    </li>
+                                    <li><a class="menu-item" tabindex="-1"
+                                         ng-click="downEquipment(pieceOfEquipment)" ng-show="!pieceOfEquipment.snowReadiness.workingDown">Down Equipment</a>
+                                    </li>
+                                       <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isEquipmentDressable"
+                                  ng-click="UpdateSnowReadinessEquipment(pieceOfEquipment)">Snow
+                                 Update</a></li>
+                                  </ul>
+                                </div>
+                              </div>
+                            </accordion-group>
+                            <accordion-group id="rolloverRecyclingMGP" is-open="rolloverRecyclingMGP.open"
+                                     ng-show="rolloverRecyclingMGP.show">
+                              <accordion-heading>
+                                <i class="fa" ng-class="rolloverRecyclingMGP.open ? 'fa-minus-square-o' : 'fa-plus-square-o'"
+                                   ng-click="togglerOpen()"></i>
+                                MGP ({{rolloverRecyclingMGP.total}})
+                              </accordion-heading>
+                              <div ng-repeat="(id,pieceOfEquipment) in equipmentpane.rolloverRecyclingMGP | toArray | orderBy: ['type', '$key'] track by pieceOfEquipment.id"
+                                 ng-click="showEquipmentDetails($event, pieceOfEquipment.id)"
+                                 class="equipment-container"
+                                 ng-class="{large : pieceOfEquipment.bins.length &gt; 1}" lvl-draggable="true"
+                                 context-menu="true"
+                                 data-target="equipment-context-menu-{{pieceOfEquipment.name}}">
+                                      <span class="piece-of-equipment {{pieceOfEquipment.type | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}}"
+                                          ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1,snowUpdated:pieceOfEquipment.snowReadinessProperty}">{{pieceOfEquipment.name}}</span>
+                                  <div ng-if="!pieceOfEquipment.snowReadinessIndicator" ng-repeat="bins in pieceOfEquipment.materialTypes track by $index">
+                                <span class="flag {{pieceOfEquipment.type | lowercase}} notReady {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypes[$index].material}} {{pieceOfEquipment.materialTypes[$index].color}}" ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1}">
+                                    {{pieceOfEquipment.materialTypes[$index].material}}
+                                </span>
+                                  </div>
+                        <div ng-if="pieceOfEquipment.snowReadinessIndicator">
+                          <span
+                            class="flag2 {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                            {{pieceOfEquipment.plowType}}</span> <span
+                            ng-show="pieceOfEquipment.secondIndicator"
+                            class="flagLoadType {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                            {{pieceOfEquipment.loadType}}</span>
+                        </div>
+                        <div id="equipment-context-menu-{{pieceOfEquipment.name}}" class="context-menu">
+                                  <ul class="dropdown-menu">
+                                  <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isLoadStatusUpdatable" ng-click="updateLoadStatus(pieceOfEquipment);">Update Load</a></li>
+                                    <li><a class="menu-item" tabindex="-1"
+                                         ng-click="detachEquipment(pieceOfEquipment)">Detach Equipment</a>
+                                    </li>
+                                    <li><a class="menu-item" tabindex="-1"
+                                         ng-click="downEquipment(pieceOfEquipment)" ng-show="!pieceOfEquipment.snowReadiness.workingDown">Down Equipment</a>
+                                    </li>
+                                       <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isEquipmentDressable"
+                                  ng-click="UpdateSnowReadinessEquipment(pieceOfEquipment)">Snow
+                                 Update</a></li>
+                                  </ul>
+                                </div>
+                              </div>
+                            </accordion-group>
+                            <accordion-group id="rolloverRecyclingMisc" is-open="rolloverRecyclingMisc.open"
+                                     ng-show="rolloverRecyclingMisc.show">
+                              <accordion-heading>
+                                <i class="fa"
+                                   ng-class="rolloverRecyclingMisc.open ? 'fa-minus-square-o' : 'fa-plus-square-o'"
+                                   ng-click="togglerOpen()"></i>
+                                Recycling Misc ({{rolloverRecyclingMisc.total}})
+                              </accordion-heading>
+                              <div ng-repeat="(id,pieceOfEquipment) in equipmentpane.rolloverRecyclingMisc | toArray | orderBy: ['type', '$key'] track by pieceOfEquipment.id"
+                                 ng-click="showEquipmentDetails($event, pieceOfEquipment.id)"
+                                 class="equipment-container"
+                                 ng-class="{large : pieceOfEquipment.bins.length &gt; 1}" lvl-draggable="true"
+                                 context-menu="true"
+                                 data-target="equipment-context-menu-{{pieceOfEquipment.name}}">
+                                      <span class="piece-of-equipment {{pieceOfEquipment.type | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}}"
+                                          ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1,snowUpdated:pieceOfEquipment.snowReadinessProperty}">{{pieceOfEquipment.name}}</span>
+                                  <div ng-if="!pieceOfEquipment.snowReadinessIndicator" ng-repeat="bins in pieceOfEquipment.materialTypes track by $index">
+                                <span class="flag {{pieceOfEquipment.type | lowercase}} notReady {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypes[$index].material}} {{pieceOfEquipment.materialTypes[$index].color}}" ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1}">
+                                    {{pieceOfEquipment.materialTypes[$index].material}}
+                                </span>
+                                  </div>
+                        <div ng-if="pieceOfEquipment.snowReadinessIndicator">
+                          <span
+                            class="flag2 {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                            {{pieceOfEquipment.plowType}}</span> <span
+                            ng-show="pieceOfEquipment.secondIndicator"
+                            class="flagLoadType {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                            {{pieceOfEquipment.loadType}}</span>
+                        </div>
+                        <div id="equipment-context-menu-{{pieceOfEquipment.name}}" class="context-menu">
+                                  <ul class="dropdown-menu">
+                                  <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isLoadStatusUpdatable" ng-click="updateLoadStatus(pieceOfEquipment);">Update Load</a></li>
+                                    <li><a class="menu-item" tabindex="-1"
+                                         ng-click="detachEquipment(pieceOfEquipment)">Detach Equipment</a>
+                                    </li>
+                                    <li><a class="menu-item" tabindex="-1"
+                                         ng-click="downEquipment(pieceOfEquipment)" ng-show="!pieceOfEquipment.snowReadiness.workingDown">Down Equipment</a>
+                                    </li>
+                                       <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isEquipmentDressable"
+                                  ng-click="UpdateSnowReadinessEquipment(pieceOfEquipment)">Snow
+                                 Update</a></li>
+                                  </ul>
+                                </div>
+                              </div>
+                            </accordion-group>
+                          </accordion-group>
+                          <accordion-group id="rolloverMiscellaneous" is-open="rolloverMiscellaneous.open"
+                                   ng-show="rolloverMiscellaneous.show">
+                            <accordion-heading>
+                              <i class="fa"
+                                 ng-class="rolloverMiscellaneous.open ? 'fa-minus-square-o' : 'fa-plus-square-o'"
+                                 ng-click="togglerOpen()"></i>
+                              Miscellaneous ({{rolloverMiscellaneous.total}})
+                            </accordion-heading>
+                            <div ng-repeat="(id,pieceOfEquipment) in equipmentpane.rolloverMiscellaneous | toArray | orderBy: ['type', '$key'] track by pieceOfEquipment.id"
+                               ng-click="showEquipmentDetails($event, pieceOfEquipment.id)"
+                               class="equipment-container"
+                               ng-class="{large : pieceOfEquipment.bins.length &gt; 1}"
+                               lvl-draggable="true" context-menu="true"
+                               data-target="equipment-context-menu-{{pieceOfEquipment.name}}">
+                                    <span class="piece-of-equipment {{pieceOfEquipment.type | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}}"
+                                        ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1,snowUpdated:pieceOfEquipment.snowReadinessProperty}">{{pieceOfEquipment.name}}</span>
+                                <div ng-if="!pieceOfEquipment.snowReadinessIndicator" ng-repeat="bins in pieceOfEquipment.materialTypes track by $index">
+                                <span class="flag {{pieceOfEquipment.type | lowercase}} notReady {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypes[$index].material}} {{pieceOfEquipment.materialTypes[$index].color}}" ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1}">
+                                    {{pieceOfEquipment.materialTypes[$index].material}}
+                                </span>
+                                </div>
+                        <div ng-if="pieceOfEquipment.snowReadinessIndicator">
+                          <span
+                            class="flag2 {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                            {{pieceOfEquipment.plowType}}</span> <span
+                            ng-show="pieceOfEquipment.secondIndicator"
+                            class="flagLoadType {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                            {{pieceOfEquipment.loadType}}</span>
+                        </div>
+                        <div id="equipment-context-menu-{{pieceOfEquipment.name}}" class="context-menu">
+                                <ul class="dropdown-menu">
+                                <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isLoadStatusUpdatable" ng-click="updateLoadStatus(pieceOfEquipment);">Update Load</a></li>
+                                  <li><a class="menu-item" tabindex="-1"
+                                       ng-click="detachEquipment(pieceOfEquipment)">Detach Equipment</a>
+                                  </li>
+                                  <li><a class="menu-item" tabindex="-1"
+                                       ng-click="downEquipment(pieceOfEquipment)" ng-show="!pieceOfEquipment.snowReadiness.workingDown">Down Equipment</a></li>
+                                          <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isEquipmentDressable"
+                                  ng-click="UpdateSnowReadinessEquipment(pieceOfEquipment)">Snow
+                                 Update</a></li>
+                                </ul>
+                              </div>
+                            </div>
+                          </accordion-group>
+                           <accordion-group id="rolloverSnow" is-open="rolloverSnow.open"
+                                   ng-show="rolloverSnow.show">
+                            <accordion-heading>
+                              <i class="fa"
+                                 ng-class="rolloverSnow.open ? 'fa-minus-square-o' : 'fa-plus-square-o'"
+                                 ng-click="togglerOpen()"></i>
+                              Snow ({{rolloverSnow.total}})
+                            </accordion-heading>
+                            <div ng-repeat="(id,pieceOfEquipment) in equipmentpane.rolloverSnow | toArray | orderBy: ['type', '$key'] track by pieceOfEquipment.id"
+                               ng-click="showEquipmentDetails($event, pieceOfEquipment.id)"
+                               class="equipment-container"
+                               ng-class="{large : pieceOfEquipment.bins.length &gt; 1}"
+                               lvl-draggable="true" context-menu="true"
+                               data-target="equipment-context-menu-{{pieceOfEquipment.name}}">
+                                    <span class="piece-of-equipment {{pieceOfEquipment.type | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}}"
+                                        ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1,snowUpdated:pieceOfEquipment.snowReadinessProperty}">{{pieceOfEquipment.name}}</span>
+                                <div ng-if="!pieceOfEquipment.snowReadinessIndicator" ng-repeat="bins in pieceOfEquipment.materialTypes track by $index">
+                                <span class="flag {{pieceOfEquipment.type | lowercase}} notReady {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypes[$index].material}} {{pieceOfEquipment.materialTypes[$index].color}}" ng-class="{dualbins : pieceOfEquipment.bins.length &gt; 1}">
+                                    {{pieceOfEquipment.materialTypes[$index].material}}
+                                </span>
+                                </div>
+                        <div ng-if="pieceOfEquipment.snowReadinessIndicator">
+                          <span
+                            class="flag2 {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                            {{pieceOfEquipment.plowType}}</span> <span
+                            ng-show="pieceOfEquipment.secondIndicator"
+                            class="flagLoadType {{'Snow' | lowercase}} {{pieceOfEquipment.subType | convertTypeToClass}} {{pieceOfEquipment.materialTypeClass}}">
+                            {{pieceOfEquipment.loadType}}</span>
+                        </div>
+                        <div id="equipment-context-menu-{{pieceOfEquipment.name}}" class="context-menu">
+                                <ul class="dropdown-menu">
+                                <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isLoadStatusUpdatable" ng-click="updateLoadStatus(pieceOfEquipment);">Update Load</a></li>
+                                  <li><a class="menu-item" tabindex="-1"
+                                       ng-click="detachEquipment(pieceOfEquipment)">Detach Equipment</a>
+                                  </li>
+                                  <li><a class="menu-item" tabindex="-1"
+                                       ng-click="downEquipment(pieceOfEquipment)" ng-show="!pieceOfEquipment.snowReadiness.workingDown">Down Equipment</a></li>
+                                          <li><a class="menu-item" tabindex="-1" ng-show="pieceOfEquipment.isEquipmentDressable"
+                                  ng-click="UpdateSnowReadinessEquipment(pieceOfEquipment)">Snow
+                                 Update</a></li>
+                                </ul>
+                              </div>
+                            </div>
+                          </accordion-group>
+                        </accordion-group>
+                      </accordion>
+                    </div>
+                  </div>
+                </div>
+              </div>
+          </div>
+        </perfect-scrollbar>
+   </div>
+</div>

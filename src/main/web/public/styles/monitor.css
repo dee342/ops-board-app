@@ -1,0 +1,221 @@
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #000000;
+}
+#logo-white {
+    height: 30px;
+    background-color: #777777;
+    float: right;
+    position: relative;
+    top: 5px;
+}
+
+#logo-red {
+    height: 30px;
+    background-color: #777777;
+    float: right;
+    position: relative;
+    top: 5px;
+}
+
+.contents {
+    top: 30px;
+    position: relative;
+    padding: 10px;
+    width: 110px;
+    height: 95px;
+    font-family: 'Open Sans', sans-serif;
+}
+.btn-top {
+    font-family: 'Open Sans', sans-serif;
+    font-weight: bold;
+    width: 100px;
+    height: 20px;
+    border-color: black;
+    font-size: 12px;
+    background-color: #63c44d;
+    color: black;
+    float: left;
+    margin-bottom: 5px;
+    border-radius: 5px;
+    text-align: center;
+    vertical-align: middle;
+    position: relative;
+}
+.btn-bottom {
+    font-family: 'Open Sans', sans-serif;
+    width: 300px;
+    height: 20px;
+    border-color: black;
+    font-size: 12px;
+    background-color: black;
+    color: white;
+    float: right;
+    margin-left: 5px;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
+.offline {
+    width: 20px;
+    height: 20px;
+    border-radius: 2px;
+    background-color: #d32f2f;
+    float: right;
+    margin-left: 200px;
+}
+.online {
+    width: 20px;
+    height: 20px;
+    border-radius: 2px;
+    background-color: #63c44d;
+    float: right;
+    margin-left: 200px;
+}
+.online-text {
+    font-family: 'Open Sans', sans-serif;
+    font-size: 12px;
+    background-color: black;
+    color: white;
+    float: right;
+    margin-left: 5px;
+}
+
+.top {
+    font-size: 12px;
+    font-weight: bold;
+    height: 16px;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
+.middle {
+    font-size: 22px;
+    font-weight: bold;
+    height: 50px;
+    width: 100%;
+    text-align: center;
+    line-height: 48px;
+    background-color: #000;
+}
+.bottom {
+    font-size: 12px;
+    font-weight: bold;
+    height: 16px;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
+.color-green {
+    background-color: #63c44d;
+}
+.color-red {
+    background-color: #d32f2f;
+}
+.text-color-red{
+    text-color: #d32f2f;
+}
+.text-color-green{
+    text-color: #63c44d
+}
+.odd {
+	background-color: #1C1D22;
+}
+
+.thumbnail{
+    /*border-color: black;*/
+    /*border-radius: 10px;*/
+    width: 110px;
+    height: 95px;
+    max-width: 110px;
+    max-height: 95px;
+    text-align: center;
+    vertical-align: middle;
+    font-family: 'Open Sans', sans-serif;
+    font-weight: bold;
+    margin-right: 10px;
+    border-style: none;
+}
+.active-top {
+    border: solid black;
+    background-color: black;
+    color: white;
+    border-top-color: #0072bc;
+    margin-left: -20px;
+    top: 1px;
+    position: absolute;
+    font-family: 'Open Sans', sans-serif;
+    font-weight: bold;
+    color: #ffffff;
+    font-size: 15px;
+    border-bottom-width: 15px;
+    padding-top: 5px;
+    padding-right: 5px;
+    padding-left: 20px;
+}
+.active {
+    font-family: 'Open Sans', sans-serif;
+    font-size: 20px;
+    font-weight: bold;
+    color: #ffffff;
+    background-color: transparent;
+    padding: 10px;
+}
+.top-menu {
+    width: 100%;
+    margin: auto;
+}
+.pull-left {
+    float: left !important;
+}
+.pull-right {
+    float: right !important;
+}
+#clear {
+    clear: both;
+}
+.horizontal {
+    display: table-cell;
+    background-color: transparent;
+}
+.border-red{
+    border: 1px solid #d32f2f;
+    color: #d32f2f;
+}
+.border-green {
+    border: 1px solid #63c44d;
+    color: #63c44d;
+}
+.kiosks {
+    top: 30px;
+    border: 1px solid #00000f;
+    background-color: #63c44d;
+    width: 110px;
+    height: 95px;
+    padding: 5px;
+    position: relative;
+}
+.sidenav {
+    width: 100%;
+    height: 95px;
+    display: table-cell;
+    text-align: center;
+    vertical-align: middle;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 18px;
+    font-weight: bold;
+    color: #777777;
+    padding-left: 25px;
+}
+.background-red {
+    background-color: #d32f2f;
+}
+.background-green {
+    background-color: #63c44d;
+}
+.text-red {
+
+    color: #d32f2f;
+}
+.text-green {
+    color: #63c44d;
+}

@@ -1,0 +1,1126 @@
+<!DOCTYPE html><html lang="en"><head><title>public\scripts\controllers\equipment-controller</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../../"><meta name="groc-document-path" content="public\scripts\controllers\equipment-controller"><meta name="groc-project-path" content="public\scripts\controllers\equipment-controller.js"><link rel="stylesheet" type="text/css" media="all" href="../../../assets/style.css"><script type="text/javascript" src="../../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">public\scripts\controllers\equipment-controller.js</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="hljs-pi">'use strict'</span>;
+
+angular.module(<span class="hljs-string">'OpsBoard'</span>)
+  .controller(<span class="hljs-string">'EquipmentCtrl'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($scope, $modal, $log, OpsBoardRepository, states, binStatus, materialGroups, materialSubGroups, groups, plowDirections)</span> </span>{
+
+    $scope.equipment = OpsBoardRepository.getEquipment();
+    $scope.materials = OpsBoardRepository.getMaterials();</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>State counts </p></div></div><div class="code"><div class="wrapper">    $scope.numDetached = <span class="hljs-number">0</span>;
+    $scope.numDown = <span class="hljs-number">0</span>;
+    $scope.numPendingLoad=<span class="hljs-number">0</span>;
+    $scope.numPendingAttach = <span class="hljs-number">0</span>;
+    $scope.numPendingDetach = <span class="hljs-number">0</span>;</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>&quot;Available&quot; Group counts </p></div></div><div class="code"><div class="wrapper">    $scope.available = {
+        open: <span class="hljs-literal">true</span>,
+        show: <span class="hljs-literal">false</span>,
+        total: <span class="hljs-number">0</span>
+    };
+    $scope.alleyTrucks = {
+      open: <span class="hljs-literal">true</span>,
+      show: <span class="hljs-literal">false</span>,
+      total: <span class="hljs-number">0</span>
+    };
+    $scope.dualBins = {
+      open: <span class="hljs-literal">true</span>,
+      show: <span class="hljs-literal">false</span>,
+      total: <span class="hljs-number">0</span>
+    };
+    $scope.ezPacks = {
+      open: <span class="hljs-literal">true</span>,
+      show: <span class="hljs-literal">false</span>,
+      total: <span class="hljs-number">0</span>
+    };
+    $scope.hoistFittedChassis = {
+      open: <span class="hljs-literal">true</span>,
+      show: <span class="hljs-literal">false</span>,
+      total: <span class="hljs-number">0</span>
+    };
+    $scope.mechanicalBrooms = {
+      open: <span class="hljs-literal">true</span>,
+      show: <span class="hljs-literal">false</span>,
+      total: <span class="hljs-number">0</span>
+    };
+    $scope.miscellaneous = {
+      open: <span class="hljs-literal">true</span>,
+      show: <span class="hljs-literal">false</span>,
+      total: <span class="hljs-number">0</span>
+    };
+    $scope.rearLoaders = {
+      open: <span class="hljs-literal">true</span>,
+      show: <span class="hljs-literal">false</span>,
+      total: <span class="hljs-number">0</span>
+    };
+    $scope.roRos = {
+      open: <span class="hljs-literal">true</span>,
+      show: <span class="hljs-literal">false</span>,
+      total: <span class="hljs-number">0</span>
+    };
+    $scope.snow = {
+      open: <span class="hljs-literal">true</span>,
+      show: <span class="hljs-literal">false</span>,
+      total: <span class="hljs-number">0</span>
+    };</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><pre><code>             Pending                     </code></pre></div></div><div class="code"><div class="wrapper">    $scope.pending = {
+        open: <span class="hljs-literal">true</span>,
+        show: <span class="hljs-literal">true</span>
+    };
+    
+    $scope.pendingLoad = {
+            open: <span class="hljs-literal">true</span>,
+            show: <span class="hljs-literal">true</span>
+        };
+    $scope.pendingAttach = {
+        open: <span class="hljs-literal">true</span>,
+        show: <span class="hljs-literal">true</span>
+    };
+    $scope.pendingDetach = {
+        open:   <span class="hljs-literal">true</span>,
+        show:   <span class="hljs-literal">true</span>
+    };</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><pre><code>               Relay                              </code></pre></div></div><div class="code"><div class="wrapper">    $scope.relay = {
+      open: <span class="hljs-literal">true</span>,
+      show: <span class="hljs-literal">true</span>,
+      total: <span class="hljs-number">0</span>
+    };
+    $scope.relayCollection = {
+      open: <span class="hljs-literal">true</span>,
+      show: <span class="hljs-literal">false</span>,
+      total: <span class="hljs-number">0</span>
+    };
+    $scope.relayRecycling = {
+      open: <span class="hljs-literal">true</span>,
+      show: <span class="hljs-literal">false</span>,
+      total: <span class="hljs-number">0</span>
+    };
+    $scope.relayMiscellaneous = {
+      open: <span class="hljs-literal">true</span>,
+      show: <span class="hljs-literal">false</span>,
+      total: <span class="hljs-number">0</span>
+    };
+     $scope.relaySnow = {
+      open: <span class="hljs-literal">true</span>,
+      show: <span class="hljs-literal">false</span>,
+      total: <span class="hljs-number">0</span>
+    };
+    $scope.relayRecyclingPaper = {
+      open: <span class="hljs-literal">true</span>,
+      show: <span class="hljs-literal">false</span>,
+      total: <span class="hljs-number">0</span>
+    };
+    $scope.relayRecyclingMGP = {
+      open: <span class="hljs-literal">true</span>,
+      show: <span class="hljs-literal">false</span>,
+      total: <span class="hljs-number">0</span>
+    };
+    $scope.relayRecyclingOrganics = {
+      open: <span class="hljs-literal">true</span>,
+      show: <span class="hljs-literal">false</span>,
+      total: <span class="hljs-number">0</span>
+    };
+    $scope.relayRecyclingMisc = {
+      open: <span class="hljs-literal">true</span>,
+      show: <span class="hljs-literal">false</span>,
+      total: <span class="hljs-number">0</span>
+    };</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><pre><code>               Relay                              
+               Rollover                              </code></pre></div></div><div class="code"><div class="wrapper">    $scope.rollover = {
+      open: <span class="hljs-literal">true</span>,
+      show: <span class="hljs-literal">true</span>,
+      total: <span class="hljs-number">0</span>
+    };
+    $scope.rolloverCollection = {
+      open: <span class="hljs-literal">true</span>,
+      show: <span class="hljs-literal">false</span>,
+      total: <span class="hljs-number">0</span>
+    };
+    $scope.rolloverRecycling = {
+      open: <span class="hljs-literal">true</span>,
+      show: <span class="hljs-literal">false</span>,
+      total: <span class="hljs-number">0</span>
+    };
+    $scope.rolloverMiscellaneous = {
+      open: <span class="hljs-literal">true</span>,
+      show: <span class="hljs-literal">false</span>,
+      total: <span class="hljs-number">0</span>
+    };
+    $scope.rolloverSnow = {
+      open: <span class="hljs-literal">true</span>,
+      show: <span class="hljs-literal">false</span>,
+      total: <span class="hljs-number">0</span>
+    };    
+    $scope.rolloverRecyclingPaper = {
+      open: <span class="hljs-literal">true</span>,
+      show: <span class="hljs-literal">false</span>,
+      total: <span class="hljs-number">0</span>
+    };
+    $scope.rolloverRecyclingMGP = {
+      open: <span class="hljs-literal">true</span>,
+      show: <span class="hljs-literal">false</span>,
+      total: <span class="hljs-number">0</span>
+    };
+    $scope.rolloverRecyclingOrganics = {
+      open: <span class="hljs-literal">true</span>,
+      show: <span class="hljs-literal">false</span>,
+      total: <span class="hljs-number">0</span>
+    };
+    $scope.rolloverRecyclingMisc = {
+      open: <span class="hljs-literal">true</span>,
+      show: <span class="hljs-literal">false</span>,
+      total: <span class="hljs-number">0</span>
+    };</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Detached </p></div></div><div class="code"><div class="wrapper">    $scope.detached = {
+        open: <span class="hljs-literal">true</span>,
+        show: <span class="hljs-literal">true</span>,
+        total: <span class="hljs-number">0</span>
+    };</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Down </p></div></div><div class="code"><div class="wrapper">    $scope.down = {
+        open: <span class="hljs-literal">true</span>,
+        show: <span class="hljs-literal">true</span>,
+        total: <span class="hljs-number">0</span>
+    };</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>State filters </p></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Separated out from &quot;scoped&quot; method of same name so it could be used with &quot;Available&quot; group filters</p></div></div><div class="code"><div class="wrapper">    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">availableFilter</span><span class="hljs-params">(equipment)</span> </span>{
+      <span class="hljs-keyword">var</span> results = {},
+        relayResults = relayFilter(equipment),
+        rolloverResults = rolloverFilter(equipment);
+
+      angular.forEach(equipment, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(value, key)</span> </span>{
+        <span class="hljs-keyword">if</span> (!value.assigned &amp;&amp; value.state === states.equipment.available &amp;&amp; !relayResults[key] &amp;&amp; !rolloverResults[key]) {
+          value = appendBinStatus(value);
+          results[key] = value;
+        }
+      });
+
+      <span class="hljs-keyword">return</span> results;
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">relayFilter</span><span class="hljs-params">(equipment)</span> </span>{
+      <span class="hljs-keyword">var</span> results = {};
+
+      angular.forEach(equipment, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(value, equipKey)</span> </span>{
+        <span class="hljs-keyword">var</span> bins = value.getFormattedBins($scope.materials)
+        angular.forEach(bins, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(bin, binKey)</span> </span>{
+          <span class="hljs-keyword">if</span> (!bin) value = appendBinStatus(value);
+          <span class="hljs-keyword">if</span> (bin.status.toUpperCase() === binStatus.equipment.relay &amp;&amp; value.state === states.equipment.available &amp;&amp; !value.assigned) {
+            results[equipKey] = value;
+          }
+        });
+      });
+
+      <span class="hljs-keyword">return</span> results;
+    }
+    
+    $scope.relayDownFilter = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment)</span> </span>{
+        <span class="hljs-keyword">var</span> results = {};
+
+        angular.forEach(equipment, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(value, equipKey)</span> </span>{
+          <span class="hljs-keyword">var</span> bins = value.getFormattedBins($scope.materials)
+          angular.forEach(bins, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(bin, binKey)</span> </span>{
+            <span class="hljs-keyword">if</span> (!bin) value = appendBinStatus(value);
+            <span class="hljs-keyword">if</span> (bin.status.toUpperCase() === binStatus.equipment.relay &amp;&amp; value.state === states.equipment.down &amp;&amp; !value.assigned) {
+              results[equipKey] = value;
+            }
+          });
+        });
+
+        <span class="hljs-keyword">return</span> results;
+      }
+
+    $scope.numRelay = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment)</span> </span>{
+      <span class="hljs-keyword">var</span> relayResults = relayFilter(equipment),
+        collection = filterByMaterialGroup(relayResults, materialGroups.equipment.collection, binStatus.equipment.relay),
+        miscellaneous = filterByMaterialGroup(relayResults, materialGroups.equipment.miscellaneous, binStatus.equipment.relay),
+        recycling = $scope.numRelayRecycling(equipment),
+        cnt = <span class="hljs-built_in">Object</span>.keys(collection)
+        .length + <span class="hljs-built_in">Object</span>.keys(miscellaneous)
+        .length + recycling;
+
+      <span class="hljs-keyword">if</span> (cnt &gt; <span class="hljs-number">0</span>) $scope.relay.show = <span class="hljs-literal">true</span>;
+      <span class="hljs-keyword">return</span> cnt;
+    }
+
+    $scope.numRelayRecycling = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment)</span> </span>{
+      $scope.relayRecycling.show = <span class="hljs-literal">false</span>;
+      <span class="hljs-keyword">var</span> results = relayFilter(equipment),
+        recycleResults = filterByMaterialGroup(results, materialGroups.equipment.recycling, binStatus.equipment.relay),
+        cnt = <span class="hljs-number">0</span>;
+      <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i <span class="hljs-keyword">in</span> materialSubGroups.equipment) {
+        <span class="hljs-keyword">var</span> obj = filterByMaterialSubGroup(recycleResults, materialSubGroups.equipment[i], binStatus.equipment.relay);
+        cnt += <span class="hljs-built_in">Object</span>.keys(obj)
+          .length;
+      }
+      <span class="hljs-keyword">if</span> (cnt &gt; <span class="hljs-number">0</span>) $scope.relayRecycling.show = <span class="hljs-literal">true</span>;
+      <span class="hljs-keyword">if</span>(cnt == <span class="hljs-number">0</span>){
+    	  <span class="hljs-keyword">var</span> downEquipment = $scope.downFilter(equipment); <span class="hljs-comment">// Returns all down equipment</span>
+    	  <span class="hljs-keyword">var</span> relayRecyclingInDown = filterByMaterialGroup(downEquipment, materialGroups.equipment.recycling, binStatus.equipment.relay); <span class="hljs-comment">// Returns equipment of type relay recycling that are down.</span>
+    	  <span class="hljs-keyword">if</span>(<span class="hljs-built_in">Object</span>.keys(relayRecyclingInDown).length &gt; <span class="hljs-number">0</span>)
+    		  $scope.relayRecycling.show = <span class="hljs-literal">true</span>;
+      }
+      <span class="hljs-keyword">return</span> cnt;
+    }
+
+
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">rolloverFilter</span><span class="hljs-params">(equipment)</span> </span>{
+      <span class="hljs-keyword">var</span> results = {};
+
+      angular.forEach(equipment, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(value, equipKey)</span> </span>{
+        <span class="hljs-keyword">var</span> bins = value.getFormattedBins($scope.materials)
+        angular.forEach(bins, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(bin, binKey)</span> </span>{
+          <span class="hljs-keyword">if</span> (!bin) value = appendBinStatus(value);
+          <span class="hljs-keyword">if</span> (bin.status.toUpperCase() === binStatus.equipment.rollover &amp;&amp; value.state === states.equipment.available &amp;&amp; !value.assigned) {
+            results[equipKey] = value;
+          }
+        });
+      });
+
+      <span class="hljs-keyword">return</span> results;
+    }
+
+    $scope.numRollover = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment)</span> </span>{
+      <span class="hljs-keyword">var</span> rolloverResults = rolloverFilter(equipment),
+        collection = filterByMaterialGroup(rolloverResults, materialGroups.equipment.collection, binStatus.equipment.rollover),
+        miscellaneous = filterByMaterialGroup(rolloverResults, materialGroups.equipment.miscellaneous, binStatus.equipment.rollover),
+        recycling = $scope.numRolloverRecycling(equipment),
+        cnt = <span class="hljs-built_in">Object</span>.keys(collection)
+        .length + <span class="hljs-built_in">Object</span>.keys(miscellaneous)
+        .length + recycling;
+
+      <span class="hljs-keyword">if</span> (cnt &gt; <span class="hljs-number">0</span>) $scope.rollover.show = <span class="hljs-literal">true</span>;
+      <span class="hljs-keyword">return</span> cnt;
+    }
+
+    $scope.numRolloverRecycling = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment)</span> </span>{
+      $scope.rolloverRecycling.show = <span class="hljs-literal">false</span>;
+      <span class="hljs-keyword">var</span> results = rolloverFilter(equipment),
+        recycleResults = filterByMaterialGroup(results, materialGroups.equipment.recycling, binStatus.equipment.rollover),
+        cnt = <span class="hljs-number">0</span>;
+      <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i <span class="hljs-keyword">in</span> materialSubGroups.equipment) {
+        <span class="hljs-keyword">var</span> obj = filterByMaterialSubGroup(recycleResults, materialSubGroups.equipment[i], binStatus.equipment.rollover);
+        cnt += <span class="hljs-built_in">Object</span>.keys(obj)
+          .length;
+      }
+      <span class="hljs-keyword">if</span> (cnt &gt; <span class="hljs-number">0</span>) $scope.rolloverRecycling.show = <span class="hljs-literal">true</span>;
+      <span class="hljs-keyword">if</span>(cnt == <span class="hljs-number">0</span>){
+    	  <span class="hljs-keyword">var</span> downEquipment = $scope.downFilter(equipment); <span class="hljs-comment">// Returns all down equipment</span>
+    	  <span class="hljs-keyword">var</span> rolloverRecyclingInDown = filterByMaterialGroup(downEquipment, materialGroups.equipment.recycling, binStatus.equipment.relay); <span class="hljs-comment">// Returns equipment of type rollover recycling that are down.</span>
+    	  <span class="hljs-keyword">if</span>(<span class="hljs-built_in">Object</span>.keys(rolloverRecyclingInDown).length &gt; <span class="hljs-number">0</span>)
+    		  $scope.rolloverRecycling.show = <span class="hljs-literal">true</span>;
+      }
+      <span class="hljs-keyword">return</span> cnt;
+    }
+
+    $scope.numAvailable = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment)</span> </span>{
+      <span class="hljs-keyword">var</span> results = availableFilter(equipment);
+
+      <span class="hljs-keyword">return</span> <span class="hljs-built_in">Object</span>.keys(results)
+        .length;
+    };
+
+
+    $scope.detachedFilter = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment)</span> </span>{
+      <span class="hljs-keyword">var</span> results = {};
+
+      angular.forEach(equipment, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(value, key)</span> </span>{
+        <span class="hljs-keyword">if</span> (value.state === states.equipment.detached) {
+          value = appendBinStatus(value);
+          results[key] = value;
+        }
+      });
+
+      $scope.numDetached = <span class="hljs-built_in">Object</span>.keys(results)
+        .length;
+
+      <span class="hljs-keyword">return</span> results;
+    };
+
+    $scope.numDown = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment)</span> </span>{
+      <span class="hljs-keyword">var</span> results = $scope.downFilter(equipment);
+
+      <span class="hljs-keyword">return</span> <span class="hljs-built_in">Object</span>.keys(results)
+        .length;
+    };
+
+    $scope.downFilter = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment)</span> </span>{
+      <span class="hljs-keyword">var</span> results = {};
+
+      angular.forEach(equipment, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(value, key)</span> </span>{
+        <span class="hljs-keyword">if</span> (value.state === states.equipment.down) {
+          value = appendBinStatus(value);
+          results[key] = value;
+        }
+      });
+
+      <span class="hljs-keyword">return</span> results;
+    };
+    
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">isAnyEquipmentOnLocation</span><span class="hljs-params">(equipment)</span> </span>{
+        <span class="hljs-keyword">var</span> onLocation = <span class="hljs-literal">false</span>;
+        angular.forEach(equipment, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(value, key)</span> </span>{
+          <span class="hljs-keyword">if</span> (!onLocation &amp;&amp; states.equipment.onLocation.indexOf(value.state) &gt;= <span class="hljs-number">0</span>) {
+              onLocation = <span class="hljs-literal">true</span>;;
+          }
+        });
+
+        <span class="hljs-keyword">return</span> onLocation;
+      };    
+
+    $scope.pendingAttachFilter = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment)</span> </span>{
+      <span class="hljs-keyword">var</span> results = {};
+
+      angular.forEach(equipment, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(value, key)</span> </span>{
+        <span class="hljs-keyword">if</span> (value.state === states.equipment.pendingAttach) {
+          value = appendBinStatus(value);
+          results[key] = value;
+        }
+      });
+
+      $scope.numPendingAttach = <span class="hljs-built_in">Object</span>.keys(results)
+        .length;
+
+      <span class="hljs-keyword">return</span> results;
+    };
+
+    $scope.range = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(start, stop, step)</span> </span>{
+      <span class="hljs-keyword">if</span> (<span class="hljs-built_in">arguments</span>.length &lt;= <span class="hljs-number">1</span>) {
+        stop = start || <span class="hljs-number">0</span>;
+        start = <span class="hljs-number">0</span>;
+      }
+      step = <span class="hljs-built_in">arguments</span>[<span class="hljs-number">2</span>] || <span class="hljs-number">1</span>;
+
+      <span class="hljs-keyword">var</span> length = <span class="hljs-built_in">Math</span>.max(<span class="hljs-built_in">Math</span>.ceil((stop - start) / step), <span class="hljs-number">0</span>);
+      <span class="hljs-keyword">var</span> idx = <span class="hljs-number">0</span>;
+      <span class="hljs-keyword">var</span> range = <span class="hljs-built_in">Array</span>(length);
+
+      <span class="hljs-keyword">while</span> (idx &lt; length) {
+        range[idx++] = start;
+        start += step;
+      }
+
+      <span class="hljs-keyword">return</span> range;
+    }
+
+    $scope.pendingDetachFilter = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment)</span> </span>{
+      <span class="hljs-keyword">var</span> results = {};
+
+      angular.forEach(equipment, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(value, key)</span> </span>{
+        <span class="hljs-keyword">if</span> (value.state === states.equipment.pendingDetach) {
+          value = appendBinStatus(value);
+          results[key] = value;
+        }
+      });
+
+      $scope.numPendingDetach = <span class="hljs-built_in">Object</span>.keys(results)
+        .length;
+
+      <span class="hljs-keyword">return</span> results;
+    };
+    
+    $scope.pendingLoadFilter = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment)</span> </span>{
+        <span class="hljs-keyword">var</span> results = {};
+
+        angular.forEach(equipment, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(value, key)</span> </span>{
+          <span class="hljs-keyword">if</span> (value.state === states.equipment.pendingLoad) {
+            value = appendBinStatus(value);
+            results[key] = value;
+          }
+        });
+
+        $scope.numPendingLoad = <span class="hljs-built_in">Object</span>.keys(results)
+          .length;
+
+        <span class="hljs-keyword">return</span> results;
+      };</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>&quot;Available&quot; group filters </p></div></div><div class="code"><div class="wrapper">    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">appendBinStatus</span><span class="hljs-params">(equipment)</span> </span>{
+      <span class="hljs-keyword">if</span> (!equipment.bins)
+        equipment.bins = [];
+      <span class="hljs-keyword">return</span> equipment;
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">filterByGroup</span><span class="hljs-params">(list, group)</span> </span>{
+        <span class="hljs-keyword">var</span> results = {};
+
+        angular.forEach(list, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(value, key)</span> </span>{
+          <span class="hljs-keyword">if</span>($scope.board.location === value.currentLocation) {
+            <span class="hljs-keyword">if</span> (value.hasOwnProperty(<span class="hljs-string">'group'</span>) &amp;&amp; value.group === group) {
+              value = appendBinStatus(value);
+              results[key] = value;
+            }
+          }
+        });
+
+        <span class="hljs-keyword">return</span> results;
+      };
+
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">filterByMaterialGroup</span><span class="hljs-params">(list, group, status)</span> </span>{
+      <span class="hljs-keyword">var</span> results = {};
+
+      angular.forEach(list, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment, equipKey)</span> </span>{
+        <span class="hljs-keyword">var</span> bins = equipment.getFormattedBins($scope.materials)
+        angular.forEach(bins, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(bin, binKey)</span> </span>{
+          <span class="hljs-keyword">var</span> material;
+          <span class="hljs-keyword">if</span> (!bin || !bin.uniqueId) <span class="hljs-keyword">return</span>;
+          <span class="hljs-keyword">if</span> (bin.uniqueId) {
+            <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i <span class="hljs-keyword">in</span> $scope.materials) {
+              <span class="hljs-keyword">if</span> ($scope.materials[i].uniqueId == bin.uniqueId)
+                material = $scope.materials[i];
+            }
+          }
+          <span class="hljs-keyword">if</span> (material &amp;&amp; material.group.toUpperCase() === group &amp;&amp; bin.status.toUpperCase() === status)
+            results[equipKey] = equipment;
+        });
+      });
+
+      <span class="hljs-keyword">return</span> results;
+    };
+
+
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">filterByMaterialSubGroup</span><span class="hljs-params">(list, subGroup, status)</span> </span>{
+      <span class="hljs-keyword">var</span> results = {};
+
+      angular.forEach(list, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment, equipKey)</span> </span>{
+        <span class="hljs-keyword">var</span> bins = equipment.getFormattedBins($scope.materials)
+        angular.forEach(bins, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(bin, binKey)</span> </span>{
+          <span class="hljs-keyword">var</span> material;
+          <span class="hljs-keyword">if</span> (!bin || !bin.uniqueId) <span class="hljs-keyword">return</span>;
+          <span class="hljs-keyword">if</span> (bin.uniqueId) {
+            <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i <span class="hljs-keyword">in</span> $scope.materials) {
+              <span class="hljs-keyword">if</span> ($scope.materials[i].uniqueId == bin.uniqueId)
+                material = $scope.materials[i];
+            }
+          }
+          <span class="hljs-keyword">if</span> (material &amp;&amp; material.group.toUpperCase() === materialGroups.equipment.recycling &amp;&amp; material.subGroup.toUpperCase() === subGroup &amp;&amp; bin.status.toUpperCase() === status)
+            results[equipKey] = equipment;
+        });
+      });
+
+      <span class="hljs-keyword">return</span> results;
+    };
+
+    $scope.alleyTruckFilter = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment)</span> </span>{
+      <span class="hljs-keyword">var</span> results = filterByGroup(equipment, groups.equipment.alleyTruck);
+      <span class="hljs-keyword">var</span> availableResults = availableFilter(results);
+
+      $scope.alleyTrucks.show = <span class="hljs-literal">false</span>;
+      <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> key <span class="hljs-keyword">in</span> availableResults) {
+        <span class="hljs-keyword">var</span> r = availableResults[key];
+        <span class="hljs-keyword">if</span> (r.state != states.equipment.detached) {
+          $scope.alleyTrucks.show = <span class="hljs-literal">true</span>;
+          <span class="hljs-keyword">break</span>;
+        }
+      }
+      $scope.alleyTrucks.total = <span class="hljs-built_in">Object</span>.keys(availableResults).length;
+      <span class="hljs-keyword">if</span> ($scope.alleyTrucks.total == <span class="hljs-number">0</span> &amp;&amp; isAnyEquipmentOnLocation(results)) {
+          $scope.alleyTrucks.show = <span class="hljs-literal">true</span>;
+      }
+
+      <span class="hljs-keyword">return</span> availableResults;
+    };
+
+    
+    $scope.dualBinFilter = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment)</span> </span>{
+      <span class="hljs-keyword">var</span> results = filterByGroup(equipment, groups.equipment.dualBins);
+      <span class="hljs-keyword">var</span> availableResults = availableFilter(results);
+
+      $scope.dualBins.show = <span class="hljs-literal">false</span>;
+      <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> key <span class="hljs-keyword">in</span> availableResults) {
+        <span class="hljs-keyword">var</span> r = availableResults[key];
+        <span class="hljs-keyword">if</span> (r.state != states.equipment.detached) {
+          $scope.dualBins.show = <span class="hljs-literal">true</span>;
+          <span class="hljs-keyword">break</span>;
+        }
+      }
+      $scope.dualBins.total = <span class="hljs-built_in">Object</span>.keys(availableResults)
+        .length;
+      <span class="hljs-keyword">if</span>($scope.dualBins.total == <span class="hljs-number">0</span> &amp;&amp; isAnyEquipmentOnLocation(results)) {
+    		  $scope.dualBins.show = <span class="hljs-literal">true</span>;
+      }
+
+      <span class="hljs-keyword">return</span> availableResults;
+    };
+
+    $scope.ezPackFilter = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment)</span> </span>{
+      <span class="hljs-keyword">var</span> results = filterByGroup(equipment, groups.equipment.ezPacks);
+      <span class="hljs-keyword">var</span> availableResults = availableFilter(results);
+
+      $scope.ezPacks.show = <span class="hljs-literal">false</span>;
+      <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> key <span class="hljs-keyword">in</span> availableResults) {
+        <span class="hljs-keyword">var</span> r = availableResults[key];
+        <span class="hljs-keyword">if</span> (r.state != states.equipment.detached) {
+          $scope.ezPacks.show = <span class="hljs-literal">true</span>;
+          <span class="hljs-keyword">break</span>;
+        }
+      }
+      $scope.ezPacks.total = <span class="hljs-built_in">Object</span>.keys(availableResults)
+        .length;
+      <span class="hljs-keyword">if</span>($scope.ezPacks.total == <span class="hljs-number">0</span> &amp;&amp; isAnyEquipmentOnLocation(results)) {
+    		  $scope.ezPacks.show = <span class="hljs-literal">true</span>;
+      }
+
+      <span class="hljs-keyword">return</span> availableResults;
+    };
+
+    $scope.hoistFittedChassisFilter = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment)</span> </span>{
+      <span class="hljs-keyword">var</span> results = filterByGroup(equipment, groups.equipment.hoistFittedChassis);      
+      <span class="hljs-keyword">var</span> availableResults = availableFilter(results);
+
+      $scope.hoistFittedChassis.show = <span class="hljs-literal">false</span>;
+      <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> key <span class="hljs-keyword">in</span> availableResults) {
+        <span class="hljs-keyword">var</span> r = availableResults[key];
+        <span class="hljs-keyword">if</span> (r.state != states.equipment.detached) {
+          $scope.hoistFittedChassis.show = <span class="hljs-literal">true</span>;
+          <span class="hljs-keyword">break</span>;
+        }
+      }
+      $scope.hoistFittedChassis.total = <span class="hljs-built_in">Object</span>.keys(availableResults)
+        .length;
+      <span class="hljs-keyword">if</span>($scope.hoistFittedChassis.total == <span class="hljs-number">0</span> &amp;&amp; isAnyEquipmentOnLocation(results)) {
+    		  $scope.hoistFittedChassis.show = <span class="hljs-literal">true</span>;
+      }
+
+      <span class="hljs-keyword">return</span> availableResults;
+    };
+
+    $scope.miscellaneousFilter = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment)</span> </span>{
+      <span class="hljs-keyword">var</span> results = filterByGroup(equipment, groups.equipment.miscellaneous);      
+      <span class="hljs-keyword">var</span> availableResults = availableFilter(results);
+
+      $scope.miscellaneous.show = <span class="hljs-literal">false</span>;
+      <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> key <span class="hljs-keyword">in</span> availableResults) {
+        <span class="hljs-keyword">var</span> r = availableResults[key];
+        <span class="hljs-keyword">if</span> (r.state != states.equipment.detached) {
+          $scope.miscellaneous.show = <span class="hljs-literal">true</span>;
+          <span class="hljs-keyword">break</span>;
+        }
+      }
+      $scope.miscellaneous.total = <span class="hljs-built_in">Object</span>.keys(availableResults)
+        .length;
+      <span class="hljs-keyword">if</span>($scope.miscellaneous.total == <span class="hljs-number">0</span> &amp;&amp; isAnyEquipmentOnLocation(results)) {
+    		  $scope.miscellaneous.show = <span class="hljs-literal">true</span>;
+      }
+      <span class="hljs-keyword">return</span> availableResults;
+    };
+
+    $scope.mechanicalBroomFilter = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment)</span> </span>{
+      <span class="hljs-keyword">var</span> results = filterByGroup(equipment, groups.equipment.mechanicalBrooms);      
+      <span class="hljs-keyword">var</span> availableResults = availableFilter(results);
+
+      $scope.mechanicalBrooms.show = <span class="hljs-literal">false</span>;
+      <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> key <span class="hljs-keyword">in</span> availableResults) {
+        <span class="hljs-keyword">var</span> r = availableResults[key];
+        <span class="hljs-keyword">if</span> (r.state != states.equipment.detached) {
+          $scope.mechanicalBrooms.show = <span class="hljs-literal">true</span>;
+          <span class="hljs-keyword">break</span>;
+        }
+      }
+      $scope.mechanicalBrooms.total = <span class="hljs-built_in">Object</span>.keys(availableResults)
+        .length;
+      <span class="hljs-keyword">if</span>($scope.mechanicalBrooms.total == <span class="hljs-number">0</span> &amp;&amp; isAnyEquipmentOnLocation(results)) {
+    		  $scope.mechanicalBrooms.show = <span class="hljs-literal">true</span>;
+      }
+      <span class="hljs-keyword">return</span> availableResults;
+    };
+
+    $scope.rearLoaderFilter = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment)</span> </span>{
+      <span class="hljs-keyword">var</span> results = filterByGroup(equipment, groups.equipment.rearLoader);
+      <span class="hljs-keyword">var</span> availableResults = availableFilter(results);
+
+      $scope.rearLoaders.show = <span class="hljs-literal">false</span>;
+      <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> key <span class="hljs-keyword">in</span> availableResults) {
+        <span class="hljs-keyword">var</span> r = availableResults[key];
+        <span class="hljs-keyword">if</span> (r.state != states.equipment.detached) {
+          $scope.rearLoaders.show = <span class="hljs-literal">true</span>;
+          <span class="hljs-keyword">break</span>;
+        }
+      }
+      $scope.rearLoaders.total = <span class="hljs-built_in">Object</span>.keys(availableResults)
+        .length;
+      <span class="hljs-keyword">if</span>($scope.rearLoaders.total == <span class="hljs-number">0</span> &amp;&amp; isAnyEquipmentOnLocation(results)) {
+    		  $scope.rearLoaders.show = <span class="hljs-literal">true</span>;
+      }
+      <span class="hljs-keyword">return</span> availableResults;
+    };
+
+    $scope.roRoFilter = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment)</span> </span>{
+      <span class="hljs-keyword">var</span> results = filterByGroup(equipment, groups.equipment.roRo);
+      <span class="hljs-keyword">var</span> availableResults = availableFilter(results);
+
+      $scope.roRos.show = <span class="hljs-literal">false</span>;
+      <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> key <span class="hljs-keyword">in</span> availableResults) {
+        <span class="hljs-keyword">var</span> r = availableResults[key];
+        <span class="hljs-keyword">if</span> (r.state != states.equipment.detached) {
+          $scope.roRos.show = <span class="hljs-literal">true</span>;
+          <span class="hljs-keyword">break</span>;
+        }
+      }
+      $scope.roRos.total = <span class="hljs-built_in">Object</span>.keys(availableResults)
+        .length;
+      <span class="hljs-keyword">if</span>($scope.roRos.total == <span class="hljs-number">0</span> &amp;&amp; isAnyEquipmentOnLocation(results)) {
+    		  $scope.roRos.show = <span class="hljs-literal">true</span>;
+      }
+      
+      <span class="hljs-keyword">return</span> availableResults;
+    };
+
+    $scope.snowFilter = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment)</span> </span>{
+      <span class="hljs-keyword">var</span> results = filterByGroup(equipment, groups.equipment.snow);      
+      <span class="hljs-keyword">var</span> availableResults = availableFilter(results);
+
+      $scope.snow.show = <span class="hljs-literal">false</span>;
+      <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> key <span class="hljs-keyword">in</span> availableResults) {
+        <span class="hljs-keyword">var</span> r = availableResults[key];
+        <span class="hljs-keyword">if</span> (r.state != states.equipment.detached) {
+          $scope.snow.show = <span class="hljs-literal">true</span>;
+          <span class="hljs-keyword">break</span>;
+        }
+      }
+      $scope.snow.total = <span class="hljs-built_in">Object</span>.keys(availableResults)
+        .length;
+      <span class="hljs-keyword">if</span>($scope.snow.total == <span class="hljs-number">0</span> &amp;&amp; isAnyEquipmentOnLocation(results)) {
+    		  $scope.snow.show = <span class="hljs-literal">true</span>;
+      }
+      <span class="hljs-keyword">return</span> availableResults;
+    };
+
+    $scope.materialTypeClassFilter = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(index, pieceOfEquipment)</span> </span>{
+      <span class="hljs-keyword">if</span> (!<span class="hljs-built_in">isNaN</span>(index) &amp;&amp; pieceOfEquipment.bins.length &gt;= index + <span class="hljs-number">1</span>) {
+        <span class="hljs-keyword">var</span> bins = pieceOfEquipment.getFormattedBins($scope.materials);
+        <span class="hljs-keyword">var</span> bin = bins[index];
+        <span class="hljs-keyword">if</span> (bin.status === <span class="hljs-string">'Empty'</span>) <span class="hljs-keyword">return</span> <span class="hljs-string">''</span>;
+        <span class="hljs-keyword">return</span> <span class="hljs-string">'M'</span> + bin.materialType;
+      }
+      <span class="hljs-keyword">return</span> <span class="hljs-string">''</span>;
+    };
+
+    $scope.materialTypeFilter = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(index, pieceOfEquipment)</span> </span>{
+      <span class="hljs-keyword">if</span> (!<span class="hljs-built_in">isNaN</span>(index) &amp;&amp; pieceOfEquipment.bins.length &gt;= index + <span class="hljs-number">1</span>) {
+        <span class="hljs-keyword">var</span> bins = pieceOfEquipment.getFormattedBins($scope.materials);
+        <span class="hljs-keyword">var</span> bin = bins[index];
+        <span class="hljs-keyword">if</span> (bin.status === <span class="hljs-string">'Empty'</span>) <span class="hljs-keyword">return</span> <span class="hljs-string">'E'</span>;
+        <span class="hljs-keyword">return</span> bin.materialType;
+      }
+      <span class="hljs-keyword">return</span> <span class="hljs-string">''</span>;
+    };
+    
+    $scope.plowTypeFilter = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(pieceOfEquipment)</span> </span>{
+          <span class="hljs-keyword">var</span> plowType = pieceOfEquipment.snowReadiness.plowType;
+          <span class="hljs-keyword">var</span> direction=pieceOfEquipment.snowReadiness.plowDirection;
+          <span class="hljs-keyword">var</span> chained = pieceOfEquipment.snowReadiness.chained;
+                    
+          <span class="hljs-keyword">if</span> (plowType==<span class="hljs-string">'REGULAR_PLOW'</span>){
+        	  <span class="hljs-keyword">if</span>(direction==plowDirections[<span class="hljs-number">0</span>])
+        		  <span class="hljs-keyword">return</span> <span class="hljs-string">'R'</span>;
+        	  <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(direction==plowDirections[<span class="hljs-number">1</span>])
+        		  <span class="hljs-keyword">return</span> <span class="hljs-string">'L'</span>;
+        	  <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(direction==plowDirections[<span class="hljs-number">2</span>])
+        		  <span class="hljs-keyword">return</span> <span class="hljs-string">'S'</span>;
+        	  <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(direction==plowDirections[<span class="hljs-number">3</span>])
+        		  <span class="hljs-keyword">return</span> <span class="hljs-string">'W'</span>;
+        	  <span class="hljs-keyword">else</span>
+        		  <span class="hljs-keyword">return</span> <span class="hljs-string">'R'</span>;
+          } 
+          <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(plowType==<span class="hljs-string">'MINI_V_PLOW'</span>)
+        	  <span class="hljs-keyword">return</span> <span class="hljs-string">'M'</span>;
+          <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(plowType==<span class="hljs-string">'LARGE_V_PLOW'</span>)
+        	  <span class="hljs-keyword">return</span> <span class="hljs-string">'V'</span>;
+          <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(chained)
+    		  <span class="hljs-keyword">return</span> <span class="hljs-string">'C'</span>;
+          
+        <span class="hljs-keyword">return</span> <span class="hljs-string">''</span>;
+      };
+      
+      $scope.loadTypeFilter = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(pieceOfEquipment)</span> </span>{
+          
+          <span class="hljs-keyword">if</span> (pieceOfEquipment.snowReadiness.load==<span class="hljs-string">'SALT'</span>)
+        	  <span class="hljs-keyword">return</span> <span class="hljs-string">'SL'</span>
+          <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(pieceOfEquipment.snowReadiness.load==<span class="hljs-string">'SAND'</span>)
+        	  <span class="hljs-keyword">return</span> <span class="hljs-string">'SN'</span>;
+        
+        <span class="hljs-keyword">return</span> <span class="hljs-string">''</span>;
+      };
+
+
+    $scope.relayCollectionFilter = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment)</span> </span>{
+      <span class="hljs-keyword">var</span> relayResults = relayFilter(equipment),
+        results = filterByMaterialGroup(relayResults, materialGroups.equipment.collection, binStatus.equipment.relay),
+        cnt = <span class="hljs-built_in">Object</span>.keys(results)
+        .length;
+
+      $scope.relayCollection.show = <span class="hljs-literal">false</span>;
+      <span class="hljs-keyword">if</span> (cnt &gt; <span class="hljs-number">0</span>)
+        $scope.relayCollection.show = <span class="hljs-literal">true</span>;
+
+
+      $scope.relayCollection.total = cnt;
+      <span class="hljs-keyword">if</span>($scope.relayCollection.total == <span class="hljs-number">0</span>){
+    	  <span class="hljs-keyword">var</span> downEquipment = $scope.relayDownFilter(equipment);
+    	  <span class="hljs-keyword">var</span> relayCollectionInDown = filterByMaterialGroup(downEquipment, materialGroups.equipment.collection, binStatus.equipment.relay);
+    	  <span class="hljs-keyword">if</span>(<span class="hljs-built_in">Object</span>.keys(relayCollectionInDown).length &gt; <span class="hljs-number">0</span>)
+    		  $scope.relayCollection.show = <span class="hljs-literal">true</span>;
+      }
+      <span class="hljs-keyword">return</span> results;
+    };
+    
+    $scope.relaySnowFilter = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment)</span> </span>{
+      <span class="hljs-keyword">var</span> relayResults = relayFilter(equipment),
+        results = filterByMaterialGroup(relayResults, materialGroups.equipment.snow, binStatus.equipment.relay),
+        cnt = <span class="hljs-built_in">Object</span>.keys(results)
+        .length;
+
+      $scope.relaySnow.show = <span class="hljs-literal">false</span>;
+      <span class="hljs-keyword">if</span> (cnt &gt; <span class="hljs-number">0</span>)
+        $scope.relaySnow.show = <span class="hljs-literal">true</span>;
+      <span class="hljs-keyword">else</span>{
+    	  <span class="hljs-keyword">var</span> downEquipment = $scope.downFilter(results);
+    	  <span class="hljs-keyword">if</span>(<span class="hljs-built_in">Object</span>.keys(downEquipment).length &gt; <span class="hljs-number">0</span>)
+    		  $scope.relaySnow.show = <span class="hljs-literal">true</span>;
+      }
+      $scope.relaySnow.total = cnt;
+      <span class="hljs-keyword">if</span>($scope.relaySnow.total == <span class="hljs-number">0</span>){
+    	  <span class="hljs-keyword">var</span> downEquipment = $scope.relayDownFilter(equipment);
+    	  <span class="hljs-keyword">var</span> temp = filterByMaterialGroup(downEquipment, materialGroups.equipment.snow, binStatus.equipment.relay);
+          <span class="hljs-keyword">if</span>(<span class="hljs-built_in">Object</span>.keys(temp).length &gt; <span class="hljs-number">0</span>)
+    		  $scope.relaySnow.show = <span class="hljs-literal">true</span>;
+      }
+      <span class="hljs-keyword">return</span> results;
+    };
+    
+
+    $scope.relayRecyclingPaperFilter = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment)</span> </span>{
+      <span class="hljs-keyword">var</span> relayResults = relayFilter(equipment),
+        recycleResults = filterByMaterialGroup(relayResults, materialGroups.equipment.recycling, binStatus.equipment.relay),
+        results = filterByMaterialSubGroup(recycleResults, materialSubGroups.equipment.paper, binStatus.equipment.relay),
+        cnt = <span class="hljs-built_in">Object</span>.keys(results)
+        .length;
+
+      $scope.relayRecyclingPaper.show = <span class="hljs-literal">false</span>;
+      <span class="hljs-keyword">if</span> (cnt &gt; <span class="hljs-number">0</span>)
+        $scope.relayRecyclingPaper.show = <span class="hljs-literal">true</span>;
+
+
+      $scope.relayRecyclingPaper.total = cnt;
+      <span class="hljs-keyword">if</span>($scope.relayRecyclingPaper.total == <span class="hljs-number">0</span>){
+    	  <span class="hljs-keyword">var</span> downEquipment = $scope.relayDownFilter(equipment);
+    	  <span class="hljs-keyword">var</span> temp = filterByMaterialGroup(downEquipment, materialGroups.equipment.recycling, binStatus.equipment.relay);
+          <span class="hljs-keyword">var</span> relayRecyclingPaperInDown = filterByMaterialSubGroup(temp, materialSubGroups.equipment.paper, binStatus.equipment.relay);
+    	  <span class="hljs-keyword">if</span>(<span class="hljs-built_in">Object</span>.keys(relayRecyclingPaperInDown).length &gt; <span class="hljs-number">0</span>)
+    		  $scope.relayRecyclingPaper.show = <span class="hljs-literal">true</span>;
+      }
+      <span class="hljs-keyword">return</span> results;
+    };
+
+    $scope.relayRecyclingOrganicsFilter = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment)</span> </span>{
+      <span class="hljs-keyword">var</span> relayResults = relayFilter(equipment),
+        recycleResults = filterByMaterialGroup(relayResults, materialGroups.equipment.recycling, binStatus.equipment.relay),
+        results = filterByMaterialSubGroup(recycleResults, materialSubGroups.equipment.organics, binStatus.equipment.relay),
+        cnt = <span class="hljs-built_in">Object</span>.keys(results)
+        .length;
+
+      $scope.relayRecyclingOrganics.show = <span class="hljs-literal">false</span>;
+      <span class="hljs-keyword">if</span> (cnt &gt; <span class="hljs-number">0</span>)
+        $scope.relayRecyclingOrganics.show = <span class="hljs-literal">true</span>;
+
+
+      $scope.relayRecyclingOrganics.total = cnt;
+      <span class="hljs-keyword">if</span>($scope.relayRecyclingOrganics.total == <span class="hljs-number">0</span>){
+    	  <span class="hljs-keyword">var</span> downEquipment = $scope.relayDownFilter(equipment);
+    	  <span class="hljs-keyword">var</span> temp = filterByMaterialGroup(downEquipment, materialGroups.equipment.recycling, binStatus.equipment.relay);
+          <span class="hljs-keyword">var</span> relayRecyclingOrganicsInDown = filterByMaterialSubGroup(temp, materialSubGroups.equipment.organics, binStatus.equipment.relay);
+    	  <span class="hljs-keyword">if</span>(<span class="hljs-built_in">Object</span>.keys(relayRecyclingOrganicsInDown).length &gt; <span class="hljs-number">0</span>)
+    		  $scope.relayRecyclingOrganics.show = <span class="hljs-literal">true</span>;
+      }
+      <span class="hljs-keyword">return</span> results;
+    };
+
+    $scope.relayRecyclingMGPFilter = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment)</span> </span>{
+      <span class="hljs-keyword">var</span> relayResults = relayFilter(equipment),
+        recycleResults = filterByMaterialGroup(relayResults, materialGroups.equipment.recycling, binStatus.equipment.relay),
+        results = filterByMaterialSubGroup(recycleResults, materialSubGroups.equipment.mgp, binStatus.equipment.relay),
+        cnt = <span class="hljs-built_in">Object</span>.keys(results)
+        .length;
+
+      $scope.relayRecyclingMGP.show = <span class="hljs-literal">false</span>;
+      <span class="hljs-keyword">if</span> (cnt &gt; <span class="hljs-number">0</span>)
+        $scope.relayRecyclingMGP.show = <span class="hljs-literal">true</span>;
+
+
+      $scope.relayRecyclingMGP.total = cnt;
+      <span class="hljs-keyword">if</span>($scope.relayRecyclingMGP.total == <span class="hljs-number">0</span>){
+    	  <span class="hljs-keyword">var</span> downEquipment = $scope.relayDownFilter(equipment);
+    	  <span class="hljs-keyword">var</span> temp = filterByMaterialGroup(downEquipment, materialGroups.equipment.recycling, binStatus.equipment.relay);
+          <span class="hljs-keyword">var</span> relayRecyclingMGPInDown = filterByMaterialSubGroup(temp, materialSubGroups.equipment.mgp, binStatus.equipment.relay);
+    	  <span class="hljs-keyword">if</span>(<span class="hljs-built_in">Object</span>.keys(relayRecyclingMGPInDown).length &gt; <span class="hljs-number">0</span>)
+    		  $scope.relayRecyclingMGP.show = <span class="hljs-literal">true</span>;
+      }
+      <span class="hljs-keyword">return</span> results;
+    };
+
+    $scope.relayRecyclingMiscFilter = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment)</span> </span>{
+      <span class="hljs-keyword">var</span> relayResults = relayFilter(equipment),
+        recycleResults = filterByMaterialGroup(relayResults, materialGroups.equipment.recycling, binStatus.equipment.relay),
+        results = filterByMaterialSubGroup(recycleResults, materialSubGroups.equipment.recyclingMisc, binStatus.equipment.relay),
+        cnt = <span class="hljs-built_in">Object</span>.keys(results)
+        .length;
+
+      $scope.relayRecyclingMisc.show = <span class="hljs-literal">false</span>;
+      <span class="hljs-keyword">if</span> (cnt &gt; <span class="hljs-number">0</span>)
+        $scope.relayRecyclingMisc.show = <span class="hljs-literal">true</span>;
+
+
+      $scope.relayRecyclingMisc.total = cnt;
+      <span class="hljs-keyword">if</span>($scope.relayRecyclingMisc.total == <span class="hljs-number">0</span>){
+    	  <span class="hljs-keyword">var</span> downEquipment = $scope.relayDownFilter(equipment);
+    	  <span class="hljs-keyword">var</span> temp = filterByMaterialGroup(downEquipment, materialGroups.equipment.recycling, binStatus.equipment.relay);
+          <span class="hljs-keyword">var</span> relayRecyclingMiscInDown = filterByMaterialSubGroup(temp, materialSubGroups.equipment.recyclingMisc, binStatus.equipment.relay);
+    	  <span class="hljs-keyword">if</span>(<span class="hljs-built_in">Object</span>.keys(relayRecyclingMiscInDown).length &gt; <span class="hljs-number">0</span>)
+    		  $scope.relayRecyclingMisc.show = <span class="hljs-literal">true</span>;
+      }
+      <span class="hljs-keyword">return</span> results;
+    };
+
+    $scope.relayMiscellaneousFilter = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment)</span> </span>{
+      <span class="hljs-keyword">var</span> relayResults = relayFilter(equipment),
+        results = filterByMaterialGroup(relayResults, materialGroups.equipment.miscellaneous, binStatus.equipment.relay),
+        cnt = <span class="hljs-built_in">Object</span>.keys(results)
+        .length;
+
+      $scope.relayMiscellaneous.show = <span class="hljs-literal">false</span>;
+      <span class="hljs-keyword">if</span> (cnt &gt; <span class="hljs-number">0</span>)
+        $scope.relayMiscellaneous.show = <span class="hljs-literal">true</span>;
+      <span class="hljs-keyword">else</span>{
+    	  <span class="hljs-keyword">var</span> downEquipment = $scope.downFilter(results);
+    	  <span class="hljs-keyword">if</span>(<span class="hljs-built_in">Object</span>.keys(downEquipment).length &gt; <span class="hljs-number">0</span>)
+    		  $scope.relayMiscellaneous.show = <span class="hljs-literal">true</span>;
+      }
+      $scope.relayMiscellaneous.total = cnt;
+      <span class="hljs-keyword">if</span>($scope.relayMiscellaneous.total == <span class="hljs-number">0</span>){
+    	  <span class="hljs-keyword">var</span> downEquipment = $scope.relayDownFilter(equipment);
+    	  <span class="hljs-keyword">var</span> temp = filterByMaterialGroup(downEquipment, materialGroups.equipment.miscellaneous, binStatus.equipment.relay);
+          <span class="hljs-keyword">if</span>(<span class="hljs-built_in">Object</span>.keys(temp).length &gt; <span class="hljs-number">0</span>)
+    		  $scope.relayMiscellaneous.show = <span class="hljs-literal">true</span>;
+      }
+      <span class="hljs-keyword">return</span> results;
+    };
+    
+    $scope.rolloverCollectionFilter = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment)</span> </span>{
+      <span class="hljs-keyword">var</span> rolloverResults = rolloverFilter(equipment),
+        results = filterByMaterialGroup(rolloverResults, materialGroups.equipment.collection, binStatus.equipment.rollover),
+        cnt = <span class="hljs-built_in">Object</span>.keys(results)
+        .length;
+
+      $scope.rolloverCollection.show = <span class="hljs-literal">false</span>;
+      <span class="hljs-keyword">if</span> (cnt &gt; <span class="hljs-number">0</span>)
+        $scope.rolloverCollection.show = <span class="hljs-literal">true</span>;
+
+
+      $scope.rolloverCollection.total = cnt;
+      <span class="hljs-keyword">if</span>($scope.rolloverCollection.total == <span class="hljs-number">0</span>){
+    	  <span class="hljs-keyword">var</span> downEquipment = $scope.relayDownFilter(equipment);
+    	  <span class="hljs-keyword">var</span> temp = filterByMaterialGroup(downEquipment, materialGroups.equipment.collection, binStatus.equipment.rollover);
+    	  <span class="hljs-keyword">if</span>(<span class="hljs-built_in">Object</span>.keys(temp).length &gt; <span class="hljs-number">0</span>)
+    		  $scope.rolloverCollection.show = <span class="hljs-literal">true</span>;
+      }
+      <span class="hljs-keyword">return</span> results;
+    };
+    
+    $scope.rolloverSnowFilter = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment)</span> </span>{
+      <span class="hljs-keyword">var</span> relayResults = relayFilter(equipment),
+        results = filterByMaterialGroup(relayResults, materialGroups.equipment.snow, binStatus.equipment.relay),
+        cnt = <span class="hljs-built_in">Object</span>.keys(results)
+        .length;
+
+      $scope.rolloverSnow.show = <span class="hljs-literal">false</span>;
+      <span class="hljs-keyword">if</span> (cnt &gt; <span class="hljs-number">0</span>)
+        $scope.rolloverSnow.show = <span class="hljs-literal">true</span>;
+      <span class="hljs-keyword">else</span>{
+    	  <span class="hljs-keyword">var</span> downEquipment = $scope.downFilter(results);
+    	  <span class="hljs-keyword">if</span>(<span class="hljs-built_in">Object</span>.keys(downEquipment).length &gt; <span class="hljs-number">0</span>)
+    		  $scope.rolloverSnow.show = <span class="hljs-literal">true</span>;
+      }
+      $scope.rolloverSnow.total = cnt;
+      <span class="hljs-keyword">if</span>($scope.relaySnow.total == <span class="hljs-number">0</span>){
+    	  <span class="hljs-keyword">var</span> downEquipment = $scope.relayDownFilter(equipment);
+    	  <span class="hljs-keyword">var</span> temp = filterByMaterialGroup(downEquipment, materialGroups.equipment.snow, binStatus.equipment.relay);
+          <span class="hljs-keyword">if</span>(<span class="hljs-built_in">Object</span>.keys(temp).length &gt; <span class="hljs-number">0</span>)
+    		  $scope.rolloverSnow.show = <span class="hljs-literal">true</span>;
+      }
+      <span class="hljs-keyword">return</span> results;
+    };
+    
+    $scope.rolloverRecyclingPaperFilter = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment)</span> </span>{
+      <span class="hljs-keyword">var</span> rolloverResults = rolloverFilter(equipment),
+        recycleResults = filterByMaterialGroup(rolloverResults, materialGroups.equipment.recycling, binStatus.equipment.rollover),
+        results = filterByMaterialSubGroup(recycleResults, materialSubGroups.equipment.paper, binStatus.equipment.rollover),
+        cnt = <span class="hljs-built_in">Object</span>.keys(results)
+        .length;
+
+      $scope.rolloverRecyclingPaper.show = <span class="hljs-literal">false</span>;
+      <span class="hljs-keyword">if</span> (cnt &gt; <span class="hljs-number">0</span>)
+        $scope.rolloverRecyclingPaper.show = <span class="hljs-literal">true</span>;
+
+
+      $scope.rolloverRecyclingPaper.total = cnt;
+      <span class="hljs-keyword">if</span>($scope.rolloverRecyclingPaper.total == <span class="hljs-number">0</span>){
+    	  <span class="hljs-keyword">var</span> downEquipment = $scope.relayDownFilter(equipment);
+    	  <span class="hljs-keyword">var</span> temp = filterByMaterialGroup(downEquipment, materialGroups.equipment.recycling, binStatus.equipment.rollover);
+          <span class="hljs-keyword">var</span> rolloverRecyclingPaperInDown = filterByMaterialSubGroup(temp, materialSubGroups.equipment.paper, binStatus.equipment.rollover);
+    	  <span class="hljs-keyword">if</span>(<span class="hljs-built_in">Object</span>.keys(rolloverRecyclingPaperInDown).length &gt; <span class="hljs-number">0</span>)
+    		  $scope.rolloverRecyclingPaper.show = <span class="hljs-literal">true</span>;
+      }
+      <span class="hljs-keyword">return</span> results;
+    };
+
+    $scope.rolloverRecyclingOrganicsFilter = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment)</span> </span>{
+      <span class="hljs-keyword">var</span> rolloverResults = rolloverFilter(equipment),
+        recycleResults = filterByMaterialGroup(rolloverResults, materialGroups.equipment.recycling, binStatus.equipment.rollover),
+        results = filterByMaterialSubGroup(recycleResults, materialSubGroups.equipment.organics, binStatus.equipment.rollover),
+        cnt = <span class="hljs-built_in">Object</span>.keys(results)
+        .length;
+
+      $scope.rolloverRecyclingOrganics.show = <span class="hljs-literal">false</span>;
+      <span class="hljs-keyword">if</span> (cnt &gt; <span class="hljs-number">0</span>)
+        $scope.rolloverRecyclingOrganics.show = <span class="hljs-literal">true</span>;
+
+
+      $scope.rolloverRecyclingOrganics.total = cnt;
+      <span class="hljs-keyword">if</span>($scope.rolloverRecyclingOrganics.total == <span class="hljs-number">0</span>){
+    	  <span class="hljs-keyword">var</span> downEquipment = $scope.relayDownFilter(equipment);
+    	  <span class="hljs-keyword">var</span> temp = filterByMaterialGroup(downEquipment, materialGroups.equipment.recycling, binStatus.equipment.rollover);
+          <span class="hljs-keyword">var</span> rolloverRecyclingOrganicsInDown = filterByMaterialSubGroup(temp, materialSubGroups.equipment.organics, binStatus.equipment.rollover);
+    	  <span class="hljs-keyword">if</span>(<span class="hljs-built_in">Object</span>.keys(rolloverRecyclingOrganicsInDown).length &gt; <span class="hljs-number">0</span>)
+    		  $scope.rolloverRecyclingOrganics.show = <span class="hljs-literal">true</span>;
+      }
+      <span class="hljs-keyword">return</span> results;
+    };
+
+    $scope.rolloverRecyclingMGPFilter = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment)</span> </span>{
+      <span class="hljs-keyword">var</span> rolloverResults = rolloverFilter(equipment),
+        recycleResults = filterByMaterialGroup(rolloverResults, materialGroups.equipment.recycling, binStatus.equipment.rollover),
+        results = filterByMaterialSubGroup(recycleResults, materialSubGroups.equipment.mgp, binStatus.equipment.rollover),
+        cnt = <span class="hljs-built_in">Object</span>.keys(results)
+        .length;
+
+      $scope.rolloverRecyclingMGP.show = <span class="hljs-literal">false</span>;
+      <span class="hljs-keyword">if</span> (cnt &gt; <span class="hljs-number">0</span>)
+        $scope.rolloverRecyclingMGP.show = <span class="hljs-literal">true</span>;
+
+
+      $scope.rolloverRecyclingMGP.total = cnt;
+      <span class="hljs-keyword">if</span>($scope.rolloverRecyclingMGP.total == <span class="hljs-number">0</span>){
+    	  <span class="hljs-keyword">var</span> downEquipment = $scope.relayDownFilter(results);
+    	  <span class="hljs-keyword">var</span> temp = filterByMaterialGroup(downEquipment, materialGroups.equipment.recycling, binStatus.equipment.rollover);
+          <span class="hljs-keyword">var</span> rolloverRecyclingMGPInDown = filterByMaterialSubGroup(temp, materialSubGroups.equipment.mgp, binStatus.equipment.rollover);
+    	  <span class="hljs-keyword">if</span>(<span class="hljs-built_in">Object</span>.keys(rolloverRecyclingMGPInDown).length &gt; <span class="hljs-number">0</span>)
+    		  $scope.rolloverRecyclingMGP.show = <span class="hljs-literal">true</span>;
+      }
+      <span class="hljs-keyword">return</span> results;
+    };
+
+    $scope.rolloverRecyclingMiscFilter = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment)</span> </span>{
+      <span class="hljs-keyword">var</span> rolloverResults = rolloverFilter(equipment),
+        recycleResults = filterByMaterialGroup(rolloverResults, materialGroups.equipment.recycling, binStatus.equipment.rollover),
+        results = filterByMaterialSubGroup(recycleResults, materialSubGroups.equipment.recyclingMisc, binStatus.equipment.rollover),
+        cnt = <span class="hljs-built_in">Object</span>.keys(results)
+        .length;
+
+      $scope.rolloverRecyclingMisc.show = <span class="hljs-literal">false</span>;
+      <span class="hljs-keyword">if</span> (cnt &gt; <span class="hljs-number">0</span>)
+        $scope.rolloverRecyclingMisc.show = <span class="hljs-literal">true</span>;
+
+
+      $scope.rolloverRecyclingMisc.total = cnt;
+      <span class="hljs-keyword">if</span>($scope.rolloverRecyclingMisc.total == <span class="hljs-number">0</span>){
+    	  <span class="hljs-keyword">var</span> downEquipment = $scope.relayDownFilter(results);
+    	  <span class="hljs-keyword">var</span> temp = filterByMaterialGroup(downEquipment, materialGroups.equipment.recycling, binStatus.equipment.rollover);
+          <span class="hljs-keyword">var</span> rolloverRecyclingMiscInDown = filterByMaterialSubGroup(temp, materialSubGroups.equipment.recyclingMisc, binStatus.equipment.rollover);
+    	  <span class="hljs-keyword">if</span>(<span class="hljs-built_in">Object</span>.keys(rolloverRecyclingMiscInDown).length &gt; <span class="hljs-number">0</span>)
+    		  $scope.rolloverRecyclingMisc.show = <span class="hljs-literal">true</span>;
+      }
+      <span class="hljs-keyword">return</span> results;
+    };
+
+    $scope.rolloverMiscellaneousFilter = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment)</span> </span>{
+      <span class="hljs-keyword">var</span> rolloverResults = rolloverFilter(equipment),
+        results = filterByMaterialGroup(rolloverResults, materialGroups.equipment.miscellaneous, binStatus.equipment.rollover),
+        cnt = <span class="hljs-built_in">Object</span>.keys(results)
+        .length;
+
+      $scope.rolloverMiscellaneous.show = <span class="hljs-literal">false</span>;
+      <span class="hljs-keyword">if</span> (cnt &gt; <span class="hljs-number">0</span>)
+        $scope.rolloverMiscellaneous.show = <span class="hljs-literal">true</span>;
+
+
+      $scope.rolloverMiscellaneous.total = cnt;
+      <span class="hljs-keyword">if</span>($scope.rolloverMiscellaneous.total == <span class="hljs-number">0</span>){
+    	  <span class="hljs-keyword">var</span> downEquipment = $scope.relayDownFilter(equipment);
+    	  <span class="hljs-keyword">var</span> rolloverMiscInDown = filterByMaterialGroup(downEquipment, materialGroups.equipment.miscellaneous, binStatus.equipment.rollover);
+    	  <span class="hljs-keyword">if</span>(<span class="hljs-built_in">Object</span>.keys(rolloverMiscInDown).length &gt; <span class="hljs-number">0</span>)
+    		  $scope.rolloverMiscellaneous.show = <span class="hljs-literal">true</span>;
+      }
+      <span class="hljs-keyword">return</span> results;
+    };
+
+    
+    $scope.secondIndicator=<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(pieceOfEquipment)</span></span>{
+    	<span class="hljs-keyword">if</span>(pieceOfEquipment.snowReadiness.load==<span class="hljs-string">"SALT"</span>||pieceOfEquipment.snowReadiness.load==<span class="hljs-string">"SAND"</span>)
+    		<span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(pieceOfEquipment.bins.length&gt;<span class="hljs-number">1</span>){
+            <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+        }
+    		<span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+    };
+    $scope.snowReadinessFilter=<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(pieceOfEquipment)</span></span>{
+        <span class="hljs-keyword">if</span>(pieceOfEquipment.hasOwnProperty(<span class="hljs-string">'group'</span>)){
+        	
+        	<span class="hljs-keyword">if</span>($scope.isEquipmentDressed(pieceOfEquipment))
+        		<span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+        }
+        
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;    
+    }
+    
+    $scope.snowReadinessOneIndicator=<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(pieceOfEquipment)</span></span>{
+    	<span class="hljs-keyword">return</span> ($scope.snowReadinessFilter(pieceOfEquipment)||pieceOfEquipment.snowReadiness.chained) &amp;&amp; !$scope.secondIndicator(pieceOfEquipment);
+    };
+    
+    $scope.snowReadinessIndicatorFilter=<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(pieceOfEquipment)</span></span>{
+        <span class="hljs-keyword">var</span> isSnowReady = $scope.snowReadinessFilter(pieceOfEquipment); 
+        
+        <span class="hljs-keyword">if</span>(!isSnowReady){ 
+        	<span class="hljs-keyword">if</span>(pieceOfEquipment.snowReadiness.chained)
+        		<span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+        }     
+        <span class="hljs-keyword">return</span> isSnowReady;
+    }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Sub panel control</p>
+<p>Current logic is to open all top-level categories on expand,
+close all on collapse, or, if no categories, to open/close the body.</p>
+<p>TODO: This is somewhat fragile - adding/removing top level categories will require modifying these functions</p></div></div><div class="code"><div class="wrapper">    $scope.toggleAvailableSubpanel = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+        $scope.available.open = !$scope.available.open;
+
+        $scope.rearLoaders.open = $scope.available.open;
+        $scope.dualBins.open = $scope.available.open;
+        $scope.mechanicalBrooms.open = $scope.available.open;
+        $scope.roRos.open = $scope.available.open;
+        $scope.ezPacks.open = $scope.available.open;
+        $scope.miscellaneous.open = $scope.available.open;
+        $scope.snow.open = $scope.available.open;
+    };
+
+    $scope.toggleRolloverSubpanel = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+        $scope.rollover.open = !$scope.rollover.open;
+        
+        $scope.rolloverSnow.open = $scope.relay.open;
+        $scope.rolloverRecycling.open = $scope.rollover.open;
+        $scope.rolloverMiscellaneous.open = $scope.rollover.open;
+    };
+    $scope.toggleRelaySubpanel = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+        $scope.relay.open = !$scope.relay.open;
+
+        $scope.relayRecycling.open = $scope.relay.open;
+        $scope.relayMiscellaneous.open = $scope.relay.open;
+        $scope.relaySnow.open = $scope.relay.open;
+        $scope.relayCollection.open = $scope.relay.open;
+    };
+    $scope.togglePendingSubpanel = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+        $scope.pending.open = !$scope.pending.open;
+
+        $scope.pendingLoad.open = $scope.pending.open;
+        $scope.pendingAttach.open = $scope.pending.open;
+        $scope.pendingDetach.open = $scope.pending.open;
+    };
+    $scope.toggleDetachedSubpanel = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+        $scope.detached.open = !$scope.detached.open;
+    };
+    $scope.toggleDownSubpanel = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+        $scope.down.open = !$scope.down.open;
+    };
+  });</div></div></div></div></body></html>

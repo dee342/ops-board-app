@@ -1,0 +1,16 @@
+<!DOCTYPE html><html lang="en"><head><title>public\scripts\controllers\login-controller</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../../"><meta name="groc-document-path" content="public\scripts\controllers\login-controller"><meta name="groc-project-path" content="public\scripts\controllers\login-controller.js"><link rel="stylesheet" type="text/css" media="all" href="../../../assets/style.css"><script type="text/javascript" src="../../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">public\scripts\controllers\login-controller.js</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="hljs-pi">'use strict'</span>;
+
+angular.module(<span class="hljs-string">'about-us'</span>)
+  .controller(<span class="hljs-string">'LoginCtrl'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($scope, $log, $controller, $rootScope, BrowserService)</span> </span>{
+	  
+	  $scope.browserType = BrowserService.getBrowser();
+	  
+	  $scope.isSupportedBrowser = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{
+		  <span class="hljs-keyword">var</span> supported = <span class="hljs-literal">false</span>;
+		  <span class="hljs-keyword">if</span> ($scope.browserType === <span class="hljs-string">"chrome"</span> || $scope.browserType === <span class="hljs-string">"firefox"</span>){
+			  supported = <span class="hljs-literal">true</span>;
+		  }  
+		  <span class="hljs-keyword">return</span> supported;
+	  }
+	  
+});</div></div></div></div></body></html>

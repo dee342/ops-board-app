@@ -1,0 +1,1224 @@
+<!--/* Thymeleaf fragment to display the Personnel Pane. */-->
+
+<div th:fragment="personnel-pane">
+    <div ng-controller="PersonnelCtrl" id="personnel" ng-hide="panes.equipmentDetails.active" class="noSelect">
+
+        <div class="header pane-header">
+            <div class="row" style="margin:0px;">
+                <div class="col-md-12" style="text-align: center; padding: 0px;">
+                    <span class="paneTitle personnel-pane-selenium">
+                        Personnel
+                    </span>
+                    <div class="pane-header-actions">
+                        <button class="btn btn-default btn-sm dropdown" type="button" ng-click="togglePersonnelSummary()" ng-class="{ dropup: personnelSummary.active }">
+                            Summary<i class="caret"></i>
+                        </button>
+                        <div class="dropdown sort-control dropdown-toggle">
+                            <button ng-model="toggle" class="btn btn-default btn-sm dropdown" ng-class="{ dropup: toggle }" ng-click="toggle = !toggle" ng-blur="toggle = false">
+                                <span style="color: #98ff00;">Sort by:</span> {{ filterType }}
+                                <i class="caret"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li ng-repeat="choice in sortFilters">
+                                    <a href="javascript:;" ng-click="changeFilterType(choice)" ng-class="{ active: choice === filterType }">
+                                        <i class="fa fa-check"></i>
+                                        <span>{{choice}}</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        <button class="btn btn-default btn-sm" type="button" ng-click="togglePersonnelPane()" ng-class="{summaryActive: personnelSummary.active}">
+                            <i class="fa fa-times fa-lg"></i>
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+
+        </div>
+         <div th:include="views/fragments/personnel-summary:: personnel-summary" th:remove="tag"></div>
+        <perfect-scrollbar class="scroller" style="overflow: hidden; position: relative;" ng-style="{'height': layout.scrollpanel.height}" min-scrollbar-length="5" max-scrollbar-length="20" use-both-wheel-axes="true" >
+            <div class="scrollerpadding">
+
+                <div id="personnel-panel-body">
+                    <div id="allUnavailablePersonnel" class="all-unavail-panel-grouping">
+                        <div class="pane-subpane pane-subpane-person pane-subpane-unavailable flexbox flex">
+                        <a href="" ng-click="toggleUnavailableSubpanel()">
+                            <div class="header">
+                                <span class="title-text">Unavailable</span> <span class="badge badgeMod">{{numUnavailable}}</span>
+                                <span class="arrowleft">
+                                    <i class="fa" ng-class="unavailable.open ? 'fa-caret-down' : 'fa-caret-right'" ></i>
+                                </span>
+                            </div>
+                            </a>
+                            <div class="body">
+                                <accordion id="personnelUnAvailableBySubGroups" class="sub-categories" close-others="false">
+                                    <accordion-group id="charts" is-open="charts.open" ng-show="personnelpane.chartsShow">
+                                        <accordion-heading>
+                                            <i class="fa" ng-class="charts.open ? 'fa-minus-square-o' : 'fa-plus-square-o'" ng-click="togglerOpen()"></i>
+                                            Charts <span>({{personnelpane.chartsTotal}})</span>
+                                        </accordion-heading>
+                                        <div ng-repeat="(id, person) in personnelpane.chartsSorted track by person.id"
+                                             ng-click="showPersonDetails($event, person.id)" context-menu="true"
+                                             data-target="person-context-menu-{{person.id}}-{{$index}}"
+                                             class="person-container">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}"  lvl-draggable="">{{person.formattedName}}</span>
+                                            <span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}">{{person.indicatorText}}</span>
+                                            <div id="person-context-menu-{{person.id}}-{{$index}}" class="context-menu">
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.activeMDA" ng-click="setMdaStatus(person)">Add MDA</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.civilServiceTitle == 'SW'" ng-click="addPersonSpecialPosition(person)">Add Special Position</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </accordion-group>
+
+                                    <accordion-group id="vacationCharts" is-open="vacationCharts.open" ng-show="personnelpane.vacationsChartsShow">
+                                        <accordion-heading>
+                                            <i class="fa" ng-class="vacationCharts.open ? 'fa-minus-square-o' : 'fa-plus-square-o'" ng-click="togglerOpen()"></i>
+                                            Vacation/Chart <span>({{personnelpane.vacationsChartsTotal}})</span>
+                                        </accordion-heading>
+                                        <div ng-repeat="(id, person) in personnelpane.vacationsChartsSorted track by person.id"
+                                             ng-click="showPersonDetails($event, person.id)" context-menu="true"
+                                             data-target="person-context-menu-{{person.id}}-{{$index}}"
+                                             class="person-container">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}" lvl-draggable="">{{person.formattedName}}</span><span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}">{{person.indicatorText}}</span>
+                                            <div id="person-context-menu-{{person.id}}-{{$index}}" class="context-menu">
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.activeMDA" ng-click="setMdaStatus(person)">Add MDA</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.civilServiceTitle == 'SW'" ng-click="addPersonSpecialPosition(person)">Add Special Position</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </accordion-group>
+
+                                    <accordion-group id="xwp" is-open="xwp.open" ng-show="personnelpane.xwpShow">
+                                        <accordion-heading>
+                                            <i class="fa" ng-class="xwp.open ? 'fa-minus-square-o' : 'fa-plus-square-o'" ng-click="togglerOpen()"></i>
+                                            XWP <span>({{personnelpane.xwpTotal}})</span>
+                                        </accordion-heading>
+                                        <div ng-repeat="(id, person) in personnelpane.xwpSorted track by person.id"
+                                             ng-click="showPersonDetails($event, person.id)" context-menu="true"
+                                             data-target="person-context-menu-{{person.id}}-{{$index}}"
+                                             class="person-container">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}" lvl-draggable="">{{person.formattedName}}</span><span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}">{{person.indicatorText}}</span>
+                                            <div id="person-context-menu-{{person.id}}-{{$index}}" class="context-menu">
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.activeMDA" ng-click="setMdaStatus(person)">Add MDA</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.civilServiceTitle == 'SW'" ng-click="addPersonSpecialPosition(person)">Add Special Position</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </accordion-group>
+
+                                    <accordion-group id="xwop" is-open="xwop.open" ng-show="personnelpane.xwopShow">
+                                        <accordion-heading>
+                                            <i class="fa" ng-class="xwop.open ? 'fa-minus-square-o' : 'fa-plus-square-o'" ng-click="togglerOpen()"></i>
+                                            XWOP <span>({{personnelpane.xwopTotal}})</span>
+                                        </accordion-heading>
+                                        <div ng-repeat="(id, person) in personnelpane.xwopSorted track by person.id"
+                                             ng-click="showPersonDetails($event, person.id)" context-menu="true"
+                                             data-target="person-context-menu-{{person.id}}-{{$index}}"
+                                             class="person-container">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}" lvl-draggable="">{{person.formattedName}}</span><span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}">{{person.indicatorText}}</span>
+                                            <div id="person-context-menu-{{person.id}}-{{$index}}" class="context-menu">
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.activeMDA" ng-click="setMdaStatus(person)">Add MDA</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.civilServiceTitle == 'SW'" ng-click="addPersonSpecialPosition(person)">Add Special Position</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </accordion-group>
+
+                                    <accordion-group id="sickCharts" is-open="sickCharts.open" ng-show="personnelpane.sickChartShow">
+                                        <accordion-heading>
+                                            <i class="fa" ng-class="sickCharts.open ? 'fa-minus-square-o' : 'fa-plus-square-o'" ng-click="togglerOpen()"></i>
+                                            Sick <span>({{personnelpane.sickChartTotal}})</span>
+                                        </accordion-heading>
+                                        <div ng-repeat="(id, person) in personnelpane.sickChartSorted track by person.id"
+                                             ng-click="showPersonDetails($event, person.id)" context-menu="true"
+                                             data-target="person-context-menu-{{person.id}}-{{$index}}"
+                                             class="person-container">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}">{{person.formattedName}}</span><span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}">{{person.indicatorText}}</span>
+                                            <div id="person-context-menu-{{person.id}}-{{$index}}" class="context-menu">
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.activeMDA" ng-click="setMdaStatus(person)">Add MDA</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.civilServiceTitle == 'SW'" ng-click="addPersonSpecialPosition(person)">Add Special Position</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </accordion-group>
+
+                                    <accordion-group id="vacation" is-open="vacation.open" ng-show="personnelpane.vacationShow">
+                                        <accordion-heading>
+                                            <i class="fa" ng-class="vacation.open ? 'fa-minus-square-o' : 'fa-plus-square-o'" ng-click="togglerOpen()"></i>
+                                            Vacation <span>({{personnelpane.vacationTotal}})</span>
+                                        </accordion-heading>
+                                        <div ng-repeat="(id, person) in personnelpane.vacationSorted track by person.id"
+                                             ng-click="showPersonDetails($event, person.id)" context-menu="true"
+                                             data-target="person-context-menu-{{person.id}}-{{$index}}"
+                                             class="person-container">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}" lvl-draggable="">
+                                                {{person.formattedName}}
+                                            </span>
+                                            <span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}">
+                                                {{person.indicatorText}}
+                                            </span>
+                                            <div id="person-context-menu-{{person.id}}-{{$index}}" class="context-menu">
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.activeMDA" ng-click="setMdaStatus(person)">Add MDA</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.civilServiceTitle == 'SW'" ng-click="addPersonSpecialPosition(person)">Add Special Position</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </accordion-group>
+
+                                    <accordion-group id="lodi" is-open="lodi.open" ng-show="personnelpane.lodiShow">
+                                        <accordion-heading>
+                                            <i class="fa" ng-class="lodi.open ? 'fa-minus-square-o' : 'fa-plus-square-o'" ng-click="togglerOpen()"></i>
+                                            LODI <span>({{personnelpane.lodiTotal}})</span>
+                                        </accordion-heading>
+                                        <div ng-repeat="(id, person) in personnelpane.lodiSorted track by person.id"
+                                             ng-click="showPersonDetails($event, person.id)" context-menu="true"
+                                             data-target="person-context-menu-{{person.id}}-{{$index}}"
+                                             class="person-container">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}">
+                                                {{person.formattedName}}
+                                            </span>
+                                            <span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}">
+                                                {{person.indicatorText}}
+                                            </span>
+                                            <div id="person-context-menu-{{person.id}}-{{$index}}" class="context-menu">
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.activeMDA" ng-click="setMdaStatus(person)">Add MDA</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.civilServiceTitle == 'SW'" ng-click="addPersonSpecialPosition(person)">Add Special Position</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </accordion-group>
+
+                                    <accordion-group id="app" is-open="app.open" ng-show="personnelpane.appShow">
+                                        <accordion-heading>
+                                            <i class="fa" ng-class="app.open ? 'fa-minus-square-o' : 'fa-plus-square-o'" ng-click="togglerOpen()"></i>
+                                            APP <span>({{personnelpane.appTotal}})</span>
+                                        </accordion-heading>
+                                        <div ng-repeat="(id, person) in personnelpane.appSorted track by person.id"
+                                             ng-click="showPersonDetails($event, person.id)" context-menu="true"
+                                             data-target="person-context-menu-{{person.id}}-{{$index}}"
+                                             class="person-container">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}" lvl-draggable="">
+                                                {{person.formattedName}}
+                                            </span>
+                                            <span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}">
+                                                {{person.indicatorText}}
+                                            </span>
+                                            <div id="person-context-menu-{{person.id}}-{{$index}}" class="context-menu">
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.activeMDA" ng-click="setMdaStatus(person)">Add MDA</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.civilServiceTitle == 'SW'" ng-click="addPersonSpecialPosition(person)">Add Special Position</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </accordion-group>
+
+                                    <accordion-group id="awol" is-open="awol.open" ng-show="personnelpane.awolShow">
+                                        <accordion-heading>
+                                            <i class="fa" ng-class="awol.open ? 'fa-minus-square-o' : 'fa-plus-square-o'" ng-click="togglerOpen()"></i>
+                                            AWOL <span>({{personnelpane.awolTotal}})</span>
+                                        </accordion-heading>
+                                        <div ng-repeat="(id, person) in personnelpane.awolSorted track by person.id"
+                                             ng-click="showPersonDetails($event, person.id)" context-menu="true"
+                                             data-target="person-context-menu-{{person.id}}-{{$index}}"
+                                             class="person-container">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}" lvl-draggable="">
+                                                {{person.formattedName}}
+                                            </span>
+                                            <span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}">
+                                                {{person.indicatorText}}
+                                            </span>
+                                            <div id="person-context-menu-{{person.id}}-{{$index}}" class="context-menu">
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.activeMDA" ng-click="setMdaStatus(person)">Add MDA</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.civilServiceTitle == 'SW'" ng-click="addPersonSpecialPosition(person)">Add Special Position</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </accordion-group>
+
+
+                                    <accordion-group id="dif" is-open="dif.open" ng-show="personnelpane.difShow">
+                                        <accordion-heading>
+                                            <i class="fa" ng-class="dif.open ? 'fa-minus-square-o' : 'fa-plus-square-o'" ng-click="togglerOpen()"></i>
+                                            DIF <span>({{personnelpane.difTotal}})</span>
+                                        </accordion-heading>
+                                        <div ng-repeat="(id, person) in personnelpane.difSorted track by person.id"
+                                             ng-click="showPersonDetails($event, person.id)" context-menu="true"
+                                             data-target="person-context-menu-{{person.id}}-{{$index}}"
+                                             class="person-container">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}" lvl-draggable="">
+                                                {{person.formattedName}}
+                                            </span>
+                                            <span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}">
+                                                {{person.indicatorText}}
+                                            </span>
+                                            <div id="person-context-menu-{{person.id}}-{{$index}}" class="context-menu">
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.activeMDA" ng-click="setMdaStatus(person)">Add MDA</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.civilServiceTitle == 'SW'" ng-click="addPersonSpecialPosition(person)">Add Special Position</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </accordion-group>
+
+                                    <accordion-group id="suspended" is-open="suspended.open" ng-show="personnelpane.suspendedShow">
+                                        <accordion-heading>
+                                            <i class="fa" ng-class="suspended.open ? 'fa-minus-square-o' : 'fa-plus-square-o'" ng-click="togglerOpen()"></i>
+                                            Suspended <span>({{personnelpane.suspendedTotal}})</span>
+                                        </accordion-heading>
+                                        <div ng-repeat="(id, person) in personnelpane.suspendedSorted track by person.id"
+                                             ng-click="showPersonDetails($event, person.id)" context-menu="true"
+                                             data-target="person-context-menu-{{person.id}}-{{$index}}"
+                                             class="person-container">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}" lvl-draggable="">
+                                                {{person.formattedName}}
+                                            </span>
+                                            <span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}">
+                                                {{person.indicatorText}}
+                                            </span>
+                                            <div id="person-context-menu-{{person.id}}-{{$index}}" class="context-menu">
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.activeMDA" ng-click="setMdaStatus(person)">Add MDA</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.civilServiceTitle == 'SW'" ng-click="addPersonSpecialPosition(person)">Add Special Position</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </accordion-group>
+
+                                    <accordion-group id="terminalLeave" is-open="terminalLeave.open" ng-show="personnelpane.terminalLeaveShow">
+                                        <accordion-heading>
+                                            <i class="fa" ng-class="terminalLeave.open ? 'fa-minus-square-o' : 'fa-plus-square-o'" ng-click="togglerOpen()"></i>
+                                            Terminal Leave <span>({{personnelpane.terminalLeaveTotal}})</span>
+                                        </accordion-heading>
+                                        <div ng-repeat="(id, person) in personnelpane.terminalLeaveSorted track by person.id"
+                                             ng-click="showPersonDetails($event, person.id)" context-menu="true"
+                                             data-target="person-context-menu-{{person.id}}-{{$index}}"
+                                             class="person-container">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}" lvl-draggable="">
+                                                {{person.formattedName}}
+                                            </span>
+                                            <span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}">
+                                                {{person.indicatorText}}
+                                            </span>
+                                            <div id="person-context-menu-{{person.id}}-{{$index}}" class="context-menu">
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.activeMDA" ng-click="setMdaStatus(person)">Add MDA</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.civilServiceTitle == 'SW'" ng-click="addPersonSpecialPosition(person)">Add Special Position</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </accordion-group>
+
+                                    <accordion-group id="juryDuty" is-open="juryDuty.open" ng-show="personnelpane.juryDutyShow">
+                                        <accordion-heading>
+                                            <i class="fa" ng-class="juryDuty.open ? 'fa-minus-square-o' : 'fa-plus-square-o'" ng-click="togglerOpen()"></i>
+                                            Jury Duty <span>({{personnelpane.juryDutyTotal}})</span>
+                                        </accordion-heading>
+                                        <div ng-repeat="(id, person) in personnelpane.juryDutySorted track by person.id"
+                                             ng-click="showPersonDetails($event, person.id)" context-menu="true"
+                                             data-target="person-context-menu-{{person.id}}-{{$index}}"
+                                             class="person-container">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}" lvl-draggable="">
+                                                {{person.formattedName}}
+                                            </span>
+                                            <span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}">
+                                                {{person.indicatorText}}
+                                            </span>
+                                            <div id="person-context-menu-{{person.id}}-{{$index}}" class="context-menu">
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.activeMDA" ng-click="setMdaStatus(person)">Add MDA</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.civilServiceTitle == 'SW'" ng-click="addPersonSpecialPosition(person)">Add Special Position</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </accordion-group>
+
+                                    <accordion-group id="milDtyWithPay" is-open="milDutyWithPay.open" ng-show="personnelpane.milDtyWithPayShow">
+                                        <accordion-heading>
+                                            <i class="fa" ng-class="milDutyWithPay.open ? 'fa-minus-square-o' : 'fa-plus-square-o'" ng-click="togglerOpen()"></i>
+                                            Mil Dty W/Pay <span>({{personnelpane.milDtyWithPayTotal}})</span>
+                                        </accordion-heading>
+                                        <div ng-repeat="(id, person) in personnelpane.milDtyWithPaySorted track by person.id"
+                                             ng-click="showPersonDetails($event, person.id)" context-menu="true"
+                                             data-target="person-context-menu-{{person.id}}-{{$index}}"
+                                             class="person-container">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}" lvl-draggable="">
+                                                {{person.formattedName}}
+                                            </span>
+                                            <span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}">
+                                                {{person.indicatorText}}
+                                            </span>
+                                            <div id="person-context-menu-{{person.id}}-{{$index}}" class="context-menu">
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.activeMDA" ng-click="setMdaStatus(person)">Add MDA</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.civilServiceTitle == 'SW'" ng-click="addPersonSpecialPosition(person)">Add Special Position</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </accordion-group>
+
+
+                                    <accordion-group id="milDutyWithoutPay" is-open="milDutyWithoutPay.open" ng-show="personnelpane.milDutyWithoutPayShow">
+                                        <accordion-heading>
+                                            <i class="fa" ng-class="milDutyWithoutPay.open ? 'fa-minus-square-o' : 'fa-plus-square-o'" ng-click="togglerOpen()"></i>
+                                            Mil Dty W/O Pay <span>({{personnelpane.milDutyWithoutPayTotal}})</span>
+                                        </accordion-heading>
+                                        <div ng-repeat="(id, person) in personnelpane.milDutyWithoutPaySorted track by person.id"
+                                             ng-click="showPersonDetails($event, person.id)" context-menu="true"
+                                             data-target="person-context-menu-{{person.id}}-{{$index}}"
+                                             class="person-container">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}" lvl-draggable="">
+                                                {{person.formattedName}}
+                                            </span>
+                                            <span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}">
+                                                {{person.indicatorText}}
+                                            </span>
+                                            <div id="person-context-menu-{{person.id}}-{{$index}}" class="context-menu">
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.activeMDA" ng-click="setMdaStatus(person)">Add MDA</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.civilServiceTitle == 'SW'" ng-click="addPersonSpecialPosition(person)">Add Special Position</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </accordion-group>
+
+                                    <accordion-group id="honorGuard" is-open="honorGuard.open" ng-show="personnelpane.honorGuardShow">
+                                        <accordion-heading>
+                                            <i class="fa" ng-class="honorGuard.open ? 'fa-minus-square-o' : 'fa-plus-square-o'" ng-click="togglerOpen()"></i>
+                                            Honor Guard <span>({{personnelpane.honorGuardTotal}})</span>
+                                        </accordion-heading>
+                                        <div ng-repeat="(id, person) in personnelpane.honorGuardSorted track by person.id"
+                                             ng-click="showPersonDetails($event, person.id)" context-menu="true"
+                                             data-target="person-context-menu-{{person.id}}-{{$index}}"
+                                             class="person-container">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}" lvl-draggable="">
+                                                {{person.formattedName}}
+                                            </span>
+                                            <span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}">
+                                                {{person.indicatorText}}
+                                            </span>
+                                            <div id="person-context-menu-{{person.id}}-{{$index}}" class="context-menu">
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.activeMDA" ng-click="setMdaStatus(person)">Add MDA</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.civilServiceTitle == 'SW'" ng-click="addPersonSpecialPosition(person)">Add Special Position</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </accordion-group>
+
+                                    <accordion-group id="fmla" is-open="fmla.open" ng-show="personnelpane.fmlaShow">
+                                        <accordion-heading>
+                                            <i class="fa" ng-class="fmla.open ? 'fa-minus-square-o' : 'fa-plus-square-o'" ng-click="togglerOpen()"></i>
+                                            FMLA <span>({{personnelpane.fmlaTotal}})</span>
+                                        </accordion-heading>
+                                        <div ng-repeat="(id, person) in personnelpane.fmlaSorted track by person.id"
+                                             ng-click="showPersonDetails($event, person.id)" context-menu="true"
+                                             data-target="person-context-menu-{{person.id}}-{{$index}}"
+                                             class="person-container">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}" lvl-draggable="">
+                                                {{person.formattedName}}
+                                            </span>
+                                            <span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}">
+                                                {{person.indicatorText}}
+                                            </span>
+                                            <div id="person-context-menu-{{person.id}}-{{$index}}" class="context-menu">
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.activeMDA" ng-click="setMdaStatus(person)">Add MDA</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.civilServiceTitle == 'SW'" ng-click="addPersonSpecialPosition(person)">Add Special Position</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </accordion-group>
+
+                                    <accordion-group id="maternityLeave" is-open="maternityLeave.open" ng-show="personnelpane.maternityLeaveShow">
+                                        <accordion-heading>
+                                            <i class="fa" ng-class="maternityLeave.open ? 'fa-minus-square-o' : 'fa-plus-square-o'" ng-click="togglerOpen()"></i>
+                                            Maternity Leave&nbsp;<span>({{personnelpane.maternityLeaveTotal}})</span>
+                                        </accordion-heading>
+                                        <div ng-repeat="(id, person) in personnelpane.maternityLeaveSorted track by person.id"
+                                             ng-click="showPersonDetails($event, person.id)" context-menu="true"
+                                             data-target="person-context-menu-{{person.id}}-{{$index}}"
+                                             class="person-container">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}" lvl-draggable="">
+                                                {{person.formattedName}}
+                                            </span>
+                                            <span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}">
+                                                {{person.indicatorText}}
+                                            </span>
+                                            <div id="person-context-menu-{{person.id}}-{{$index}}" class="context-menu">
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.activeMDA" ng-click="setMdaStatus(person)">Add MDA</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.civilServiceTitle == 'SW'" ng-click="addPersonSpecialPosition(person)">Add Special Position</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </accordion-group>
+
+
+                                    <accordion-group id="civilServiceExamLeave" is-open="civilServiceExam.open" ng-show="personnelpane.civilServiceExamShow">
+                                        <accordion-heading>
+                                            <i class="fa" ng-class="civilServiceExam.open ? 'fa-minus-square-o' : 'fa-plus-square-o'" ng-click="togglerOpen()"></i>
+                                           Civil Service Exam<span>({{personnelpane.civilServiceExamTotal}})</span>
+                                        </accordion-heading>
+                                        <div ng-repeat="(id, person) in personnelpane.civilServiceExamSorted track by person.id"
+                                             ng-click="showPersonDetails($event, person.id)" context-menu="true"
+                                             data-target="person-context-menu-{{person.id}}-{{$index}}"
+                                             class="person-container">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}" lvl-draggable="">
+                                                {{person.formattedName}}
+                                            </span>
+                                            <span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}">
+                                                {{person.indicatorText}}
+                                            </span>
+                                            <div id="person-context-menu-{{person.id}}-{{$index}}" class="context-menu">
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.activeMDA" ng-click="setMdaStatus(person)">Add MDA</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.civilServiceTitle == 'SW'" ng-click="addPersonSpecialPosition(person)">Add Special Position</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </accordion-group>
+
+                                    <accordion-group id="multiple" is-open="multiple.open" ng-show="personnelpane.multipleShow">
+                                        <accordion-heading>
+                                            <i class="fa" ng-class="multiple.open ? 'fa-minus-square-o' : 'fa-plus-square-o'" ng-click="togglerOpen()"></i>
+                                            Multiple<span>({{personnelpane.multipleTotal}})</span>
+                                        </accordion-heading>
+                                        <div ng-repeat="(id, person) in personnelpane.multipleSorted track by person.id"
+                                             ng-click="showPersonDetails($event, person.id)" context-menu="true"
+                                             data-target="person-context-menu-{{person.id}}-{{$index}}"
+                                             class="person-container">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}" ng-if="!person.notDraggable" lvl-draggable="">
+                                                {{person.formattedName}}
+                                            </span>
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}"  ng-if="person.notDraggable">
+                                                {{person.formattedName}}
+                                            </span>
+                                            <span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation, 'detachedoutsidepayroll': person.detachedOutSidePayroll}">
+                                                {{person.indicatorText}}
+                                            </span>
+                                            <div id="person-context-menu-{{person.id}}-{{$index}}" class="context-menu">
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.activeMDA" ng-click="setMdaStatus(person)">Add MDA</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.civilServiceTitle == 'SW'" ng-click="addPersonSpecialPosition(person)">Add Special Position</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </accordion-group>
+                                </accordion>
+                            </div>
+                        </div>
+
+                        <div class="pane-subpane pane-subpane-person pane-subpane-unavailable assigned flexbox flex">
+                         <a href="" ng-click="assigned.toggleAssignedSubpanel()">
+                            <div class="header">
+                                <span class="title-text">Assigned</span> <span class="badge badgeMod">{{numAssigned}}</span>
+                                <span class="arrowleft">
+                                    <i class="fa" ng-class="assigned.open ? 'fa-caret-down' : 'fa-caret-right'" ></i>
+                                </span>
+                            </div>
+                            </a>
+                            <div class="body">
+                              <div class="assigned-personnel daybefore-personnel" ng-repeat="shift in assigned.dayBeforeShifts | orderBy:sequence track by shift.id">
+
+                                <accordion class="sub-categories" close-others="false" ng-hide="!shift._personnel.length">
+                                  <accordion-group is-open="assigned.shiftToggleData[shift.id].open">
+                                    <accordion-heading>
+                                      <i class="fa" ng-class="assigned.shiftToggleData[shift.id].open ? 'fa-minus-square-o' : 'fa-plus-square-o'" ng-click="assigned.toggleAssignedShift(shift.id)"></i>
+                                      <span>Started Previous Day for {{shift.name}} ({{shift._personnel.length}})</span>
+                                    </accordion-heading>
+
+                                    <div class="assigned-personnel-group chiefs" ng-show="assigned.dayBeforeGroups.chiefs[shift.id].sorted.length">
+                                        <header>
+                                              Chiefs ({{assigned.dayBeforeGroups.chiefs[shift.id].sorted.length + assigned.dayBeforeGroups.chiefs[shift.id].nextDay.sorted.length}})
+                                        </header>
+                                        <div ng-repeat="(id, person) in assigned.dayBeforeGroups.chiefs[shift.id].sorted" ng-click="showPersonDetails($event, person.id)" class="person-container" context-menu="true" data-target="person-context-menu-{{person.id}}">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}" >
+                                                {{person.formattedName}}
+                                            </span>
+                                            <span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}">
+                                                {{person.indicatorText}}
+                                            </span>
+                                            <div ng-hide="person.state === states.personnel.hidden" id="person-context-menu-{{person.id}}" class="context-menu">
+                                                <ul class="dropdown-menu">                                                    
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setMdaStatus(person)" ng-show="person.activeMDA">Add MDA</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setAvailableNextDay(person)">Make Available</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>                                     
+                                    </div>
+
+                                    <div class="assigned-personnel-group chiefs" ng-show="assigned.dayBeforeGroups.superintendents[shift.id].sorted.length">
+                                        <header>
+                                            Superintendents ({{assigned.dayBeforeGroups.superintendents[shift.id].sorted.length + assigned.dayBeforeGroups.superintendents[shift.id].nextDay.sorted.length}})
+                                        </header>
+                                        <div ng-repeat="(id, person) in assigned.dayBeforeGroups.superintendents[shift.id].sorted" ng-click="showPersonDetails($event, person.id)" class="person-container" context-menu="true" data-target="person-context-menu-{{person.id}}">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}"  ng-class="{'detachedoutsidepayroll': person.detachedOutSidePayroll}">
+                                                {{person.formattedName}}
+                                            </span>
+                                            <span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}" ng-class="{'detachedoutsidepayroll': person.detachedOutSidePayroll}">
+                                                {{person.indicatorText}}
+                                            </span>
+                                            <div ng-hide="person.state === states.personnel.hidden" id="person-context-menu-{{person.id}}" class="context-menu">
+                                                <ul class="dropdown-menu">                                                    
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setMdaStatus(person)" ng-show="person.activeMDA">Add MDA</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setAvailableNextDay(person)">Make Available</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>                                 
+                                    </div>
+
+                                    <div class="assigned-personnel-group supervisors" ng-show="assigned.dayBeforeGroups.supervisors[shift.id].sorted.length">
+                                        <header>
+                                            Supervisors ({{assigned.dayBeforeGroups.supervisors[shift.id].sorted.length + assigned.dayBeforeGroups.supervisors[shift.id].nextDay.sorted.length}})
+                                        </header>
+                                        <!--<div ng-repeat="(id, person) in assigned.dayBeforeGroups.supervisors.filter(shift._personnel, shift.id)" ng-click="showPersonDetails($event, person.id)" class="person-container" context-menu="true" data-target="person-context-menu-{{person.id}}">-->
+                                        <div ng-repeat="(id, person) in assigned.dayBeforeGroups.supervisors[shift.id].sorted" ng-click="showPersonDetails($event, person.id)" class="person-container" context-menu="true" data-target="person-context-menu-{{person.id}}">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}"  ng-class="{'detachedsup': person.detachedSup}">
+                                                {{person.formattedName}}
+                                            </span>
+                                            <span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}" ng-class="{'detachedsup': person.detachedSup}">
+                                                {{person.indicatorText}}
+                                            </span>
+                                            <div ng-hide="person.state === states.personnel.hidden" id="person-context-menu-{{person.id}}" class="context-menu">
+                                                <ul class="dropdown-menu">                                                   
+                                                   <li><a class="menu-item" tabindex="-1" ng-click="setMdaStatus(person)" ng-show="person.activeMDA">Add MDA</a></li>
+                                                   <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                               	   <li><a class="menu-item" tabindex="-1" ng-click="setAvailableNextDay(person)">Make Available</a></li>
+                                               </ul>
+                                            </div>
+                                        </div>                                      
+                                    </div>								
+                                    <div class="assigned-personnel-group sanitationWorkers" ng-show="assigned.dayBeforeGroups.sanitationWorkers[shift.id].sorted.length">
+                                        <header>
+                                            Sanitation Workers ({{assigned.dayBeforeGroups.sanitationWorkers[shift.id].sorted.length + assigned.dayBeforeGroups.sanitationWorkers[shift.id].nextDay.sorted.length}})
+                                        </header>
+                                        <div ng-repeat="(id, person) in assigned.dayBeforeGroups.sanitationWorkers[shift.id].sorted" ng-click="showPersonDetails($event, person.id)" class="person-container" context-menu="true" data-target="person-context-menu-{{person.id}}">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}"  ng-class="{'detachedsw': person.detachedSW, 'attachedtopayrolllocation': person.attachedToPayrollLocation}">
+                                                {{person.formattedName}}
+                                            </span>
+                                            <span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'attachedtopayrolllocation': person.attachedToPayrollLocation}">
+                                                {{person.indicatorText}}
+                                            </span>
+                                            <div ng-hide="person.state === states.personnel.hidden" id="person-context-menu-{{person.id}}" class="context-menu">
+                                                <ul class="dropdown-menu">                                                    
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setMdaStatus(person)" ng-show="person.activeMDA">Add MDA</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setAvailableNextDay(person)">Make Available</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="assigned-personnel-group civilians" ng-show="assigned.dayBeforeGroups.civilians[shift.id].sorted.length">
+                                        <header>
+                                            Civilians ({{assigned.dayBeforeGroups.civilians[shift.id].sorted.length}})
+                                        </header>
+                                        <div ng-repeat="(id, person) in assigned.dayBeforeGroups.civilians[shift.id].sorted" ng-click="showPersonDetails($event, person.id)" class="person-container" context-menu="true" data-target="person-context-menu-{{person.id}}">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}"  ng-class="{'detachedoutsidepayroll': person.detachedOutSidePayroll}">
+                                                {{person.formattedName}}
+                                            </span>
+                                            <span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}" ng-class="{'detachedoutsidepayroll': person.detachedOutSidePayroll}">
+                                                {{person.indicatorText}}
+                                            </span>
+                                            <div ng-hide="person.state === states.personnel.hidden" id="person-context-menu-{{person.id}}" class="context-menu">
+                                                <ul class="dropdown-menu">                                                    
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setMdaStatus(person)" ng-show="person.activeMDA">Add MDA</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setAvailableNextDay(person)">Make Available</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                  </accordion-group>
+                                </accordion>
+
+                              </div>
+
+                              <div class="assigned-personnel" ng-repeat="shift in assigned.shifts | orderBy:sequence track by shift.id">
+
+                                <accordion class="sub-categories" close-others="false" ng-hide="!shift._personnel.length &amp;&amp; (!shift._nextDayPersonnel || !shift._nextDayPersonnel.length)">
+                                  <accordion-group is-open="assigned.shiftToggleData[shift.id].open">
+                                    <accordion-heading>
+                                      <i class="fa" ng-class="assigned.shiftToggleData[shift.id].open ? 'fa-minus-square-o' : 'fa-plus-square-o'" ng-click="assigned.toggleAssignedShift(shift.id)"></i>
+                                      <span>{{shift.name}}</span>
+                                    </accordion-heading>
+
+                                    <div class="assigned-personnel-group chiefs" ng-show="assigned.groups.chiefs[shift.id].sorted.length || assigned.groups.chiefs[shift.id].nextDay.sorted.length">
+                                        <header>
+                                              Chiefs ({{assigned.groups.chiefs[shift.id].sorted.length + assigned.groups.chiefs[shift.id].nextDay.sorted.length}})
+                                        </header>
+                                        <div ng-repeat="(id, person) in assigned.groups.chiefs[shift.id].sorted" ng-click="showPersonDetails($event, person.id)" class="person-container" context-menu="true" data-target="person-context-menu-{{person.id}}-{{$index}}">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}" lvl-draggable="">
+                                                {{person.formattedName}}
+                                            </span>
+                                            <span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}">
+                                                {{person.indicatorText}}
+                                            </span>
+                                            <div ng-hide="person.state === states.personnel.hidden" id="person-context-menu-{{person.id}}-{{$index}}" class="context-menu">
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setMdaStatus(person)" ng-show="person.activeMDA">Add MDA</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                         <!-- NEW -->
+                                        <div class="next-day clear" ng-show="assigned.groups.chiefs[shift.id].nextDay.sorted.length">
+                                        	<header>
+                                        		Working Next Day ({{assigned.groups.chiefs[shift.id].nextDay.sorted.length}}) 
+                                        	</header>
+	                                        <div ng-repeat="(id, person) in assigned.groups.chiefs[shift.id].nextDay.sorted" ng-click="showPersonDetails($event, person.id)" class="person-container" context-menu="true" data-target="person-context-menu-{{person.id}}">
+	                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}" lvl-draggable="">
+	                                                {{person.formattedName}}
+	                                            </span>
+	                                            <span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}">
+	                                                {{person.indicatorText}}
+	                                            </span>
+	                                            <div ng-hide="person.state === states.personnel.hidden" id="person-context-menu-{{person.id}}" class="context-menu">
+	                                                <ul class="dropdown-menu">
+	                                                    <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+	                                                    <li><a class="menu-item" tabindex="-1" ng-click="setMdaStatus(person)" ng-show="person.activeMDA">Add MDA</a></li>
+	                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+	                                                </ul>
+	                                            </div>
+	                                        </div>
+                                        </div>
+                                        <!-- END NEW -->
+                                    </div>
+
+                                    <div class="assigned-personnel-group chiefs" ng-show="assigned.groups.superintendents[shift.id].sorted.length || assigned.groups.superintendents[shift.id].nextDay.sorted.length">
+                                        <header>
+                                            Superintendents ({{assigned.groups.superintendents[shift.id].sorted.length + assigned.groups.superintendents[shift.id].nextDay.sorted.length}})
+                                        </header>
+                                        <div ng-repeat="(id, person) in assigned.groups.superintendents[shift.id].sorted" ng-click="showPersonDetails($event, person.id)" class="person-container" context-menu="true" data-target="person-context-menu-{{person.id}}-{{$index}}">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}" lvl-draggable="" ng-class="{'detachedoutsidepayroll': person.detachedOutSidePayroll}">
+                                                {{person.formattedName}}
+                                            </span>
+                                            <span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}" ng-class="{'detachedoutsidepayroll': person.detachedOutSidePayroll}">
+                                                {{person.indicatorText}}
+                                            </span>
+                                            <div ng-hide="person.state === states.personnel.hidden" id="person-context-menu-{{person.id}}-{{$index}}" class="context-menu">
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setMdaStatus(person)" ng-show="person.activeMDA">Add MDA</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <!-- NEW -->
+                                        <div class="next-day clear" ng-show="assigned.groups.superintendents[shift.id].nextDay.sorted.length">
+                                        	<header>
+                                        		Working Next Day ({{assigned.groups.superintendents[shift.id].nextDay.sorted.length}}) 
+                                        	</header>
+	                                        <div ng-repeat="(id, person) in assigned.groups.superintendents[shift.id].nextDay.sorted" ng-click="showPersonDetails($event, person.id)" class="person-container" context-menu="true" data-target="person-context-menu-{{person.id}}">
+	                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}" lvl-draggable="" ng-class="{'detachedoutsidepayroll': person.detachedOutSidePayroll}">
+	                                                {{person.formattedName}}
+	                                            </span>
+	                                            <span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}" ng-class="{'detachedoutsidepayroll': person.detachedOutSidePayroll}">
+	                                                {{person.indicatorText}}
+	                                            </span>
+	                                            <div ng-hide="person.state === states.personnel.hidden" id="person-context-menu-{{person.id}}" class="context-menu">
+	                                                <ul class="dropdown-menu">
+	                                                    <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+	                                                    <li><a class="menu-item" tabindex="-1" ng-click="setMdaStatus(person)" ng-show="person.activeMDA">Add MDA</a></li>
+	                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+	                                                </ul>
+	                                            </div>
+	                                        </div>
+                                        </div>
+                                        <!-- END NEW -->
+                                    </div>
+
+                                    <div class="assigned-personnel-group supervisors" ng-show="assigned.groups.supervisors[shift.id].sorted.length || assigned.groups.supervisors[shift.id].nextDay.sorted.length">
+                                        <header>
+                                            Supervisors ({{assigned.groups.supervisors[shift.id].sorted.length + assigned.groups.supervisors[shift.id].nextDay.sorted.length}})
+                                        </header>
+                                        <!--<div ng-repeat="(id, person) in assigned.groups.supervisors.filter(shift._personnel, shift.id)" ng-click="showPersonDetails($event, person.id)" class="person-container" context-menu="true" data-target="person-context-menu-{{person.id}}-{{$index}}">-->
+                                        <div ng-repeat="(id, person) in assigned.groups.supervisors[shift.id].sorted" ng-click="showPersonDetails($event, person.id)" class="person-container" context-menu="true" data-target="person-context-menu-{{person.id}}-{{$index}}">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}" lvl-draggable="" ng-class="{'detachedsup': person.detachedSup}">
+                                                {{person.formattedName}}
+                                            </span>
+                                            <span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}" ng-class="{'detachedsup': person.detachedSup}">
+                                                {{person.indicatorText}}
+                                            </span>
+                                            <div ng-hide="person.state === states.personnel.hidden" id="person-context-menu-{{person.id}}-{{$index}}" class="context-menu">
+                                                <ul class="dropdown-menu">
+                                                   <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+                                                   <li><a class="menu-item" tabindex="-1" ng-click="setMdaStatus(person)" ng-show="person.activeMDA">Add MDA</a></li>
+                                                   <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <!-- NEW -->
+                                        <div class="next-day clear" ng-show="assigned.groups.supervisors[shift.id].nextDay.sorted.length">
+                                        	<header>
+                                        		Working Next Day ({{assigned.groups.supervisors[shift.id].nextDay.sorted.length}}) 
+                                        	</header>
+	                                        <div ng-repeat="(id, person) in assigned.groups.supervisors[shift.id].nextDay.sorted" ng-click="showPersonDetails($event, person.id)" class="person-container" context-menu="true" data-target="person-context-menu-{{person.id}}">
+	                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}" lvl-draggable="" ng-class="{'detachedsup': person.detachedSup}">
+	                                                {{person.formattedName}}
+	                                            </span>
+	                                            <span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}" ng-class="{'detachedsup': person.detachedSup}">
+	                                                {{person.indicatorText}}
+	                                            </span>
+	                                            <div ng-hide="person.state === states.personnel.hidden" id="person-context-menu-{{person.id}}" class="context-menu">
+	                                                <ul class="dropdown-menu">
+	                                                   <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+	                                                   <li><a class="menu-item" tabindex="-1" ng-click="setMdaStatus(person)" ng-show="person.activeMDA">Add MDA</a></li>
+	                                                   <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+	                                                </ul>
+	                                            </div>
+	                                        </div>
+                                        </div>
+                                        <!-- END NEW -->
+                                    </div>								
+                                    <div class="assigned-personnel-group sanitationWorkers" ng-show="assigned.groups.sanitationWorkers[shift.id].sorted.length || assigned.groups.sanitationWorkers[shift.id].nextDay.sorted.length">
+                                        <header>
+                                            Sanitation Workers ({{assigned.groups.sanitationWorkers[shift.id].sorted.length + assigned.groups.sanitationWorkers[shift.id].nextDay.sorted.length}})
+                                        </header>
+                                        <div ng-repeat="(id, person) in assigned.groups.sanitationWorkers[shift.id].sorted" ng-click="showPersonDetails($event, person.id)" class="person-container" context-menu="true" data-target="person-context-menu-{{person.id}}-{{$index}}">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}" lvl-draggable="" ng-class="{'detachedsw': person.detachedSW, 'attachedtopayrolllocation': person.attachedToPayrollLocation}">
+                                                {{person.formattedName}}
+                                            </span>
+                                            <span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'attachedtopayrolllocation': person.attachedToPayrollLocation}">
+                                                {{person.indicatorText}}
+                                            </span>
+                                            <div ng-hide="person.state === states.personnel.hidden" id="person-context-menu-{{person.id}}-{{$index}}" class="context-menu">
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setMdaStatus(person)" ng-show="person.activeMDA">Add MDA</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                         <!-- NEW -->
+                                        <div class="next-day clear" ng-show="assigned.groups.sanitationWorkers[shift.id].nextDay.sorted.length">
+                                        	<header>
+                                        		Working Next Day ({{assigned.groups.sanitationWorkers[shift.id].nextDay.sorted.length}}) 
+                                        	</header>
+	                                        <div ng-repeat="(id, person) in assigned.groups.sanitationWorkers[shift.id].nextDay.sorted" ng-click="showPersonDetails($event, person.id)" class="person-container" context-menu="true" data-target="person-context-menu-{{person.id}}">
+	                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}" lvl-draggable="" ng-class="{'detachedsw': person.detachedSW, 'attachedtopayrolllocation': person.attachedToPayrollLocation}">
+	                                                {{person.formattedName}}
+	                                            </span>
+	                                            <span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'attachedtopayrolllocation': person.attachedToPayrollLocation}">
+	                                                {{person.indicatorText}}
+	                                            </span>
+	                                            <div ng-hide="person.state === states.personnel.hidden" id="person-context-menu-{{person.id}}" class="context-menu">
+	                                                <ul class="dropdown-menu">
+	                                                    <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+	                                                    <li><a class="menu-item" tabindex="-1" ng-click="setMdaStatus(person)" ng-show="person.activeMDA">Add MDA</a></li>
+	                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+	                                                </ul>
+	                                            </div>
+	                                        </div>
+                                        </div>
+                                        <!-- END NEW -->
+                                    </div>
+
+                                    <div class="assigned-personnel-group civilians" ng-show="assigned.groups.civilians[shift.id].sorted.length || assigned.groups.civilians[shift.id].nextDay.sorted.length">
+                                        <header>
+                                            Civilians ({{assigned.groups.civilians[shift.id].sorted.length}})
+                                        </header>
+                                        <div ng-repeat="(id, person) in assigned.groups.civilians[shift.id].sorted" ng-click="showPersonDetails($event, person.id)" class="person-container" context-menu="true" data-target="person-context-menu-{{person.id}}-{{$index}}">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}" lvl-draggable="" ng-class="{'detachedoutsidepayroll': person.detachedOutSidePayroll}">
+                                                {{person.formattedName}}
+                                            </span>
+                                            <span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}" ng-class="{'detachedoutsidepayroll': person.detachedOutSidePayroll}">
+                                                {{person.indicatorText}}
+                                            </span>
+                                            <div ng-hide="person.state === states.personnel.hidden" id="person-context-menu-{{person.id}}-{{$index}}" class="context-menu">
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setMdaStatus(person)" ng-show="person.activeMDA">Add MDA</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <!-- NEW -->
+                                        <div class="next-day clear" ng-show="assigned.groups.civillians[shift.id].nextDay.sorted.length">
+                                        	<header>
+                                        		Working Next Day ({{assigned.groups.civillians[shift.id].nextDay.sorted.length}}) 
+                                        	</header>
+	                                        <div ng-repeat="(id, person) in assigned.groups.civilians[shift.id].nextDay.sorted" ng-click="showPersonDetails($event, person.id)" class="person-container" context-menu="true" data-target="person-context-menu-{{person.id}}">
+	                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}" lvl-draggable="" ng-class="{'detachedoutsidepayroll': person.detachedOutSidePayroll}">
+	                                                {{person.formattedName}}
+	                                            </span>
+	                                            <span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}" ng-class="{'detachedoutsidepayroll': person.detachedOutSidePayroll}">
+	                                                {{person.indicatorText}}
+	                                            </span>
+	                                            <div ng-hide="person.state === states.personnel.hidden" id="person-context-menu-{{person.id}}" class="context-menu">
+	                                                <ul class="dropdown-menu">
+	                                                    <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+	                                                    <li><a class="menu-item" tabindex="-1" ng-click="setMdaStatus(person)" ng-show="person.activeMDA">Add MDA</a></li>
+	                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+	                                                </ul>
+	                                            </div>
+	                                        </div>
+                                        </div>
+                                        <!-- END NEW -->
+                                    </div>
+
+                                  </accordion-group>
+                                </accordion>
+
+                              </div>
+                            </div>
+                        </div>
+
+                        <div class="pane-subpane pane-subpane-person pane-subpane-unavailable flexbox flex">
+                        <a href="" ng-click="toggleDetachedSubpanel()">
+                            <div class="header">
+                                <span class="title-text">Detached</span> <span class="badge badgeMod">{{personnelpane.detachedPersonnelCount}}</span>
+                                <span class="arrowleft">
+                                    <i class="fa" ng-class="detached.open ? 'fa-caret-down' : 'fa-caret-right'" ></i>
+                                </span>
+                            </div>
+                            </a>
+
+                            <div class="body">
+                                <accordion id="personnelDetachedBySubGroups" class="sub-categories" close-others="false">
+                                    <accordion-group id="chiefsDetached" is-open="chiefsDetached.open" ng-show="personnelpane.chiefsDetachedShow">
+                                        <accordion-heading>
+                                            <i class="fa" ng-class="chiefsDetached.open ? 'fa-minus-square-o' : 'fa-plus-square-o'" ng-click="togglerOpen()"></i>
+                                            Chiefs <span>({{personnelpane.chiefsDetachedTotal}})</span>
+                                        </accordion-heading>
+                                        <div ng-repeat="(id, person) in personnelpane.chiefsDetachedSorted track by person.id" ng-click="showPersonDetails($event, person.id)" class="person-container" context-menu="true" data-target="person-context-menu-{{person.id}}-{{$index}}">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}">{{person.formattedName}}</span><span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}">{{person.indicatorText}}</span>
+                                            <div id="person-context-menu-{{person.id}}-{{$index}}" class="context-menu">
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.activeMDA" ng-click="setMdaStatus(person)">Add MDA</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </accordion-group>
+
+                                    <accordion-group id="superintendentsDetached" is-open="superintendentsDetached.open" ng-show="personnelpane.superintendentsDetachedShow">
+                                        <accordion-heading>
+                                            <i class="fa" ng-class="superintendentsDetached.open ? 'fa-minus-square-o' : 'fa-plus-square-o'" ng-click="togglerOpen()"></i>
+                                            Superintendents <span>({{personnelpane.superintendentsDetachedTotal}})</span>
+                                        </accordion-heading>
+                                        <div ng-repeat="(id, person) in personnelpane.superintendentsDetachedSorted track by person.id" ng-click="showPersonDetails($event, person.id)" class="person-container" context-menu="true" data-target="person-context-menu-{{person.id}}-{{$index}}">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}" ng-class="{'detachedoutsidepayroll': person.detachedOutSidePayroll}">{{person.formattedName}}</span><span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}" ng-class="{'detachedoutsidepayroll': person.detachedOutSidePayroll}">{{person.indicatorText}}</span>
+                                            <div id="person-context-menu-{{person.id}}-{{$index}}" class="context-menu">
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.activeMDA" ng-click="setMdaStatus(person)">Add MDA</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </accordion-group>
+
+                                    <accordion-group id="supervisorsDetached" is-open="supervisorsDetached.open" ng-show="personnelpane.supervisorsDetachedShow">
+                                        <accordion-heading>
+                                            <i class="fa" ng-class="supervisorsDetached.open ? 'fa-minus-square-o' : 'fa-plus-square-o'" ng-click="togglerOpen()"></i>
+                                            Supervisors <span>({{personnelpane.supervisorsDetachedTotal}})</span>
+                                        </accordion-heading>
+                                        <div ng-repeat="(id, person) in personnelpane.supervisorsDetachedSorted track by person.id" ng-click="showPersonDetails($event, person.id)" class="person-container" context-menu="true" data-target="person-context-menu-{{person.id}}-{{$index}}">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}">{{person.formattedName}}</span><span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}">{{person.indicatorText}}</span>
+                                            <div id="person-context-menu-{{person.id}}-{{$index}}" class="context-menu">
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.activeMDA" ng-click="setMdaStatus(person)">Add MDA</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </accordion-group>
+
+                                    <accordion-group id="sanitationsDetached" is-open="sanitationDetached.open" ng-show="personnelpane.sanitationDetachedShow">
+                                        <accordion-heading>
+                                            <i class="fa" ng-class="sanitationDetached.open ? 'fa-minus-square-o' : 'fa-plus-square-o'" ng-click="togglerOpen()"></i>
+                                            Sanitation Workers <span>({{personnelpane.sanitationDetachedTotal}})</span>
+                                        </accordion-heading>
+                                        <div ng-repeat="(id,person) in personnelpane.sanitationDetachedSorted track by person.id"
+                                             class="person-container"
+                                             ng-click="showPersonDetails($event, person.id)"
+                                             context-menu="true"
+                                             data-target="person-context-menu-{{person.id}}-{{$index}}">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}">{{person.formattedName}}</span>
+                                            <span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}">{{person.indicatorText}}</span>
+
+                                            <div id="person-context-menu-{{person.id}}-{{$index}}" class="context-menu">
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setMdaStatus(person)" ng-show="person.activeMDA">Add MDA</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="addPersonSpecialPosition(person)">Add Special Position</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </accordion-group>
+
+                                    <accordion-group id="civiliansDetached" is-open="civiliansDetached.open" ng-show="personnelpane.civiliansDetachedShow">
+                                        <accordion-heading>
+                                            <i class="fa" ng-class="civilians.open ? 'fa-minus-square-o' : 'fa-plus-square-o'" ng-click="togglerOpen()"></i>
+                                            Civilians <span>({{personnelpane.civiliansDetachedTotal}})</span>
+                                        </accordion-heading>
+                                        <div ng-repeat="(id,person) in personnelpane.civiliansDetachedSorted track by person.id" class="person-container"
+                                             ng-click="showPersonDetails($event, person.id)" 
+                                             context-menu="true"
+                                             data-target="person-context-menu-{{person.id}}-{{$index}}">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}" ng-class="{'detachedoutsidepayroll': person.detachedOutSidePayroll}">{{person.formattedName}}</span>
+                                            <span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}" ng-class="{'detachedoutsidepayroll': person.detachedOutSidePayroll}">{{person.indicatorText}}</span>
+
+                                            <div id="person-context-menu-{{person.id}}-{{$index}}" class="context-menu">
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </accordion-group>
+                                </accordion>
+                            </div>
+                        </div>
+                        <div class="pane-subpane pane-subpane-person pane-subpane-unavailable flexbox flex">
+                        <a href="" ng-click="toggleMDASubpanel()">
+                            <div class="header">
+                                <span class="title-text">MDA</span> <span class="badge badgeMod">{{personnelpane.mdaTotal}}</span>
+                                <span class="arrowleft">
+                                    <i class="fa" ng-class="mda.open ? 'fa-caret-down' : 'fa-caret-right'"></i>
+                                </span>
+                            </div>
+                            </a>
+                            <div class="body">
+                                <div id="personnelMDA" class="no-categories" ng-show="mda.open">
+                                    <div ng-repeat="(id, person) in personnelpane.mdaSorted track by person.id" ng-click="showPersonDetails($event, person.id)" class="person-container" context-menu="true" data-target="person-context-menu-{{person.id}}-{{$index}}">
+                                        <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}"
+                                            ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation}"
+                                            lvl-draggable="true">
+                                            {{person.formattedName}}
+                                        </span>
+                                        <span class="flag {{person.departmentType | lowercase}} {{person.titleMap}} {{person.indicatorBox}} {{person.titleMap}}"
+                                            ng-class="{'detachedsw': person.detachedSW, 'detachedsup': person.detachedSup, 'attachedtopayrolllocation': person.attachedToPayrollLocation}">
+                                            {{person.indicatorText}}
+                                        </span>
+                                        <div id="person-context-menu-{{person.id}}-{{$index}}" class="context-menu">
+                                            <ul class="dropdown-menu">
+                                                <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+                                                <li><a class="menu-item" tabindex="-1" ng-show="person.activeMDA" ng-click="setMdaStatus(person)">Add MDA</a></li>
+                                                <li><a class="menu-item" tabindex="-1" ng-show="person.civilServiceTitle == 'SW'" ng-click="addPersonSpecialPosition(person)">Add Special Position</a></li>
+                                                <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                <li><a class="menu-item" tabindex="-1" ng-show="person.availableNextDay" ng-click="removeAvailableNextDay(person)">Remove from Available</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="allAvailablePersonnel" class="all-avail-panel-grouping">
+                        <div class="pane-subpane pane-subpane-person pane-subpane-available flexbox flex">
+                         <a href="" ng-click="toggleAvailableSubpanel()">
+                            <div class="header">
+                                <span class="arrowleft">
+                                    <i class="fa" ng-class="available.open ? 'fa-caret-down' : 'fa-caret-right'"></i>
+                                </span>
+
+                                <span class="title-text">Available/Unassigned</span>
+                                <span class="badge badgeMod">{{personnelpane.numAvailable}}</span>
+
+                            </div>
+                            </a>
+                            <div class="body">
+                                <accordion id="personnelAvailable" class="sub-categories" close-others="false">
+
+                                    <accordion-group id="commissioners" is-open="commissioners.open" ng-show="personnelpane.commissionersShow">
+                                        <accordion-heading>
+                                            <i class="fa" ng-class="commissioners.open ? 'fa-minus-square-o' : 'fa-plus-square-o'" ng-click="togglerOpen()"></i>
+                                            Commissioner <span>({{personnelpane.commissionersTotal}})</span>
+                                        </accordion-heading>
+                                        <div ng-repeat="(id,person) in personnelpane.commissionersSorted track by person.id" class="person-container"
+                                             ng-click="showPersonDetails($event, person.id)" lvl-draggable="true" context-menu="true"
+                                             data-target="person-context-menu-{{person.id}}-{{$index}}">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}">{{person.formattedName}}</span>
+                                            <span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}">{{person.indicatorText}}</span>
+
+                                            <div id="person-context-menu-{{person.id}}-{{$index}}" class="context-menu">
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setMdaStatus(person)" ng-show="person.activeMDA">Add MDA</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.availableNextDay" ng-click="removeAvailableNextDay(person)">Remove from Available</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </accordion-group>
+                                    <accordion-group id="chiefs" is-open="chiefs.open" ng-show="personnelpane.chiefsShow">
+                                        <accordion-heading>
+                                            <i class="fa" ng-class="chiefs.open ? 'fa-minus-square-o' : 'fa-plus-square-o'" ng-click="togglerOpen()"></i>
+                                            Chiefs <span>({{personnelpane.chiefsTotal}})</span>
+                                        </accordion-heading>
+                                        <div ng-repeat="(id,person) in personnelpane.chiefsSorted track by person.id" class="person-container"
+                                             ng-click="showPersonDetails($event, person.id)" lvl-draggable="true"
+                                             context-menu="true"
+                                             data-target="person-context-menu-{{person.id}}-{{$index}}">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}">{{person.formattedName}}</span>
+                                            <span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}">{{person.indicatorText}}</span>
+
+                                            <div id="person-context-menu-{{person.id}}-{{$index}}" class="context-menu">
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setMdaStatus(person)" ng-show="person.activeMDA">Add MDA</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.availableNextDay" ng-click="removeAvailableNextDay(person)">Remove from Available</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </accordion-group>
+                                    <accordion-group id="superintendents" is-open="superintendents.open"
+                                                     ng-show="personnelpane.superintendentsShow">
+                                        <accordion-heading>
+                                            <i class="fa" ng-class="superintendents.open ? 'fa-minus-square-o' : 'fa-plus-square-o'" ng-click="togglerOpen()"></i>
+                                            Superintendents ({{personnelpane.superintendentsTotal}})
+                                        </accordion-heading>
+                                        <div ng-repeat="(id,person) in personnelpane.superintendentsSorted track by person.id"
+                                             class="person-container"
+                                             ng-click="showPersonDetails($event, person.id)" lvl-draggable="true"
+                                             context-menu="true"
+                                             data-target="person-context-menu-{{person.id}}-{{$index}}">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}" ng-class="{'detachedoutsidepayroll': person.detachedOutSidePayroll}">{{person.formattedName}}</span>
+                                            <span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}" ng-class="{'detachedoutsidepayroll': person.detachedOutSidePayroll}">{{person.indicatorText}}</span>
+
+                                            <div id="person-context-menu-{{person.id}}-{{$index}}" class="context-menu">
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setMdaStatus(person)" ng-show="person.activeMDA">Add MDA</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.availableNextDay" ng-click="removeAvailableNextDay(person)">Remove from Available</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </accordion-group>
+                                    <accordion-group id="supervisors" is-open="supervisors.open" ng-show="personnelpane.supervisorsShow">
+                                        <accordion-heading>
+                                            <i class="fa" ng-class="supervisors.open ? 'fa-minus-square-o' : 'fa-plus-square-o'" ng-click="togglerOpen()"></i>
+                                            Supervisors <span>({{personnelpane.supervisorsTotal}})</span>
+                                        </accordion-heading>
+                                        <div ng-repeat="(id,person) in personnelpane.supervisorsSorted track by person.id" class="person-container" ng-click="showPersonDetails($event, person.id)" lvl-draggable="true" context-menu="true" data-target="person-context-menu-{{person.id}}-{{$index}}">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}" ng-class="{'detachedsup': person.detachedSup}">
+                                                {{person.formattedName}}
+                                            </span>
+                                            <span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}" ng-class="{'detachedsup': person.detachedSup}">
+                                                {{person.indicatorText}}
+                                            </span>
+
+                                            <div id="person-context-menu-{{person.id}}-{{$index}}" class="context-menu">
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setMdaStatus(person)" ng-show="person.activeMDA">Add MDA</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                	<li><a class="menu-item" tabindex="-1" ng-show="person.availableNextDay" ng-click="removeAvailableNextDay(person)">Remove from Available</a></li>  
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </accordion-group>
+                                    <accordion-group id="sanitationWorkers" is-open="sanitationWorkers.open"
+                                                     ng-show="personnelpane.sanitationWorkersShow" class="paddingbot5">
+                                        <accordion-heading>
+                                            <i class="fa" ng-class="sanitationWorkers.open ? 'fa-minus-square-o' : 'fa-plus-square-o'" ng-click="togglerOpen()"></i>
+                                            Sanitation Workers <span>({{personnelpane.sanitationWorkersTotal}})</span>
+                                        </accordion-heading>
+                                        <div ng-repeat="(id,person) in personnelpane.sanitationWorkersSorted track by person.id"
+                                             class="person-container"
+                                             ng-click="showPersonDetails($event, person.id)"
+                                             context-menu="true"
+                                             data-target="person-context-menu-{{person.id}}-{{$index}}"
+                                             lvl-draggable="true">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'attachedtopayrolllocation': person.attachedToPayrollLocation}">{{person.formattedName}}</span><span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}" ng-class="{'detachedsw': person.detachedSW, 'attachedtopayrolllocation': person.attachedToPayrollLocation}">{{person.indicatorText}}</span>
+
+                                            <div id="person-context-menu-{{person.id}}-{{$index}}" class="context-menu">
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setMdaStatus(person)" ng-show="person.activeMDA">Add MDA</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="addPersonSpecialPosition(person)">Add Special Position</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.availableNextDay" ng-click="removeAvailableNextDay(person)">Remove from Available</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </accordion-group>
+                                    <accordion-group id="civilians" is-open="civilians.open" ng-show="personnelpane.civiliansShow">
+                                        <accordion-heading>
+                                            <i class="fa" ng-class="civilians.open ? 'fa-minus-square-o' : 'fa-plus-square-o'" ng-click="togglerOpen()"></i>
+                                            Civilians <span>({{personnelpane.civiliansTotal}})</span>
+                                        </accordion-heading>
+                                        <div ng-repeat="(id,person) in personnelpane.civiliansSorted track by person.id" class="person-container"
+                                             ng-click="showPersonDetails($event, person.id)" lvl-draggable="true"
+                                             context-menu="true"
+                                             data-target="person-context-menu-{{person.id}}-{{$index}}">
+                                            <span class="person {{person.departmentType | lowercase}} {{person.titleMap}}" ng-class="{'detachedoutsidepayroll': person.detachedOutSidePayroll}">{{person.formattedName}}</span><span class="flag {{person.departmentType | lowercase}} {{person.indicatorBox}} {{person.titleMap}}" ng-class="{'detachedoutsidepayroll': person.detachedOutSidePayroll}">{{person.indicatorText}}</span>
+
+                                            <div id="person-context-menu-{{person.id}}-{{$index}}" class="context-menu">
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="detachPerson(person)">Detach</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-click="setUnavailableStatus(person)">Add Unavailable</a></li>
+                                                    <li><a class="menu-item" tabindex="-1" ng-show="person.availableNextDay" ng-click="removeAvailableNextDay(person)">Remove from Available</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </accordion-group>
+                                </accordion>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </perfect-scrollbar>
+
+    </div>
+</div>

@@ -1,0 +1,1782 @@
+<!DOCTYPE html><html lang="en"><head><title>public\scripts\controllers\personnel-controller</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../../"><meta name="groc-document-path" content="public\scripts\controllers\personnel-controller"><meta name="groc-project-path" content="public\scripts\controllers\personnel-controller.js"><link rel="stylesheet" type="text/css" media="all" href="../../../assets/style.css"><script type="text/javascript" src="../../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">public\scripts\controllers\personnel-controller.js</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="hljs-pi">'use strict'</span>;
+
+angular.module(<span class="hljs-string">'OpsBoard'</span>).controller(
+    <span class="hljs-string">'PersonnelCtrl'</span>,
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">($scope, $rootScope, OpsBoardRepository, states, groups, titleHierarchy, titles, $timeout, OpsBoardInterval)</span> </span>{
+
+    	
+    	
+        $scope.persons = OpsBoardRepository.getPersonnel();
+        $scope.isBoro = OpsBoardRepository.isBoroBoard();
+        
+        
+        $scope.boardQuota = OpsBoardRepository.getBoardQuota();
+        $scope.personnelSummary = {
+        		active: <span class="hljs-literal">false</span>,
+        		isBoro : $scope.isBoro
+        }
+        
+      
+        $scope.getActualSuperintendents = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+        	<span class="hljs-keyword">var</span> actualSuperintendents = <span class="hljs-number">0</span>;
+        	
+        	<span class="hljs-keyword">var</span> tasks = OpsBoardRepository.getTasks();
+        	angular.forEach(tasks.locations, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(location,key)</span> </span>{
+	        	 angular.forEach(location.locationShifts, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(value,key)</span> </span>{
+	        		 angular.forEach(value.shiftCategories, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(value,key)</span> </span>{
+	        			 angular.forEach(value.subcategoryTasks, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(value,key)</span> </span>{
+	        				 <span class="hljs-keyword">var</span> tempNumberOfTasks = value.numOfTasks;
+	        				 <span class="hljs-keyword">if</span> (value.subcategory.personnelTitle !== <span class="hljs-literal">undefined</span>)
+	        				 {
+	        					 <span class="hljs-keyword">if</span> (value.subcategory.personnelTitle.name === <span class="hljs-string">"GS I"</span>)
+        						 {
+	        						 actualSuperintendents = actualSuperintendents + (tempNumberOfTasks * value.subcategory.peoplePerTask) ;
+        						 }
+	        					 
+	        				 }	         				 
+	             		 })
+	         		 })
+	     		 })
+	 		 })
+	 		 
+	 		  		
+    			<span class="hljs-keyword">return</span> actualSuperintendents; 
+    		}
+           
+            $scope.getActualSanitationWorkers = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+        	<span class="hljs-keyword">var</span> actualSanitationWorkers = <span class="hljs-number">0</span>;
+        	<span class="hljs-keyword">var</span> tasks = OpsBoardRepository.getTasks();
+        	angular.forEach(tasks.locations, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(location,key)</span> </span>{
+	        	 angular.forEach(location.locationShifts, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(locationShift,key)</span> </span>{
+	        		 angular.forEach(locationShift.shiftCategories, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(shiftCategory,key)</span> </span>{
+	        			 angular.forEach(shiftCategory.subcategoryTasks, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(subcategoryTask,key)</span> </span>{
+		        				 <span class="hljs-keyword">var</span> tempNumberOfTasks;
+		        				 <span class="hljs-keyword">if</span>(!subcategoryTask.subcategory.containsSections){
+		        					 tempNumberOfTasks = subcategoryTask.numOfTasks;
+		        				 }<span class="hljs-keyword">else</span>{
+		        					 tempNumberOfTasks = <span class="hljs-number">0</span>;
+		        					 angular.forEach(subcategoryTask.sections, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(section,key)</span> </span>{
+		        						 tempNumberOfTasks = tempNumberOfTasks + <span class="hljs-built_in">Object</span>.keys(section.tasks).length;
+		        					 })
+		        				 }
+		        				 <span class="hljs-keyword">if</span> (subcategoryTask.subcategory.personnelTitle)
+		        				 {
+		        					 <span class="hljs-keyword">if</span> (subcategoryTask.subcategory.personnelTitle.name === <span class="hljs-string">"SW"</span>)
+	        						 {
+		        						 actualSanitationWorkers = actualSanitationWorkers + (tempNumberOfTasks * subcategoryTask.subcategory.peoplePerTask) ;
+	        						 }
+		        				 }
+	             		 })
+	         		 })
+	     		 })
+	 		 })
+    			<span class="hljs-keyword">return</span> actualSanitationWorkers; 
+    		}
+            
+            $scope.getActualSup = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+            	<span class="hljs-keyword">var</span> actualSupervisors = <span class="hljs-number">0</span>;
+            	<span class="hljs-keyword">var</span> tasks = OpsBoardRepository.getTasks();
+            	angular.forEach(tasks.locations, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(location,key)</span> </span>{
+    	        	 angular.forEach(location.locationShifts, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(value,key)</span> </span>{
+    	        		 angular.forEach(value.shiftCategories, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(value,key)</span> </span>{
+    	        			 angular.forEach(value.subcategoryTasks, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(value,key)</span> </span>{
+    	        				 <span class="hljs-keyword">var</span> tempNumberOfTasks = value.numOfTasks;
+    	        				 <span class="hljs-keyword">if</span> (value.subcategory.personnelTitle !== <span class="hljs-literal">undefined</span>)
+    	        				 {
+    	        					 <span class="hljs-keyword">if</span> (value.subcategory.personnelTitle.name === <span class="hljs-string">"SUP"</span>)
+    	        						 {
+    	        						 actualSupervisors = actualSupervisors + (tempNumberOfTasks * value.subcategory.peoplePerTask) ;
+    	        						 }
+    	        					 
+    	        				 }
+    	             		 })
+    	         		 })
+    	     		 })
+    	 		 })
+    	 		  		
+        			<span class="hljs-keyword">return</span> actualSupervisors; 
+        		}
+            
+            
+            
+            $scope.getAvailableSanitationWorkers = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+            	<span class="hljs-keyword">var</span> assignedeSanitationWorkers = <span class="hljs-number">0</span>;
+            	<span class="hljs-keyword">var</span> sortedResults = $scope.assignedFilter($scope.persons, <span class="hljs-string">'Location Seniority'</span>) 
+    	 		  	
+            		angular.forEach(sortedResults, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(personnel)</span> </span>{
+	        		<span class="hljs-keyword">switch</span>(personnel.civilServiceTitle){
+	            		<span class="hljs-keyword">case</span> <span class="hljs-string">'SW'</span>:
+	            			assignedeSanitationWorkers ++;
+	            			<span class="hljs-keyword">break</span>;
+	        		}
+	    		});
+            	
+            	
+        			<span class="hljs-keyword">return</span> assignedeSanitationWorkers + $scope.sanitationWorkers.total;
+        		}
+            
+            $scope.getAvailableSupervisors = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+            	<span class="hljs-keyword">var</span> assignedeSupervisors = <span class="hljs-number">0</span>;
+            	<span class="hljs-keyword">var</span> sortedResults = $scope.assignedFilter($scope.persons, <span class="hljs-string">'Location Seniority'</span>) 
+    	 		  	
+            		angular.forEach(sortedResults, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(personnel)</span> </span>{
+	        		<span class="hljs-keyword">switch</span>(personnel.civilServiceTitle){
+	            		<span class="hljs-keyword">case</span> <span class="hljs-string">'SUP'</span>:
+	            			assignedeSupervisors ++;
+	            			<span class="hljs-keyword">break</span>;
+	        		}
+	            
+	    		});
+            	
+            	
+        			<span class="hljs-keyword">return</span> assignedeSupervisors + $scope.supervisors.total;
+        		}
+           
+            
+
+            
+            $scope.getAvailableSuperintendents = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+            	<span class="hljs-keyword">var</span> assignedeSuperintendents = <span class="hljs-number">0</span>;
+            	<span class="hljs-keyword">var</span> sortedResults = $scope.assignedFilter($scope.persons, <span class="hljs-string">'Location Seniority'</span>) 
+    	 		  	
+            		angular.forEach(sortedResults, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(personnel)</span> </span>{
+	        		<span class="hljs-keyword">switch</span>(personnel.civilServiceTitle){
+	        		<span class="hljs-keyword">case</span> <span class="hljs-string">'GS I'</span>:
+	        			assignedeSuperintendents++;
+            			<span class="hljs-keyword">break</span>;
+	        		}
+	            
+	    		});
+            	
+            	
+        			<span class="hljs-keyword">return</span> assignedeSuperintendents + $scope.superintendents.total;
+        		}
+            
+       
+            $scope.togglePersonnelSummary = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{
+            	$scope.personnelSummary.active = !$scope.personnelSummary.active;
+            }
+            
+            
+      
+            
+         
+        </div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>State counts </p></div></div><div class="code"><div class="wrapper">        $scope.numAvailable = <span class="hljs-number">0</span>;
+        $scope.numAssigned = <span class="hljs-number">0</span>;
+        $scope.numDetached = <span class="hljs-number">0</span>;
+        $scope.numMDA = <span class="hljs-number">0</span>;
+        $scope.numBoroAssignmentOrder = <span class="hljs-number">0</span>;
+        $scope.numUnavailable = <span class="hljs-number">0</span>;</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>&quot;Available&quot; Group counts </p></div></div><div class="code"><div class="wrapper">        $scope.commissioners = {
+            open: <span class="hljs-literal">true</span>,
+            show: <span class="hljs-literal">false</span>,
+            total: <span class="hljs-number">0</span>
+        };
+        
+
+        $scope.chiefs = {
+            open: <span class="hljs-literal">true</span>,
+            show: <span class="hljs-literal">false</span>,
+            total: <span class="hljs-number">0</span>
+        };
+
+        $scope.civilians = {
+            open: <span class="hljs-literal">true</span>,
+            show: <span class="hljs-literal">false</span>,
+            total: <span class="hljs-number">0</span>
+        };
+
+        $scope.sanitationWorkers = {
+            open: <span class="hljs-literal">true</span>,
+            show: <span class="hljs-literal">false</span>,
+            total: <span class="hljs-number">0</span>
+        };
+
+        $scope.superintendents = {
+            open: <span class="hljs-literal">true</span>,
+            show: <span class="hljs-literal">false</span>,
+            total: <span class="hljs-number">0</span>
+        };
+
+        $scope.supervisors = {
+            open: <span class="hljs-literal">true</span>,
+            show: <span class="hljs-literal">false</span>,
+            total: <span class="hljs-number">0</span>
+        };
+
+        $scope.available = {
+            open: <span class="hljs-literal">true</span>,
+            show: <span class="hljs-literal">true</span>,
+            total: <span class="hljs-number">0</span>
+        };
+
+        $scope.detached = {
+            open: <span class="hljs-literal">true</span>,
+            show: <span class="hljs-literal">true</span>,
+            total: <span class="hljs-number">0</span>
+        };
+
+        $scope.mda = {
+            open: <span class="hljs-literal">true</span>,
+            show: <span class="hljs-literal">true</span>,
+            total: <span class="hljs-number">0</span>
+        };
+
+        $scope.unavailable = {
+            open: <span class="hljs-literal">true</span>,
+            show: <span class="hljs-literal">true</span>,
+            total: <span class="hljs-number">0</span>
+        };
+        $scope.assigned = {
+            open: <span class="hljs-literal">true</span>,
+            show: <span class="hljs-literal">true</span>,
+            total: <span class="hljs-number">0</span>
+        };
+        $scope.boro = {
+            open: <span class="hljs-literal">true</span>,
+            show: <span class="hljs-literal">true</span>,
+            total: <span class="hljs-number">0</span>
+        };
+
+
+
+        <span class="hljs-comment">/*-------------Added by Max-------------*/</span>
+
+
+        $scope.charts = {
+            open: <span class="hljs-literal">true</span>,
+            show: <span class="hljs-literal">false</span>,
+            total: <span class="hljs-number">0</span>
+        };
+
+        $scope.vacationCharts = {
+            open: <span class="hljs-literal">true</span>,
+            show: <span class="hljs-literal">false</span>,
+            total: <span class="hljs-number">0</span>
+        };
+
+
+        $scope.xwp = {
+            open: <span class="hljs-literal">true</span>,
+            show: <span class="hljs-literal">false</span>,
+            total: <span class="hljs-number">0</span>
+        };
+
+        $scope.xwop = {
+            open: <span class="hljs-literal">true</span>,
+            show: <span class="hljs-literal">false</span>,
+            total: <span class="hljs-number">0</span>
+        };
+
+
+        $scope.sickCharts = {
+            open: <span class="hljs-literal">true</span>,
+            show: <span class="hljs-literal">false</span>,
+            total: <span class="hljs-number">0</span>
+        };
+
+
+        $scope.vacation = {
+            open: <span class="hljs-literal">true</span>,
+            show: <span class="hljs-literal">false</span>,
+            total: <span class="hljs-number">0</span>
+        };
+
+
+        $scope.lodi = {
+            open: <span class="hljs-literal">true</span>,
+            show: <span class="hljs-literal">false</span>,
+            total: <span class="hljs-number">0</span>
+        };
+
+
+        $scope.app = {
+            open: <span class="hljs-literal">true</span>,
+            show: <span class="hljs-literal">false</span>,
+            total: <span class="hljs-number">0</span>
+        };
+
+        $scope.awol = {
+            open: <span class="hljs-literal">true</span>,
+            show: <span class="hljs-literal">false</span>,
+            total: <span class="hljs-number">0</span>
+        };
+
+        $scope.dif = {
+            open: <span class="hljs-literal">true</span>,
+            show: <span class="hljs-literal">false</span>,
+            total: <span class="hljs-number">0</span>
+        };
+
+        $scope.suspended = {
+            open: <span class="hljs-literal">true</span>,
+            show: <span class="hljs-literal">false</span>,
+            total: <span class="hljs-number">0</span>
+        };
+
+        $scope.terminalLeave = {
+            open: <span class="hljs-literal">true</span>,
+            show: <span class="hljs-literal">false</span>,
+            total: <span class="hljs-number">0</span>
+        };
+
+
+        $scope.juryDuty = {
+            open: <span class="hljs-literal">true</span>,
+            show: <span class="hljs-literal">false</span>,
+            total: <span class="hljs-number">0</span>
+        };
+
+
+        $scope.milDutyWithPay = {
+            open: <span class="hljs-literal">true</span>,
+            show: <span class="hljs-literal">false</span>,
+            total: <span class="hljs-number">0</span>
+        };
+
+
+        $scope.milDutyWithoutPay = {
+            open: <span class="hljs-literal">true</span>,
+            show: <span class="hljs-literal">false</span>,
+            total: <span class="hljs-number">0</span>
+        };
+
+
+        $scope.milDutyWithoutPay = {
+            open: <span class="hljs-literal">true</span>,
+            show: <span class="hljs-literal">false</span>,
+            total: <span class="hljs-number">0</span>
+        };
+
+        $scope.honorGuard = {
+            open: <span class="hljs-literal">true</span>,
+            show: <span class="hljs-literal">false</span>,
+            total: <span class="hljs-number">0</span>
+        };
+
+        $scope.fmla = {
+            open: <span class="hljs-literal">true</span>,
+            show: <span class="hljs-literal">false</span>,
+            total: <span class="hljs-number">0</span>
+        };
+
+
+        $scope.maternityLeave = {
+            open: <span class="hljs-literal">true</span>,
+            show: <span class="hljs-literal">false</span>,
+            total: <span class="hljs-number">0</span>
+        };
+
+        $scope.multiple = {
+            open: <span class="hljs-literal">true</span>,
+            show: <span class="hljs-literal">false</span>,
+            total: <span class="hljs-number">0</span>
+        };
+
+
+        <span class="hljs-comment">//------Detached Objects--------------</span>
+
+        $scope.chiefsDetached = {
+            open: <span class="hljs-literal">true</span>,
+            show: <span class="hljs-literal">false</span>,
+            total: <span class="hljs-number">0</span>
+        };
+
+
+
+        $scope.superintendentsDetached = {
+            open: <span class="hljs-literal">true</span>,
+            show: <span class="hljs-literal">false</span>,
+            total: <span class="hljs-number">0</span>
+        };
+
+
+        $scope.supervisorsDetached = {
+            open: <span class="hljs-literal">true</span>,
+            show: <span class="hljs-literal">false</span>,
+            total: <span class="hljs-number">0</span>
+        };
+
+
+
+        $scope.sanitationDetached = {
+            open: <span class="hljs-literal">true</span>,
+            show: <span class="hljs-literal">false</span>,
+            total: <span class="hljs-number">0</span>
+        };
+
+
+
+
+        $scope.civiliansDetached = {
+            open: <span class="hljs-literal">true</span>,
+            show: <span class="hljs-literal">false</span>,
+            total: <span class="hljs-number">0</span>
+        };
+        
+
+        <span class="hljs-comment">/*------------------End Added By Max-----------------*/</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>State filters </p></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Separated out from &quot;scoped&quot; method of same name so it could be used with &quot;Available&quot; group filters</p></div></div><div class="code"><div class="wrapper">        <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">availableFilter</span><span class="hljs-params">(persons)</span> </span>{
+            <span class="hljs-keyword">var</span> results = [];
+
+            angular.forEach(persons, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(value, key)</span> </span>{
+                <span class="hljs-keyword">if</span> (value.hasOwnProperty(<span class="hljs-string">'state'</span>) &amp;&amp; value.state === states.personnel.available) {
+                    <span class="hljs-keyword">if</span> (!value.assigned)
+                        results[key] = value;
+                }
+            });
+
+            <span class="hljs-keyword">return</span> _.uniq(results);
+        }
+
+        $scope.numAvailable = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(persons)</span> </span>{
+            <span class="hljs-keyword">var</span> results = availableFilter(persons);
+
+            <span class="hljs-keyword">return</span> <span class="hljs-built_in">Object</span>.keys(results).length;
+        };
+
+        $scope.boroAssignmentOrderFilter = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(persons, filterType)</span> </span>{
+            <span class="hljs-keyword">var</span> results = [];
+
+            angular.forEach(persons, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(value, key)</span> </span>{
+                <span class="hljs-keyword">if</span> (value.hasOwnProperty(<span class="hljs-string">'state'</span>) &amp;&amp; value.state === <span class="hljs-string">'boroAssignmentOrder'</span>) {
+                    results[key] = value;
+                }
+            });
+
+            <span class="hljs-keyword">var</span> results = _.uniq(results);
+
+            $scope.numBoroAssignmentOrder = results.length;
+            <span class="hljs-keyword">if</span> (!results || results.length == <span class="hljs-number">0</span>)
+                <span class="hljs-keyword">return</span> results
+
+            <span class="hljs-keyword">var</span> sortedResults = $scope.sortPersonnelPanel(results, filterType);
+
+            <span class="hljs-keyword">return</span> sortedResults;
+        };
+
+
+
+        $scope.assignedFilter = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(persons, filterType)</span> </span>{
+            <span class="hljs-keyword">var</span> results = [];
+
+            angular.forEach(persons, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(value, key)</span> </span>{
+                <span class="hljs-keyword">if</span> (value.hasOwnProperty(<span class="hljs-string">'state'</span>) &amp;&amp; value.state === states.personnel.available) {
+                    <span class="hljs-keyword">if</span> (value.assigned)
+                        results[key] = value;
+                }
+            });
+
+            <span class="hljs-keyword">var</span> results = _.uniq(results);
+            $scope.numAssigned = results.length;
+            <span class="hljs-keyword">if</span> (!results || results.length == <span class="hljs-number">0</span>)
+                <span class="hljs-keyword">return</span> results
+
+            <span class="hljs-keyword">var</span> sortedResults = $scope.sortPersonnelPanel(results, filterType);
+
+            <span class="hljs-keyword">return</span> sortedResults;
+        };
+
+        
+        $scope.unavailableFilter = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(persons, filterType)</span> </span>{
+            <span class="hljs-keyword">var</span> results = [];
+
+            angular.forEach(persons, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(value, key)</span> </span>{
+                <span class="hljs-keyword">if</span> (value.hasOwnProperty(<span class="hljs-string">'state'</span>) &amp;&amp; value.state === states.personnel.unavailable &amp;&amp; (!$scope.isBoro || ($scope.isBoro &amp;&amp; value.currentLocation === $scope.board.location))) {
+                    results[key] = value;
+                }
+            });
+
+            <span class="hljs-keyword">var</span> results = _.uniq(results);
+            $scope.numUnavailable = results.length - $scope.mda.total;
+            <span class="hljs-keyword">if</span> (!results || results.length == <span class="hljs-number">0</span>)
+                <span class="hljs-keyword">return</span> results
+            
+            <span class="hljs-keyword">var</span> sortedResults = $scope.sortPersonnelPanel(results, filterType);
+            <span class="hljs-keyword">return</span> sortedResults;
+        };
+
+
+
+
+        <span class="hljs-comment">/*----------Added by Max -------------*/</span>
+
+        $scope.chartsFilter = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(persons, filterType)</span> </span>{
+            <span class="hljs-keyword">var</span> unavailablePersonnelSorted = $scope.unavailableFilter(persons, filterType);
+            <span class="hljs-keyword">if</span> (unavailablePersonnelSorted &amp;&amp; unavailablePersonnelSorted.length &gt; <span class="hljs-number">0</span>) {
+                <span class="hljs-keyword">var</span> resultsChart = [];
+                angular.forEach(unavailablePersonnelSorted, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(value, key)</span> </span>{
+                    <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons.length === <span class="hljs-number">1</span>) {
+                        <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons[<span class="hljs-number">0</span>].hasOwnProperty(<span class="hljs-string">'code'</span>)) {
+                            <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons[<span class="hljs-number">0</span>].code === <span class="hljs-string">"CHART"</span>) {
+                                resultsChart.push(value);
+                            }
+                        }
+                    }
+                })
+
+                <span class="hljs-keyword">if</span> (resultsChart.length &gt; <span class="hljs-number">0</span>) {
+                    $scope.charts.show = <span class="hljs-literal">true</span>;
+
+                } <span class="hljs-keyword">else</span> {
+                    $scope.charts.show = <span class="hljs-literal">false</span>;
+                }
+                $scope.charts.total = resultsChart.length;
+
+                <span class="hljs-keyword">return</span> resultsChart;
+            } <span class="hljs-keyword">else</span> {
+                <span class="hljs-keyword">return</span> [];
+            }
+
+        };
+
+
+        $scope.vacationChartsFilter = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(persons, filterType)</span> </span>{
+            <span class="hljs-keyword">var</span> unavailablePersonnelSorted = $scope.unavailableFilter(persons, filterType);
+            <span class="hljs-keyword">if</span> (unavailablePersonnelSorted &amp;&amp; unavailablePersonnelSorted.length &gt; <span class="hljs-number">0</span>) {
+                <span class="hljs-keyword">var</span> resultsVacationChart = [];
+                angular.forEach(unavailablePersonnelSorted, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(valuePersonnel, keyPersonnel)</span> </span>{
+                    <span class="hljs-keyword">var</span> isCodeChart = <span class="hljs-literal">false</span>;
+                    <span class="hljs-keyword">var</span> isCodeVacation = <span class="hljs-literal">false</span>;
+                    <span class="hljs-keyword">if</span> (valuePersonnel.activeUnavailabilityReasons.length === <span class="hljs-number">2</span>) {
+                        angular.forEach(valuePersonnel.activeUnavailabilityReasons, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(value, key)</span> </span>{
+                            <span class="hljs-keyword">if</span> (value.hasOwnProperty(<span class="hljs-string">'code'</span>)) {
+                                <span class="hljs-keyword">if</span> (value.code === <span class="hljs-string">"CHART"</span>) {
+                                    isCodeChart = <span class="hljs-literal">true</span>;
+                                } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (value.code === <span class="hljs-string">"VACATION"</span>) {
+                                    isCodeVacation = <span class="hljs-literal">true</span>;
+                                }
+
+                            }
+                        })
+
+                        <span class="hljs-keyword">if</span> (isCodeChart &amp;&amp; isCodeVacation) {
+                            resultsVacationChart.push(valuePersonnel);
+                        }
+                    }
+                })
+
+                <span class="hljs-keyword">if</span> (resultsVacationChart.length &gt; <span class="hljs-number">0</span>) {
+                    $scope.vacationCharts.show = <span class="hljs-literal">true</span>;
+                } <span class="hljs-keyword">else</span> {
+                    $scope.vacationCharts.show = <span class="hljs-literal">false</span>;
+                }
+
+                $scope.vacationCharts.total = resultsVacationChart.length;
+                <span class="hljs-keyword">return</span> resultsVacationChart;
+
+            } <span class="hljs-keyword">else</span> {
+                <span class="hljs-keyword">return</span> [];
+            }
+
+        };
+
+
+        $scope.xwpFilter = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(persons, filterType)</span> </span>{
+            <span class="hljs-keyword">var</span> unavailablePersonnelSorted = $scope.unavailableFilter(persons, filterType);
+            <span class="hljs-keyword">if</span> (unavailablePersonnelSorted &amp;&amp; unavailablePersonnelSorted.length &gt; <span class="hljs-number">0</span>) {
+                <span class="hljs-keyword">var</span> resultsXWP = [];
+                angular.forEach(unavailablePersonnelSorted, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(value, key)</span> </span>{
+                    <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons.length === <span class="hljs-number">1</span>) {
+                        <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons[<span class="hljs-number">0</span>].hasOwnProperty(<span class="hljs-string">'code'</span>)) {
+                            <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons[<span class="hljs-number">0</span>].code === <span class="hljs-string">"XWP"</span>) {
+                                resultsXWP.push(value);
+                            }
+                        }
+                    }
+                })
+
+                <span class="hljs-keyword">if</span> (resultsXWP.length &gt; <span class="hljs-number">0</span>) {
+                    $scope.xwp.show = <span class="hljs-literal">true</span>;
+
+                } <span class="hljs-keyword">else</span> {
+                    $scope.xwp.show = <span class="hljs-literal">false</span>;
+                }
+                $scope.xwp.total = resultsXWP.length;
+                <span class="hljs-keyword">return</span> resultsXWP;
+            } <span class="hljs-keyword">else</span> {
+                <span class="hljs-keyword">return</span> [];
+            }
+
+        };
+
+
+
+        $scope.xwopFilter = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(persons, filterType)</span> </span>{
+            <span class="hljs-keyword">var</span> unavailablePersonnelSorted = $scope.unavailableFilter(persons, filterType);
+            <span class="hljs-keyword">if</span> (unavailablePersonnelSorted &amp;&amp; unavailablePersonnelSorted.length &gt; <span class="hljs-number">0</span>) {
+                <span class="hljs-keyword">var</span> resultsXWOP = [];
+                angular.forEach(unavailablePersonnelSorted, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(value, key)</span> </span>{
+                    <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons.length === <span class="hljs-number">1</span>) {
+                        <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons[<span class="hljs-number">0</span>].hasOwnProperty(<span class="hljs-string">'code'</span>)) {
+                            <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons[<span class="hljs-number">0</span>].code === <span class="hljs-string">"XWOP"</span>) {
+                                resultsXWOP.push(value);
+                            }
+                        }
+                    }
+                })
+
+                <span class="hljs-keyword">if</span> (resultsXWOP.length &gt; <span class="hljs-number">0</span>) {
+                    $scope.xwop.show = <span class="hljs-literal">true</span>;
+
+                } <span class="hljs-keyword">else</span> {
+                    $scope.xwop.show = <span class="hljs-literal">false</span>;
+                }
+                $scope.xwop.total = resultsXWOP.length;
+
+                <span class="hljs-keyword">return</span> resultsXWOP;
+
+            } <span class="hljs-keyword">else</span> {
+                <span class="hljs-keyword">return</span> [];
+            }
+
+        };
+
+
+
+        $scope.sickChartFilter = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(persons, filterType)</span> </span>{
+            <span class="hljs-keyword">var</span> unavailablePersonnelSorted = $scope.unavailableFilter(persons, filterType);
+            <span class="hljs-keyword">if</span> (unavailablePersonnelSorted &amp;&amp; unavailablePersonnelSorted.length &gt; <span class="hljs-number">0</span>) {
+                <span class="hljs-keyword">var</span> resultsSickChart = [];
+                angular.forEach(unavailablePersonnelSorted, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(valuePersonnel, keyPersonnel)</span> </span>{
+                    <span class="hljs-keyword">var</span> isCodeChart = <span class="hljs-literal">false</span>;
+                    <span class="hljs-keyword">var</span> isCodeSick = <span class="hljs-literal">false</span>;
+                    <span class="hljs-keyword">if</span> (valuePersonnel.activeUnavailabilityReasons.length === <span class="hljs-number">1</span>) {
+                        <span class="hljs-keyword">if</span> (valuePersonnel.activeUnavailabilityReasons[<span class="hljs-number">0</span>].hasOwnProperty(<span class="hljs-string">'code'</span>)) {
+                            <span class="hljs-keyword">if</span> (valuePersonnel.activeUnavailabilityReasons[<span class="hljs-number">0</span>].code === <span class="hljs-string">"SICK"</span>) {
+                                resultsSickChart.push(valuePersonnel);
+                            }
+                        }
+                    }
+                    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (valuePersonnel.activeUnavailabilityReasons.length === <span class="hljs-number">2</span>) {
+                        angular.forEach(valuePersonnel.activeUnavailabilityReasons, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(value, key)</span> </span>{
+                            <span class="hljs-keyword">if</span> (value.hasOwnProperty(<span class="hljs-string">'code'</span>)) {
+                                <span class="hljs-keyword">if</span> (value.code === <span class="hljs-string">"CHART"</span>) {
+                                    isCodeChart = <span class="hljs-literal">true</span>;
+                                } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (value.code === <span class="hljs-string">"SICK"</span>) {
+                                    isCodeSick = <span class="hljs-literal">true</span>;
+                                }
+                            }
+                        });
+                        <span class="hljs-keyword">if</span> (isCodeChart &amp;&amp; isCodeSick) {
+                            resultsSickChart.push(valuePersonnel);
+                        }
+                    }
+                });
+
+
+                <span class="hljs-keyword">if</span> (resultsSickChart.length &gt; <span class="hljs-number">0</span>) {
+                    $scope.sickCharts.show = <span class="hljs-literal">true</span>;
+                } <span class="hljs-keyword">else</span> {
+                    $scope.sickCharts.show = <span class="hljs-literal">false</span>;
+                }
+                $scope.sickCharts.total = resultsSickChart.length;
+                <span class="hljs-keyword">return</span> resultsSickChart;
+            } <span class="hljs-keyword">else</span> {
+                <span class="hljs-keyword">return</span> [];
+            }
+
+        };
+
+
+        $scope.vacationFilter = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(persons, filterType)</span> </span>{
+            <span class="hljs-keyword">var</span> unavailablePersonnelSorted = $scope.unavailableFilter(persons, filterType);
+            <span class="hljs-keyword">if</span> (unavailablePersonnelSorted &amp;&amp; unavailablePersonnelSorted.length &gt; <span class="hljs-number">0</span>) {
+                <span class="hljs-keyword">var</span> resultsVacation = [];
+                angular.forEach(unavailablePersonnelSorted, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(value, key)</span> </span>{
+                    <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons.length === <span class="hljs-number">1</span>) {
+                        <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons[<span class="hljs-number">0</span>].hasOwnProperty(<span class="hljs-string">'code'</span>)) {
+                            <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons[<span class="hljs-number">0</span>].code === <span class="hljs-string">"VACATION"</span>) {
+                                resultsVacation.push(value);
+                            }
+                        }
+                    }
+                });
+
+                <span class="hljs-keyword">if</span> (resultsVacation.length &gt; <span class="hljs-number">0</span>) {
+                    $scope.vacation.show = <span class="hljs-literal">true</span>;
+
+                } <span class="hljs-keyword">else</span> {
+                    $scope.vacation.show = <span class="hljs-literal">false</span>;
+                }
+                $scope.vacation.total = resultsVacation.length;
+
+                <span class="hljs-keyword">return</span> resultsVacation;
+
+            } <span class="hljs-keyword">else</span> {
+                <span class="hljs-keyword">return</span> [];
+            }
+        };
+
+
+
+        $scope.lodiFilter = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(persons, filterType)</span> </span>{
+            <span class="hljs-keyword">var</span> unavailablePersonnelSorted = $scope.unavailableFilter(persons, filterType);
+            <span class="hljs-keyword">if</span> (unavailablePersonnelSorted &amp;&amp; unavailablePersonnelSorted.length &gt; <span class="hljs-number">0</span>) {
+                <span class="hljs-keyword">var</span> resultsLodi = [];
+                angular.forEach(unavailablePersonnelSorted, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(value, key)</span> </span>{
+                    <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons.length === <span class="hljs-number">1</span>) {
+                        <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons[<span class="hljs-number">0</span>].hasOwnProperty(<span class="hljs-string">'code'</span>)) {
+                            <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons[<span class="hljs-number">0</span>].code === <span class="hljs-string">"LODI"</span>) {
+                                resultsLodi.push(value);
+                            }
+                        }
+                    }
+                });
+
+                <span class="hljs-keyword">if</span> (resultsLodi.length &gt; <span class="hljs-number">0</span>) {
+                    $scope.lodi.show = <span class="hljs-literal">true</span>;
+
+                } <span class="hljs-keyword">else</span> {
+                    $scope.lodi.show = <span class="hljs-literal">false</span>;
+                }
+                $scope.lodi.total = resultsLodi.length;
+
+                <span class="hljs-keyword">return</span> resultsLodi;
+
+            } <span class="hljs-keyword">else</span> {
+                <span class="hljs-keyword">return</span> [];
+            }
+        };
+
+
+
+        $scope.appFilter = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(persons, filterType)</span> </span>{
+            <span class="hljs-keyword">var</span> unavailablePersonnelSorted = $scope.unavailableFilter(persons, filterType);
+            <span class="hljs-keyword">if</span> (unavailablePersonnelSorted &amp;&amp; unavailablePersonnelSorted.length &gt; <span class="hljs-number">0</span>) {
+                <span class="hljs-keyword">var</span> resultsAPP = [];
+                angular.forEach(unavailablePersonnelSorted, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(value, key)</span> </span>{
+                    <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons.length === <span class="hljs-number">1</span>) {
+                        <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons[<span class="hljs-number">0</span>].hasOwnProperty(<span class="hljs-string">'code'</span>)) {
+                            <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons[<span class="hljs-number">0</span>].code === <span class="hljs-string">"APP"</span>) {
+                                resultsAPP.push(value);
+                            }
+                        }
+                    }
+                });
+
+                <span class="hljs-keyword">if</span> (resultsAPP.length &gt; <span class="hljs-number">0</span>) {
+                    $scope.app.show = <span class="hljs-literal">true</span>;
+
+                } <span class="hljs-keyword">else</span> {
+                    $scope.app.show = <span class="hljs-literal">false</span>;
+                }
+                $scope.app.total = resultsAPP.length;
+
+                <span class="hljs-keyword">return</span> resultsAPP;
+
+            } <span class="hljs-keyword">else</span> {
+                <span class="hljs-keyword">return</span> [];
+            }
+        };
+
+
+
+        $scope.awolFilter = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(persons, filterType)</span> </span>{
+            <span class="hljs-keyword">var</span> unavailablePersonnelSorted = $scope.unavailableFilter(persons, filterType);
+            <span class="hljs-keyword">if</span> (unavailablePersonnelSorted &amp;&amp; unavailablePersonnelSorted.length &gt; <span class="hljs-number">0</span>) {
+                <span class="hljs-keyword">var</span> resultsAWOL = [];
+                angular.forEach(unavailablePersonnelSorted, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(value, key)</span> </span>{
+                    <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons.length === <span class="hljs-number">1</span>) {
+                        <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons[<span class="hljs-number">0</span>].hasOwnProperty(<span class="hljs-string">'code'</span>)) {
+
+                            <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons[<span class="hljs-number">0</span>].code === <span class="hljs-string">"AWOL"</span>) {
+                                resultsAWOL.push(value);
+                            }
+                        }
+                    }
+                });
+
+                <span class="hljs-keyword">if</span> (resultsAWOL.length &gt; <span class="hljs-number">0</span>) {
+                    $scope.awol.show = <span class="hljs-literal">true</span>;
+
+                } <span class="hljs-keyword">else</span> {
+                    $scope.awol.show = <span class="hljs-literal">false</span>;
+                }
+                $scope.awol.total = resultsAWOL.length;
+
+                <span class="hljs-keyword">return</span> resultsAWOL;
+
+            } <span class="hljs-keyword">else</span> {
+                <span class="hljs-keyword">return</span> [];
+            }
+        };
+
+
+
+        $scope.difFilter = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(persons, filterType)</span> </span>{
+            <span class="hljs-keyword">var</span> unavailablePersonnelSorted = $scope.unavailableFilter(persons, filterType);
+            <span class="hljs-keyword">if</span> (unavailablePersonnelSorted &amp;&amp; unavailablePersonnelSorted.length &gt; <span class="hljs-number">0</span>) {
+                <span class="hljs-keyword">var</span> resultsDif = [];
+                angular.forEach(unavailablePersonnelSorted, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(value, key)</span> </span>{
+                    <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons.length === <span class="hljs-number">1</span>) {
+                        <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons[<span class="hljs-number">0</span>].hasOwnProperty(<span class="hljs-string">'code'</span>)) {
+                            <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons[<span class="hljs-number">0</span>].code === <span class="hljs-string">"DIF"</span>) {
+                                resultsDif.push(value);
+                            }
+                        }
+                    }
+                });
+
+                <span class="hljs-keyword">if</span> (resultsDif.length &gt; <span class="hljs-number">0</span>) {
+                    $scope.dif.show = <span class="hljs-literal">true</span>;
+
+                } <span class="hljs-keyword">else</span> {
+                    $scope.dif.show = <span class="hljs-literal">false</span>;
+                }
+                $scope.dif.total = resultsDif.length;
+
+                <span class="hljs-keyword">return</span> resultsDif;
+
+            } <span class="hljs-keyword">else</span> {
+                <span class="hljs-keyword">return</span> [];
+            }
+        };
+
+
+        $scope.suspendedFilter = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(persons, filterType)</span> </span>{
+            <span class="hljs-keyword">var</span> unavailablePersonnelSorted = $scope.unavailableFilter(persons, filterType);
+            <span class="hljs-keyword">if</span> (unavailablePersonnelSorted &amp;&amp; unavailablePersonnelSorted.length &gt; <span class="hljs-number">0</span>) {
+                <span class="hljs-keyword">var</span> resultsSuspended = [];
+                angular.forEach(unavailablePersonnelSorted, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(value, key)</span> </span>{
+                    <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons.length === <span class="hljs-number">1</span>) {
+                        <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons[<span class="hljs-number">0</span>].hasOwnProperty(<span class="hljs-string">'code'</span>)) {
+                            <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons[<span class="hljs-number">0</span>].code === <span class="hljs-string">"SUSPENDED"</span>) {
+                                resultsSuspended.push(value);
+                            }
+                        }
+                    }
+                });
+
+                <span class="hljs-keyword">if</span> (resultsSuspended.length &gt; <span class="hljs-number">0</span>) {
+                    $scope.suspended.show = <span class="hljs-literal">true</span>;
+
+                } <span class="hljs-keyword">else</span> {
+                    $scope.suspended.show = <span class="hljs-literal">false</span>;
+                }
+                $scope.suspended.total = resultsSuspended.length;
+
+                <span class="hljs-keyword">return</span> resultsSuspended;
+
+            } <span class="hljs-keyword">else</span> {
+                <span class="hljs-keyword">return</span> [];
+            }
+        };
+
+
+        $scope.terminalLeaveFilter = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(persons, filterType)</span> </span>{
+            <span class="hljs-keyword">var</span> unavailablePersonnelSorted = $scope.unavailableFilter(persons, filterType);
+            <span class="hljs-keyword">if</span> (unavailablePersonnelSorted &amp;&amp; unavailablePersonnelSorted.length &gt; <span class="hljs-number">0</span>) {
+                <span class="hljs-keyword">var</span> resultsTerminalLeave = [];
+                angular.forEach(unavailablePersonnelSorted, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(value, key)</span> </span>{
+                    <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons.length === <span class="hljs-number">1</span>) {
+                        <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons[<span class="hljs-number">0</span>].hasOwnProperty(<span class="hljs-string">'code'</span>)) {
+                            <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons[<span class="hljs-number">0</span>].code === <span class="hljs-string">"TERMINAL LEAVE"</span>) {
+                                resultsTerminalLeave.push(value);
+                            }
+                        }
+                    }
+                });
+
+                <span class="hljs-keyword">if</span> (resultsTerminalLeave.length &gt; <span class="hljs-number">0</span>) {
+                    $scope.terminalLeave.show = <span class="hljs-literal">true</span>;
+
+                } <span class="hljs-keyword">else</span> {
+                    $scope.terminalLeave.show = <span class="hljs-literal">false</span>;
+                }
+                $scope.terminalLeave.total = resultsTerminalLeave.length;
+
+                <span class="hljs-keyword">return</span> resultsTerminalLeave;
+
+            } <span class="hljs-keyword">else</span> {
+                <span class="hljs-keyword">return</span> [];
+            }
+        };
+
+
+
+        $scope.juryDutyFilter = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(persons, filterType)</span> </span>{
+            <span class="hljs-keyword">var</span> unavailablePersonnelSorted = $scope.unavailableFilter(persons, filterType);
+            <span class="hljs-keyword">if</span> (unavailablePersonnelSorted &amp;&amp; unavailablePersonnelSorted.length &gt; <span class="hljs-number">0</span>) {
+                <span class="hljs-keyword">var</span> resultsJuryDuty = [];
+                angular.forEach(unavailablePersonnelSorted, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(value, key)</span> </span>{
+                    <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons.length === <span class="hljs-number">1</span>) {
+                        <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons[<span class="hljs-number">0</span>].hasOwnProperty(<span class="hljs-string">'code'</span>)) {
+                            <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons[<span class="hljs-number">0</span>].code === <span class="hljs-string">"JURY DUTY"</span>) {
+                                resultsJuryDuty.push(value);
+                            }
+                        }
+                    }
+                });
+
+                <span class="hljs-keyword">if</span> (resultsJuryDuty.length &gt; <span class="hljs-number">0</span>) {
+                    $scope.juryDuty.show = <span class="hljs-literal">true</span>;
+
+                } <span class="hljs-keyword">else</span> {
+                    $scope.juryDuty.show = <span class="hljs-literal">false</span>;
+                }
+                $scope.juryDuty.total = resultsJuryDuty.length;
+
+                <span class="hljs-keyword">return</span> resultsJuryDuty;
+
+            } <span class="hljs-keyword">else</span> {
+                <span class="hljs-keyword">return</span> [];
+            }
+        };
+
+
+
+
+        $scope.milDtyWithPayFilter = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(persons, filterType)</span> </span>{
+            <span class="hljs-keyword">var</span> unavailablePersonnelSorted = $scope.unavailableFilter(persons, filterType);
+            <span class="hljs-keyword">if</span> (unavailablePersonnelSorted &amp;&amp; unavailablePersonnelSorted.length &gt; <span class="hljs-number">0</span>) {
+                <span class="hljs-keyword">var</span> resultsMilDutyWithPay = [];
+                angular.forEach(unavailablePersonnelSorted, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(value, key)</span> </span>{
+                    <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons.length === <span class="hljs-number">1</span>) {
+                        <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons[<span class="hljs-number">0</span>].hasOwnProperty(<span class="hljs-string">'code'</span>)) {
+                            <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons[<span class="hljs-number">0</span>].code === <span class="hljs-string">"Mil Dty w/Pay"</span>) {
+                                resultsMilDutyWithPay.push(value);
+                            }
+                        }
+                    }
+                });
+
+                <span class="hljs-keyword">if</span> (resultsMilDutyWithPay.length &gt; <span class="hljs-number">0</span>) {
+                    $scope.milDutyWithPay.show = <span class="hljs-literal">true</span>;
+
+                } <span class="hljs-keyword">else</span> {
+                    $scope.milDutyWithPay.show = <span class="hljs-literal">false</span>;
+                }
+                $scope.milDutyWithPay.total = resultsMilDutyWithPay.length;
+
+                <span class="hljs-keyword">return</span> resultsMilDutyWithPay;
+
+            } <span class="hljs-keyword">else</span> {
+                <span class="hljs-keyword">return</span> [];
+            }
+        };
+
+
+        $scope.milDutyWithoutPayFilter = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(persons, filterType)</span> </span>{
+            <span class="hljs-keyword">var</span> unavailablePersonnelSorted = $scope.unavailableFilter(persons, filterType);
+            <span class="hljs-keyword">if</span> (unavailablePersonnelSorted &amp;&amp; unavailablePersonnelSorted.length &gt; <span class="hljs-number">0</span>) {
+                <span class="hljs-keyword">var</span> resultsMilDutyWithoutPay = [];
+                angular.forEach(unavailablePersonnelSorted, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(value, key)</span> </span>{
+                    <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons.length === <span class="hljs-number">1</span>) {
+                        <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons[<span class="hljs-number">0</span>].hasOwnProperty(<span class="hljs-string">'code'</span>)) {
+                            <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons[<span class="hljs-number">0</span>].code === <span class="hljs-string">"Mil Dty w/o Pay"</span>) {
+                                resultsMilDutyWithoutPay.push(value);
+                            }
+                        }
+                    }
+                });
+
+                <span class="hljs-keyword">if</span> (resultsMilDutyWithoutPay.length &gt; <span class="hljs-number">0</span>) {
+                    $scope.milDutyWithoutPay.show = <span class="hljs-literal">true</span>;
+
+                } <span class="hljs-keyword">else</span> {
+                    $scope.milDutyWithoutPay.show = <span class="hljs-literal">false</span>;
+                }
+                $scope.milDutyWithoutPay.total = resultsMilDutyWithoutPay.length;
+
+                <span class="hljs-keyword">return</span> resultsMilDutyWithoutPay;
+
+            } <span class="hljs-keyword">else</span> {
+                <span class="hljs-keyword">return</span> [];
+            }
+        };
+
+
+
+        $scope.honorGuardFilter = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(persons, filterType)</span> </span>{
+            <span class="hljs-keyword">var</span> unavailablePersonnelSorted = $scope.unavailableFilter(persons, filterType);
+            <span class="hljs-keyword">if</span> (unavailablePersonnelSorted &amp;&amp; unavailablePersonnelSorted.length &gt; <span class="hljs-number">0</span>) {
+                <span class="hljs-keyword">var</span> resultsHonorGuard = [];
+                angular.forEach(unavailablePersonnelSorted, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(value, key)</span> </span>{
+                    <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons.length === <span class="hljs-number">1</span>) {
+                        <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons[<span class="hljs-number">0</span>].hasOwnProperty(<span class="hljs-string">'code'</span>)) {
+                            <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons[<span class="hljs-number">0</span>].code === <span class="hljs-string">"HONOR GUARD"</span>) {
+                                resultsHonorGuard.push(value);
+                            }
+                        }
+                    }
+                });
+
+                <span class="hljs-keyword">if</span> (resultsHonorGuard.length &gt; <span class="hljs-number">0</span>) {
+                    $scope.honorGuard.show = <span class="hljs-literal">true</span>;
+
+                } <span class="hljs-keyword">else</span> {
+                    $scope.honorGuard.show = <span class="hljs-literal">false</span>;
+                }
+                $scope.honorGuard.total = resultsHonorGuard.length;
+
+                <span class="hljs-keyword">return</span> resultsHonorGuard;
+
+            } <span class="hljs-keyword">else</span> {
+                <span class="hljs-keyword">return</span> [];
+            }
+        };
+
+
+
+        $scope.fmlaFilter = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(persons, filterType)</span> </span>{
+            <span class="hljs-keyword">var</span> unavailablePersonnelSorted = $scope.unavailableFilter(persons, filterType);
+            <span class="hljs-keyword">if</span> (unavailablePersonnelSorted &amp;&amp; unavailablePersonnelSorted.length &gt; <span class="hljs-number">0</span>) {
+                <span class="hljs-keyword">var</span> resultsFmla = [];
+                angular.forEach(unavailablePersonnelSorted, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(value, key)</span> </span>{
+                    <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons.length === <span class="hljs-number">1</span>) {
+                        <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons[<span class="hljs-number">0</span>].hasOwnProperty(<span class="hljs-string">'code'</span>)) {
+                            <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons[<span class="hljs-number">0</span>].code === <span class="hljs-string">"FMLA"</span>) {
+                                resultsFmla.push(value);
+                            }
+                        }
+                    }
+                });
+
+                <span class="hljs-keyword">if</span> (resultsFmla.length &gt; <span class="hljs-number">0</span>) {
+                    $scope.fmla.show = <span class="hljs-literal">true</span>;
+
+                } <span class="hljs-keyword">else</span> {
+                    $scope.fmla.show = <span class="hljs-literal">false</span>;
+                }
+                $scope.fmla.total = resultsFmla.length;
+
+                <span class="hljs-keyword">return</span> resultsFmla;
+
+            } <span class="hljs-keyword">else</span> {
+                <span class="hljs-keyword">return</span> [];
+            }
+        };
+
+
+
+
+        $scope.maternityLeaveFilter = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(persons, filterType)</span> </span>{
+            <span class="hljs-keyword">var</span> unavailablePersonnelSorted = $scope.unavailableFilter(persons, filterType);
+            <span class="hljs-keyword">if</span> (unavailablePersonnelSorted &amp;&amp; unavailablePersonnelSorted.length &gt; <span class="hljs-number">0</span>) {
+                <span class="hljs-keyword">var</span> resultsMaternityLeave = [];
+                angular.forEach(unavailablePersonnelSorted, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(value, key)</span> </span>{
+                    <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons.length === <span class="hljs-number">1</span>) {
+                        <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons[<span class="hljs-number">0</span>].hasOwnProperty(<span class="hljs-string">'code'</span>)) {
+                            <span class="hljs-keyword">if</span> (value.activeUnavailabilityReasons[<span class="hljs-number">0</span>].code === <span class="hljs-string">"MATERNITY LEAVE"</span>) {
+                                resultsMaternityLeave.push(value);
+                            }
+                        }
+                    }
+                });
+
+                <span class="hljs-keyword">if</span> (resultsMaternityLeave.length &gt; <span class="hljs-number">0</span>) {
+                    $scope.maternityLeave.show = <span class="hljs-literal">true</span>;
+
+                } <span class="hljs-keyword">else</span> {
+                    $scope.maternityLeave.show = <span class="hljs-literal">false</span>;
+                }
+                $scope.maternityLeave.total = resultsMaternityLeave.length;
+
+                <span class="hljs-keyword">return</span> resultsMaternityLeave;
+
+            } <span class="hljs-keyword">else</span> {
+                <span class="hljs-keyword">return</span> [];
+            }
+        };
+
+
+
+        $scope.multipleFilter = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(persons, filterType)</span> </span>{
+            <span class="hljs-keyword">var</span> unavailablePersonnelSorted = $scope.unavailableFilter(persons, filterType);
+            <span class="hljs-keyword">if</span> (unavailablePersonnelSorted &amp;&amp; unavailablePersonnelSorted.length &gt; <span class="hljs-number">0</span>) {
+                <span class="hljs-keyword">var</span> resultsMultiple = [];
+                angular.forEach(unavailablePersonnelSorted, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(valuePersonnel, keyPersonnel)</span> </span>{
+                    <span class="hljs-keyword">var</span> isCodeChart = <span class="hljs-literal">false</span>;
+                    <span class="hljs-keyword">var</span> isCodeSickOrVacation = <span class="hljs-literal">false</span>;
+                    <span class="hljs-keyword">if</span> (valuePersonnel.activeUnavailabilityReasons.length === <span class="hljs-number">2</span>) {
+                        angular.forEach(valuePersonnel.activeUnavailabilityReasons, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(value, key)</span> </span>{
+                            <span class="hljs-keyword">if</span> (value.hasOwnProperty(<span class="hljs-string">'code'</span>)) {
+                                <span class="hljs-keyword">if</span> (value.code === <span class="hljs-string">"CHART"</span>) {
+                                    isCodeChart = <span class="hljs-literal">true</span>;
+                                } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (value.code === <span class="hljs-string">"VACATION"</span> || value.code === <span class="hljs-string">"SICK"</span>) {
+                                    isCodeSickOrVacation = <span class="hljs-literal">true</span>;
+                                }
+                            }
+                        });
+                        <span class="hljs-keyword">if</span> ((isCodeChart &amp;&amp; !isCodeSickOrVacation) || !isCodeChart) {
+                            resultsMultiple.push(valuePersonnel);
+                        }
+                    } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (valuePersonnel.activeUnavailabilityReasons.length &gt; <span class="hljs-number">2</span>) {
+                        resultsMultiple.push(valuePersonnel);
+                    }
+                });
+
+                <span class="hljs-keyword">if</span> (resultsMultiple.length &gt; <span class="hljs-number">0</span>) {
+                    $scope.multiple.show = <span class="hljs-literal">true</span>;
+
+                } <span class="hljs-keyword">else</span> {
+                    $scope.multiple.show = <span class="hljs-literal">false</span>;
+                }
+                $scope.multiple.total = resultsMultiple.length;
+                <span class="hljs-keyword">return</span> resultsMultiple;
+
+            } <span class="hljs-keyword">else</span> {
+                <span class="hljs-keyword">return</span> [];
+            }
+        };
+
+
+
+
+        $scope.mdaFilter = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(persons, filterType)</span> </span>{
+            <span class="hljs-keyword">var</span> unavailablePersonnelSorted = $scope.unavailableFilter(persons, filterType);
+            <span class="hljs-keyword">if</span> (unavailablePersonnelSorted &amp;&amp; unavailablePersonnelSorted.length &gt; <span class="hljs-number">0</span>) {
+                <span class="hljs-keyword">var</span> resultsMDA = [];
+                angular.forEach(unavailablePersonnelSorted, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(valuePersonnel, keyPersonnel)</span> </span>{
+                    <span class="hljs-keyword">if</span> (valuePersonnel.mdaStatusHistory.length &gt; <span class="hljs-number">0</span> &amp;&amp; valuePersonnel.activeUnavailabilityReasons.length==<span class="hljs-number">0</span>) {
+                        resultsMDA.push(valuePersonnel);
+                    }
+
+                });
+                $scope.mda.total = resultsMDA.length;
+                <span class="hljs-keyword">return</span> resultsMDA;
+            } <span class="hljs-keyword">else</span> {
+                <span class="hljs-keyword">return</span> [];
+            }
+        };
+
+
+
+        <span class="hljs-comment">//-----------Detached Filters----------------</span>
+
+        $scope.detachedFilter = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(persons, filterType)</span> </span>{
+            <span class="hljs-keyword">var</span> results = [];
+            angular.forEach(persons, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(value, key)</span> </span>{
+                <span class="hljs-keyword">var</span> personnelHomeLocation = value.homeLocation.code;
+                
+                <span class="hljs-keyword">if</span> (value.hasOwnProperty(<span class="hljs-string">'state'</span>) &amp;&amp; value.state === states.personnel.detached) {
+                    <span class="hljs-keyword">if</span> (value.detachmentHistory.length &gt; <span class="hljs-number">0</span>) {
+                            angular.forEach(value.detachmentHistory, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(detachmentHistory, keyPersonnel)</span> </span>{
+                                <span class="hljs-keyword">if</span> (detachmentHistory.from.code === personnelHomeLocation){
+                                    results.push(value);
+                                }
+
+                            });
+                        }
+                }
+            });
+
+            <span class="hljs-keyword">var</span> results = _.uniq(results);
+            $scope.numDetached = results.length;
+            <span class="hljs-keyword">if</span> (!results || results.length == <span class="hljs-number">0</span>)
+                <span class="hljs-keyword">return</span> results
+
+            <span class="hljs-keyword">var</span> sortedResults = $scope.sortPersonnelPanel(results, filterType);
+            <span class="hljs-keyword">return</span> sortedResults;
+        };
+
+        $scope.chiefsDetachedFilter = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(persons, filterType)</span> </span>{
+            <span class="hljs-keyword">var</span> detachedPersonnelSorted = $scope.detachedFilter(persons, filterType);
+            <span class="hljs-keyword">if</span> (detachedPersonnelSorted &amp;&amp; detachedPersonnelSorted.length &gt; <span class="hljs-number">0</span>) {
+                <span class="hljs-keyword">var</span> resultsChiefsDetached = [];
+                angular.forEach(detachedPersonnelSorted, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(valuePersonnel, keyPersonnel)</span> </span>{
+                    <span class="hljs-keyword">if</span> (valuePersonnel.civilServiceTitle === <span class="hljs-string">"GS II"</span> || valuePersonnel.civilServiceTitle === <span class="hljs-string">"GS III"</span>  || valuePersonnel.civilServiceTitle === <span class="hljs-string">"GS IV"</span> ||  valuePersonnel.civilServiceTitle === <span class="hljs-string">"GS V"</span>){
+                        resultsChiefsDetached.push(valuePersonnel);
+                    }
+                });
+                <span class="hljs-keyword">if</span> (resultsChiefsDetached.length &gt; <span class="hljs-number">0</span>) {
+                    $scope.chiefsDetached.show = <span class="hljs-literal">true</span>;
+
+                } <span class="hljs-keyword">else</span> {
+                    $scope.chiefsDetached.show = <span class="hljs-literal">false</span>;
+                }
+                $scope.chiefsDetached.total = resultsChiefsDetached.length;
+
+                <span class="hljs-keyword">return</span> resultsChiefsDetached;
+            } <span class="hljs-keyword">else</span> {
+                <span class="hljs-keyword">return</span> [];
+            }
+        };
+
+        $scope.superintendentsDetachedFilter = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(persons, filterType)</span> </span>{
+            <span class="hljs-keyword">var</span> detachedPersonnelSorted = $scope.detachedFilter(persons, filterType);
+            <span class="hljs-keyword">if</span> (detachedPersonnelSorted &amp;&amp; detachedPersonnelSorted.length &gt; <span class="hljs-number">0</span>) {
+                <span class="hljs-keyword">var</span> resultsSuperintendentsDetached = [];
+                angular.forEach(detachedPersonnelSorted, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(valuePersonnel, keyPersonnel)</span> </span>{
+                    <span class="hljs-keyword">if</span> (valuePersonnel.civilServiceTitle === <span class="hljs-string">"GS I"</span>) {
+                        resultsSuperintendentsDetached.push(valuePersonnel);
+                    }
+                });
+                <span class="hljs-keyword">if</span> (resultsSuperintendentsDetached.length &gt; <span class="hljs-number">0</span>) {
+                    $scope.superintendentsDetached.show = <span class="hljs-literal">true</span>;
+
+                } <span class="hljs-keyword">else</span> {
+                    $scope.superintendentsDetached.show = <span class="hljs-literal">false</span>;
+                }
+                $scope.superintendentsDetached.total = resultsSuperintendentsDetached.length;
+
+                <span class="hljs-keyword">return</span> resultsSuperintendentsDetached;
+            } <span class="hljs-keyword">else</span> {
+                <span class="hljs-keyword">return</span> [];
+            }
+        };
+
+        $scope.supervisorsDetachedFilter = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(persons, filterType)</span> </span>{
+            <span class="hljs-keyword">var</span> detachedPersonnelSorted = $scope.detachedFilter(persons, filterType);
+            <span class="hljs-keyword">if</span> (detachedPersonnelSorted &amp;&amp; detachedPersonnelSorted.length &gt; <span class="hljs-number">0</span>) {
+                <span class="hljs-keyword">var</span> resultssupervisorsDetached = [];
+                angular.forEach(detachedPersonnelSorted, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(valuePersonnel, keyPersonnel)</span> </span>{
+                    <span class="hljs-keyword">if</span> (valuePersonnel.civilServiceTitle === <span class="hljs-string">"SUP"</span>) {
+                        resultssupervisorsDetached.push(valuePersonnel);
+                    }
+                });
+                <span class="hljs-keyword">if</span> (resultssupervisorsDetached.length &gt; <span class="hljs-number">0</span>) {
+                    $scope.supervisorsDetached.show = <span class="hljs-literal">true</span>;
+
+                } <span class="hljs-keyword">else</span> {
+                    $scope.supervisorsDetached.show = <span class="hljs-literal">false</span>;
+                }
+                $scope.supervisorsDetached.total = resultssupervisorsDetached.length;
+
+                <span class="hljs-keyword">return</span> resultssupervisorsDetached;
+            } <span class="hljs-keyword">else</span> {
+                <span class="hljs-keyword">return</span> [];
+            }
+        };
+
+        $scope.sanitationDetachedFilter = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(persons, filterType)</span> </span>{
+            <span class="hljs-keyword">var</span> detachedPersonnelSorted = $scope.detachedFilter(persons, filterType);
+            <span class="hljs-keyword">if</span> (detachedPersonnelSorted &amp;&amp; detachedPersonnelSorted.length &gt; <span class="hljs-number">0</span>) {
+                <span class="hljs-keyword">var</span> resultsSanitationDetached = [];
+                angular.forEach(detachedPersonnelSorted, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(valuePersonnel, keyPersonnel)</span> </span>{
+                    <span class="hljs-keyword">if</span> (valuePersonnel.civilServiceTitle === <span class="hljs-string">"SW"</span>) {
+                        resultsSanitationDetached.push(valuePersonnel);
+                    }
+                });
+                <span class="hljs-keyword">if</span> (resultsSanitationDetached.length &gt; <span class="hljs-number">0</span>) {
+                    $scope.sanitationDetached.show = <span class="hljs-literal">true</span>;
+
+                } <span class="hljs-keyword">else</span> {
+                    $scope.sanitationDetached.show = <span class="hljs-literal">false</span>;
+                }
+                $scope.sanitationDetached.total = resultsSanitationDetached.length;
+
+                <span class="hljs-keyword">return</span> resultsSanitationDetached;
+            } <span class="hljs-keyword">else</span> {
+                <span class="hljs-keyword">return</span> [];
+            }
+        };
+
+        $scope.civiliansDetachedFilter = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(persons, filterType)</span> </span>{
+            <span class="hljs-keyword">var</span> detachedPersonnelSorted = $scope.detachedFilter(persons, filterType);
+            <span class="hljs-keyword">if</span> (detachedPersonnelSorted &amp;&amp; detachedPersonnelSorted.length &gt; <span class="hljs-number">0</span>) {
+                <span class="hljs-keyword">var</span> resultsCiviliansDetached = [];
+                angular.forEach(detachedPersonnelSorted, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(valuePersonnel, keyPersonnel)</span> </span>{
+                    <span class="hljs-keyword">if</span> (valuePersonnel.civilServiceTitle === <span class="hljs-string">"Civilian"</span>) {
+                        resultsCiviliansDetached.push(valuePersonnel);
+                    }
+                });
+                <span class="hljs-keyword">if</span> (resultsCiviliansDetached.length &gt; <span class="hljs-number">0</span>) {
+                    $scope.civiliansDetached.show = <span class="hljs-literal">true</span>;
+
+                } <span class="hljs-keyword">else</span> {
+                    $scope.civiliansDetached.show = <span class="hljs-literal">false</span>;
+                }
+                $scope.civiliansDetached.total = resultsCiviliansDetached.length;
+
+                <span class="hljs-keyword">return</span> resultsCiviliansDetached;
+            } <span class="hljs-keyword">else</span> {
+                <span class="hljs-keyword">return</span> [];
+            }
+        };
+
+        <span class="hljs-comment">/*-------------End Added by Max -------------*/</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>&quot;Available&quot; group filters </p></div></div><div class="code"><div class="wrapper">        <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">filterByGroup</span><span class="hljs-params">(list, group)</span> </span>{
+            <span class="hljs-keyword">var</span> results = {};
+
+            angular.forEach(list, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(value, key)</span> </span>{
+                <span class="hljs-keyword">if</span> (<span class="hljs-built_in">Array</span>.isArray(group)) {
+                    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; group.length; i++) {
+                        <span class="hljs-keyword">if</span> (value.hasOwnProperty(<span class="hljs-string">'civilServiceTitle'</span>) &amp;&amp; value.civilServiceTitle === group[i] &amp;&amp; (!$scope.isBoro || ($scope.isBoro &amp;&amp; value.currentLocation === $scope.board.location))) {
+                            results[key] = value;
+                            <span class="hljs-keyword">break</span>;
+                        }
+                    }
+                } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (value.hasOwnProperty(<span class="hljs-string">'civilServiceTitle'</span>) &amp;&amp; value.civilServiceTitle === group &amp;&amp; (!$scope.isBoro || ($scope.isBoro &amp;&amp; value.currentLocation === $scope.board.location))) {
+                    results[key] = value;
+                }
+            });
+
+            <span class="hljs-keyword">return</span> results;
+        };
+
+
+        $scope.commissionersFilter = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(persons, filterType)</span> </span>{
+            <span class="hljs-keyword">var</span> results = filterByGroup(persons, groups.personnel.commissioners);
+
+            $scope.commissioners.show = <span class="hljs-literal">false</span>;
+            <span class="hljs-keyword">var</span> availableResults = availableFilter(results);
+            <span class="hljs-keyword">if</span> (<span class="hljs-built_in">Object</span>.keys(availableResults).length &gt; <span class="hljs-number">0</span>) {
+                $scope.commissioners.show = <span class="hljs-literal">true</span>;
+            }
+
+            $scope.commissioners.total = <span class="hljs-built_in">Object</span>.keys(availableResults).length;
+
+            <span class="hljs-keyword">var</span> sortedResults = $scope.sortPersonnelPanel(availableResults, filterType);
+            <span class="hljs-keyword">return</span> sortedResults;
+        };
+        
+        
+        $scope.chiefsFilter = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(persons, filterType)</span> </span>{
+            <span class="hljs-keyword">var</span> results = filterByGroup(persons, groups.personnel.chiefs);
+
+            $scope.chiefs.show = <span class="hljs-literal">false</span>;
+            <span class="hljs-keyword">var</span> availableResults = availableFilter(results);
+            <span class="hljs-keyword">if</span> (<span class="hljs-built_in">Object</span>.keys(availableResults).length &gt; <span class="hljs-number">0</span>) {
+                $scope.chiefs.show = <span class="hljs-literal">true</span>;
+            }
+
+            $scope.chiefs.total = <span class="hljs-built_in">Object</span>.keys(availableResults).length;
+
+            <span class="hljs-keyword">var</span> sortedResults = $scope.sortPersonnelPanel(availableResults, filterType);
+            <span class="hljs-keyword">return</span> sortedResults;
+        };
+
+        $scope.civiliansFilter = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(persons)</span> </span>{
+            <span class="hljs-keyword">var</span> results = filterByGroup(persons, groups.personnel.civilians);
+
+            $scope.civilians.show = <span class="hljs-literal">false</span>;
+            <span class="hljs-keyword">var</span> availableResults = availableFilter(results);
+            <span class="hljs-keyword">if</span> (<span class="hljs-built_in">Object</span>.keys(availableResults).length &gt; <span class="hljs-number">0</span>) {
+                $scope.civilians.show = <span class="hljs-literal">true</span>;
+            }
+
+            $scope.civilians.total = <span class="hljs-built_in">Object</span>.keys(availableResults).length;
+
+            <span class="hljs-keyword">var</span> sortedResults = $scope.sortPersonnelPanel(availableResults, <span class="hljs-string">'Last Name'</span>);
+
+            <span class="hljs-keyword">return</span> sortedResults;
+        };
+
+        $scope.sanitationWorkersFilter = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(persons, filterType)</span> </span>{
+            <span class="hljs-keyword">var</span> results = filterByGroup(persons, groups.personnel.sanitationWorkers);
+
+            $scope.sanitationWorkers.show = <span class="hljs-literal">false</span>;
+            <span class="hljs-keyword">var</span> availableResults = availableFilter(results);
+            <span class="hljs-keyword">if</span> (<span class="hljs-built_in">Object</span>.keys(availableResults).length &gt; <span class="hljs-number">0</span>) {
+                $scope.sanitationWorkers.show = <span class="hljs-literal">true</span>;
+            }
+
+            $scope.sanitationWorkers.total = <span class="hljs-built_in">Object</span>.keys(availableResults).length;
+
+            <span class="hljs-keyword">var</span> sortedResults = $scope.sortPersonnelPanel(availableResults, filterType);
+
+            <span class="hljs-keyword">return</span> sortedResults;
+        };
+
+        $scope.superintendentsFilter = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(persons, filterType)</span> </span>{
+            <span class="hljs-keyword">var</span> results = filterByGroup(persons, groups.personnel.superintendents);
+
+            $scope.superintendents.show = <span class="hljs-literal">false</span>;
+            <span class="hljs-keyword">var</span> availableResults = availableFilter(results);
+            <span class="hljs-keyword">if</span> (<span class="hljs-built_in">Object</span>.keys(availableResults).length &gt; <span class="hljs-number">0</span>) {
+                $scope.superintendents.show = <span class="hljs-literal">true</span>;
+            }
+
+            $scope.superintendents.total = <span class="hljs-built_in">Object</span>.keys(availableResults).length;
+
+            <span class="hljs-keyword">var</span> sortedResults = $scope.sortPersonnelPanel(availableResults, filterType);
+
+            <span class="hljs-keyword">return</span> sortedResults;
+        };
+
+        $scope.supervisorsFilter = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(persons, filterType)</span> </span>{
+            <span class="hljs-keyword">var</span> results = filterByGroup(persons, groups.personnel.supervisors);
+
+            $scope.supervisors.show = <span class="hljs-literal">false</span>;
+            <span class="hljs-keyword">var</span> availableResults = [];
+            availableResults = availableFilter(results);
+            <span class="hljs-keyword">if</span> (<span class="hljs-built_in">Object</span>.keys(availableResults).length &gt; <span class="hljs-number">0</span>) {
+                $scope.supervisors.show = <span class="hljs-literal">true</span>;
+            }
+
+            $scope.supervisors.total = <span class="hljs-built_in">Object</span>.keys(availableResults).length;
+
+            <span class="hljs-keyword">var</span> sortedResults = $scope.sortPersonnelPanel(availableResults, filterType);
+
+
+            <span class="hljs-keyword">return</span> sortedResults;
+        };
+
+        $scope.titleMap = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(title)</span> </span>{
+            <span class="hljs-keyword">var</span> results = OpsBoardRepository.getMappedTitle(title);
+            <span class="hljs-keyword">return</span> results;
+        };
+
+        <span class="hljs-keyword">if</span> ($scope.isBoro)
+            $scope.sortFilters = [<span class="hljs-string">'Seniority'</span>, <span class="hljs-string">'Reverse Seniority'</span>, <span class="hljs-string">'Location Seniority'</span>, <span class="hljs-string">'Location Reverse Seniority'</span>];
+        <span class="hljs-keyword">else</span>
+            $scope.sortFilters = [<span class="hljs-string">'Seniority'</span>, <span class="hljs-string">'Reverse Seniority'</span>, <span class="hljs-string">'Location Seniority'</span>, <span class="hljs-string">'Last Name'</span>];
+
+        $scope.filterType = <span class="hljs-string">'Location Seniority'</span>;
+
+        $scope.filterTypeClass = <span class="hljs-string">'fa-sort-numeric-desc'</span>;
+
+
+
+        $scope.sortPersonnelPanel = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(list, filterType)</span> </span>{
+            <span class="hljs-keyword">if</span> (!list) <span class="hljs-keyword">return</span> list;
+            <span class="hljs-keyword">if</span> (!filterType) filterType = <span class="hljs-string">'Location Seniority'</span>;
+
+            <span class="hljs-keyword">return</span> list.sort(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(me, that)</span> </span>{
+
+                <span class="hljs-keyword">if</span> (filterType === <span class="hljs-string">'Last Name'</span>) {
+
+                    $scope.filterTypeClass = <span class="hljs-string">'fa-sort-alpha-asc'</span>;
+                    <span class="hljs-keyword">if</span> (me.lastName &gt; that.lastName)
+                        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+                    <span class="hljs-keyword">if</span> (me.lastName &lt; that.lastName)
+                        <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+
+                    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+                }
+
+                <span class="hljs-keyword">if</span> (!me.activeDetachment &amp;&amp; that.activeDetachment &amp;&amp; me.state === <span class="hljs-string">'Available'</span>)
+                    <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+
+                <span class="hljs-keyword">if</span> (me.activeDetachment &amp;&amp; !that.activeDetachment &amp;&amp; me.state === <span class="hljs-string">'Available'</span>)
+                    <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+                <span class="hljs-keyword">if</span> ((!me.activeDetachment &amp;&amp; !that.activeDetachment) || me.state !== <span class="hljs-string">'Available'</span>) {
+
+                    <span class="hljs-keyword">if</span> (titleHierarchy.indexOf(me.civilServiceTitle) &gt; titleHierarchy.indexOf(that.civilServiceTitle))
+                        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+                    <span class="hljs-keyword">if</span> (titleHierarchy.indexOf(me.civilServiceTitle) &lt; titleHierarchy.indexOf(that.civilServiceTitle))
+                        <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+
+                    <span class="hljs-keyword">if</span> (me.civilServiceTitle === titles.civilian &amp;&amp; that.civilServiceTitle === titles.civilian) {
+
+                        <span class="hljs-keyword">if</span> (me.lastName &gt; that.lastName)
+                            <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+                        <span class="hljs-keyword">if</span> (me.lastName &lt; that.lastName)
+                            <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+                    }
+
+                    <span class="hljs-keyword">if</span> (filterType === <span class="hljs-string">'Location Seniority'</span> || filterType === <span class="hljs-string">'Location Reverse Seniority'</span>) {
+
+                        $scope.filterTypeClass = <span class="hljs-string">'fa-sort-numeric-asc'</span>;
+
+                        <span class="hljs-keyword">if</span> (me.homeLocation !== $scope.board.location &amp;&amp; that.homeLocation === $scope.board.location)
+                            <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+                        <span class="hljs-keyword">if</span> (me.homeLocation === $scope.board.location &amp;&amp; that.homeLocation !== $scope.board.location)
+                            <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+
+                        <span class="hljs-keyword">if</span> (me.homeLocation &gt; that.homeLocation)
+                            <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+                        <span class="hljs-keyword">if</span> (me.homeLocation &lt; that.homeLocation)
+                            <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+
+                        <span class="hljs-keyword">if</span> (me.payrollLocationId &gt; that.payrollLocationId)
+                            <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+                        <span class="hljs-keyword">if</span> (me.payrollLocationId &lt; that.payrollLocationId)
+                            <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+                    }
+                }
+
+
+                <span class="hljs-keyword">if</span> (filterType === <span class="hljs-string">'Seniority'</span> || filterType === <span class="hljs-string">'Location Seniority'</span>) {
+
+                    $scope.filterTypeClass = <span class="hljs-string">'fa-sort-numeric-desc'</span>;
+
+                    <span class="hljs-keyword">if</span> (me.seniorityDate &gt; that.seniorityDate)
+                        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+                    <span class="hljs-keyword">if</span> (me.seniorityDate &lt; that.seniorityDate)
+                        <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+
+                    <span class="hljs-keyword">if</span> (me.listNumber &amp;&amp; !that.listNumber)
+                        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+                    <span class="hljs-keyword">if</span> (!me.listNumber &amp;&amp; that.listNumber)
+                        <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+
+                    <span class="hljs-keyword">if</span> (!me.listNumber &amp;&amp; !that.listNumber)
+                        <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+
+                    <span class="hljs-keyword">if</span> (<span class="hljs-built_in">Number</span>(me.listNumber.replace(<span class="hljs-regexp">/[^0-9]+/g</span>, <span class="hljs-string">''</span>)) &gt; <span class="hljs-built_in">Number</span>(that.listNumber.replace(<span class="hljs-regexp">/[^0-9]+/g</span>, <span class="hljs-string">''</span>)))
+                        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+                    <span class="hljs-keyword">if</span> (<span class="hljs-built_in">Number</span>(me.listNumber.replace(<span class="hljs-regexp">/[^0-9]+/g</span>, <span class="hljs-string">''</span>)) &lt; <span class="hljs-built_in">Number</span>(that.listNumber.replace(<span class="hljs-regexp">/[^0-9]+/g</span>, <span class="hljs-string">''</span>)))
+                        <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+
+                    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+                }
+
+                <span class="hljs-keyword">if</span> (filterType === <span class="hljs-string">'Reverse Seniority'</span> || filterType === <span class="hljs-string">'Location Reverse Seniority'</span>) {
+
+                    $scope.filterTypeClass = <span class="hljs-string">'fa-sort-numeric-asc'</span>;
+
+                    <span class="hljs-keyword">if</span> (me.seniorityDate &lt; that.seniorityDate)
+                        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+                    <span class="hljs-keyword">if</span> (me.seniorityDate &gt; that.seniorityDate)
+                        <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+
+                    <span class="hljs-keyword">if</span> (me.listNumber &amp;&amp; !that.listNumber)
+                        <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+
+                    <span class="hljs-keyword">if</span> (!me.listNumber &amp;&amp; that.listNumber)
+                        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+                    <span class="hljs-keyword">if</span> (!me.listNumber &amp;&amp; !that.listNumber)
+                        <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+
+                    <span class="hljs-keyword">if</span> (<span class="hljs-built_in">Number</span>(me.listNumber.replace(<span class="hljs-regexp">/[^0-9]+/g</span>, <span class="hljs-string">''</span>)) &lt; <span class="hljs-built_in">Number</span>(that.listNumber.replace(<span class="hljs-regexp">/[^0-9]+/g</span>, <span class="hljs-string">''</span>)))
+                        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+                    <span class="hljs-keyword">if</span> (<span class="hljs-built_in">Number</span>(me.listNumber.replace(<span class="hljs-regexp">/[^0-9]+/g</span>, <span class="hljs-string">''</span>)) &gt; <span class="hljs-built_in">Number</span>(that.listNumber.replace(<span class="hljs-regexp">/[^0-9]+/g</span>, <span class="hljs-string">''</span>)))
+                        <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+
+                    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+                }
+            });
+        };
+
+        $scope.changeFilterType = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(choice)</span> </span>{
+            $scope.filterType = choice;
+        };
+
+        <span class="hljs-comment">//detachPerson(person)</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Sub panel control</p>
+<p>Current logic is to open all top-level categories on expand,
+close all on collapse, or, if no categories, to open/close the body.</p>
+<p>TODO: This is somewhat fragile - adding/removing top level categories will require modifying these functions</p></div></div><div class="code"><div class="wrapper">        $scope.toggleBoroSubpanel = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+            $scope.boro.open = !$scope.boro.open;</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>TODO: ?</p></div></div><div class="code"><div class="wrapper">        };
+        $scope.toggleAvailableSubpanel = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+            $scope.available.open = !$scope.available.open;
+
+            $scope.chiefs.open = $scope.available.open;
+            $scope.superintendents.open = $scope.available.open;
+            $scope.supervisors.open = $scope.available.open;
+            $scope.sanitationWorkers.open = $scope.available.open;
+            $scope.civilians.open = $scope.available.open;
+        };
+
+        $scope.toggleDetachedSubpanel = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+            $scope.detached.open = !$scope.detached.open;
+            $scope.chiefsDetached.open = $scope.detached.open;
+            $scope.superintendentsDetached.open = $scope.detached.open;
+            $scope.supervisorsDetached.open = $scope.detached.open;
+            $scope.sanitationDetached.open = $scope.detached.open;
+            $scope.civiliansDetached.open = $scope.detached.open;
+        };
+
+        $scope.toggleMDASubpanel = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+            $scope.mda.open = !$scope.mda.open;
+        };
+
+        $scope.toggleUnavailableSubpanel = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+            $scope.unavailable.open = !$scope.unavailable.open;
+            $scope.charts.open = $scope.unavailable.open;
+            $scope.vacationCharts.open = $scope.unavailable.open;
+            $scope.xwp.open = $scope.unavailable.open;
+            $scope.xwop.open = $scope.unavailable.open;
+            $scope.sickCharts.open = $scope.unavailable.open;
+            $scope.vacation.open = $scope.unavailable.open;
+            $scope.lodi.open = $scope.unavailable.open;
+            $scope.app.open = $scope.unavailable.open;
+            $scope.awol.open = $scope.unavailable.open;
+            $scope.dif.open = $scope.unavailable.open;
+            $scope.suspended.open = $scope.unavailable.open;
+            $scope.terminalLeave.open = $scope.unavailable.open;
+            $scope.juryDuty.open = $scope.unavailable.open;
+            $scope.milDutyWithPay.open = $scope.unavailable.open;
+            $scope.milDutyWithoutPay.open = $scope.unavailable.open;
+            $scope.honorGuard.open = $scope.unavailable.open;
+            $scope.fmla.open = $scope.unavailable.open;
+            $scope.maternityLeave.open = $scope.unavailable.open;
+            $scope.multiple.open = $scope.unavailable.open;
+        };
+
+        $scope.toggleAssignedSubpanel = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+            $scope.assigned.open = !$scope.assigned.open;
+        };</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>control of assigned panel toggling</p></div></div><div class="code"><div class="wrapper">        <span class="hljs-keyword">var</span> cachedShiftData = $scope.shiftData.toJSON();
+        $scope.assigned.shiftToggleData = {};
+
+        angular.forEach(cachedShiftData, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(val)</span> </span>{
+            $scope.assigned.shiftToggleData[val.id] = { open: <span class="hljs-literal">true</span> };
+        });</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>toggle entire panel by setting all shift scopes open</p></div></div><div class="code"><div class="wrapper">        $scope.assigned.toggleAssignedSubpanel = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+            $scope.assigned.open = !$scope.assigned.open;
+            angular.forEach(cachedShiftData, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(val)</span> </span>{
+                $scope.assigned.shiftToggleData[val.id].open = $scope.assigned.open
+            });
+        };</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>toggle individual shift scope</p></div></div><div class="code"><div class="wrapper">        $scope.assigned.toggleAssignedShift = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(id)</span> </span>{
+            <span class="hljs-keyword">var</span> wasOpen = $scope.assigned.shiftToggleData[id].open;
+            $timeout(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+                $scope.$apply(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+                    $scope.assigned.shiftToggleData[id].open = !wasOpen;
+                });
+            }, <span class="hljs-number">0</span>, <span class="hljs-literal">false</span>);
+        };
+
+        <span class="hljs-keyword">var</span> getPersonnelFromTask = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(task, shiftId, assigned)</span> </span>{
+
+            <span class="hljs-keyword">var</span> tmp = [];</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>hard-coded operations for person 1 and 2</p></div></div><div class="code"><div class="wrapper">            <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>, len = <span class="hljs-number">2</span>; i &lt; len; i ++) {
+
+                <span class="hljs-keyword">var</span> currentPerson = task[<span class="hljs-string">'assignedPerson'</span> + (i + <span class="hljs-number">1</span>)],
+                    person = currentPerson.person,
+                    assignmentType = currentPerson.type,
+                    personCopy;
+                
+                <span class="hljs-keyword">if</span> (person) {</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>check if person is detached</p></div></div><div class="code"><div class="wrapper">                    <span class="hljs-keyword">if</span> ($scope.persons[person.id].state === <span class="hljs-string">'Detached'</span>) <span class="hljs-keyword">break</span>;</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>check type of assignment</p></div></div><div class="code"><div class="wrapper">                    <span class="hljs-keyword">if</span> (person.id &amp;&amp; assignmentType &amp;&amp; assigned.length &gt; <span class="hljs-number">1</span>) {</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>diversion or overtime gets removed from the previous entry</p></div></div><div class="code"><div class="wrapper">                        <span class="hljs-keyword">if</span> (assignmentType === <span class="hljs-string">'OTHER'</span> || assignmentType === <span class="hljs-string">'OVERTIME'</span>) {
+                            assigned = assigned.filter(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(key)</span> </span>{
+                                <span class="hljs-keyword">return</span> key.id !== person.id;
+                            });
+                        }
+                    }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>copy the person model since duplicates are needed for next day
+todo: only copy and draw when needed (improve ui render)</p></div></div><div class="code"><div class="wrapper">                    personCopy = angular.copy(person);
+
+                    angular.extend(personCopy, {
+                        _assignmentType: assignmentType,
+                        _shiftId: shiftId,
+                        getFormattedName: $scope.persons[person.id].getFormattedName
+                    });
+
+                    tmp.push(personCopy);
+
+                }
+
+            }
+
+            <span class="hljs-keyword">return</span> tmp;
+        };
+
+
+        <span class="hljs-keyword">var</span> cachedLocations = $scope.tasks.locations,
+            cachedLocationsKeys = <span class="hljs-built_in">Object</span>.keys(cachedLocations);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>main method for filtering assignments to a shift</p></div></div><div class="code"><div class="wrapper">        <span class="hljs-keyword">var</span> buildAssigned = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+            
+            <span class="hljs-keyword">var</span> locations = cachedLocations,
+                locationsKeys = cachedLocationsKeys,
+                assigned = [],
+                shifts = {},
+                len = <span class="hljs-number">0</span>,
+                numAssigned = <span class="hljs-number">0</span>;
+
+            <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> locationsCount = <span class="hljs-number">0</span>, locationsLength = locationsKeys.length; locationsCount &lt; locationsLength; locationsCount ++) {
+
+                <span class="hljs-keyword">var</span> location = locations[locationsKeys[locationsCount]],
+                    locationShifts = <span class="hljs-built_in">Object</span>.keys(location.locationShifts);
+
+                <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> lsCount = <span class="hljs-number">0</span>, lsLength = locationShifts.length; lsCount &lt; lsLength; lsCount ++) {
+
+                    <span class="hljs-keyword">var</span> val = locationShifts[lsCount],
+                        categories = <span class="hljs-built_in">Object</span>.keys(location.locationShifts[val].shiftCategories);
+
+                    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> catCount = <span class="hljs-number">0</span>, catLength = categories.length; catCount &lt; catLength; catCount ++) {
+
+                        <span class="hljs-keyword">var</span> categoryKey = categories[catCount];</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>assign shift model to shift tracking object by id</p></div></div><div class="code"><div class="wrapper">                        <span class="hljs-keyword">var</span> shift = location.locationShifts[val].shift,
+                            subCats = location.locationShifts[val].shiftCategories[categoryKey].subcategoryTasks;
+
+                        <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> subCats !== <span class="hljs-string">'object'</span>) <span class="hljs-keyword">break</span>;
+                        
+                        <span class="hljs-keyword">var</span> shiftPersonnel = [];
+                        shift._personnel = [];
+                        shifts[shift.id] = shift;
+
+                        subCats = <span class="hljs-built_in">Object</span>.keys(subCats);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>need to check for sections (household refuse for example)</p></div></div><div class="code"><div class="wrapper">                        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> subCatCount = <span class="hljs-number">0</span>, subCatLength = subCats.length; subCatCount &lt; subCatLength; subCatCount ++) {
+                            
+                            <span class="hljs-keyword">var</span> taskId = subCats[subCatCount],
+                                task = location.locationShifts[val].shiftCategories[categoryKey].subcategoryTasks[taskId],
+                                sections = task.sections,
+                                sectionsKeys, taskKeys;
+
+                            <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> sections === <span class="hljs-string">'object'</span> &amp;&amp; <span class="hljs-built_in">Object</span>.keys(sections).length) {
+
+                                sectionsKeys = <span class="hljs-built_in">Object</span>.keys(sections);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>iterate section rows</p></div></div><div class="code"><div class="wrapper">                                <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> sectionCount = <span class="hljs-number">0</span>, sectionLength = sectionsKeys.length; sectionCount &lt; sectionLength; sectionCount ++) {
+
+                                    <span class="hljs-keyword">var</span> sectionTasks = sections[sectionsKeys[sectionCount]].tasks,
+                                        sectionTasksKeys = <span class="hljs-built_in">Object</span>.keys(sectionTasks);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>traverse tasks in sections and grab personnel</p></div></div><div class="code"><div class="wrapper">                                    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> taskCount = <span class="hljs-number">0</span>, taskLength = sectionTasksKeys.length; taskCount &lt; taskLength; taskCount ++) {
+
+                                        <span class="hljs-comment">//var taskEntry = sectionTasks[sectionTasksKeys[taskCount]];</span>
+
+                                        <span class="hljs-keyword">var</span> taskEntry = sectionTasks[sectionTasksKeys[taskCount]],
+                                            persons = getPersonnelFromTask(taskEntry, shift.id, assigned),
+                                            tmp = assigned.concat(persons);
+
+                                        assigned = tmp;
+
+                                    }
+
+                                }
+
+
+                            } <span class="hljs-keyword">else</span> {
+
+                                taskKeys = <span class="hljs-built_in">Object</span>.keys(task.tasks);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>traverse tasks and grab personnel</p></div></div><div class="code"><div class="wrapper">                                <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> taskCount = <span class="hljs-number">0</span>, taskLength = taskKeys.length; taskCount &lt; taskLength; taskCount ++) {
+
+                                    <span class="hljs-keyword">var</span> taskEntry = taskKeys[taskCount],
+                                        persons = getPersonnelFromTask(task.tasks[taskEntry], shift.id, assigned),
+                                        tmp = assigned.concat(persons);
+
+                                    assigned = tmp;
+
+                                }
+
+                            }
+
+
+                            
+                        }
+
+                    }
+
+                }
+
+            }
+            
+            len = assigned.length;
+
+            <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>, duplicate; i &lt; len; i ++) {
+                duplicate = <span class="hljs-literal">false</span>;</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>remove personnel already in list on same shift (multi routes)</p></div></div><div class="code"><div class="wrapper">                shifts[assigned[i]._shiftId]._personnel.forEach(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(val, index)</span> </span>{
+                    <span class="hljs-keyword">if</span> (val.id === assigned[i].id) {
+                        duplicate = <span class="hljs-literal">true</span>;
+                    }
+                });</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>link persons to shifts by shift id for each assigned person</p></div></div><div class="code"><div class="wrapper">                <span class="hljs-keyword">if</span> (!duplicate) {
+                    shifts[assigned[i]._shiftId]._personnel.push(assigned[i]);
+                    numAssigned ++;
+                }
+            }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>badge for panel heading</p></div></div><div class="code"><div class="wrapper">            $scope.numAssigned = numAssigned;
+            <span class="hljs-keyword">return</span> shifts;
+
+        };
+        
+        <span class="hljs-keyword">var</span> refreshAssigned = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+            $timeout(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+                $scope.assigned.shifts = buildAssigned();
+            }, <span class="hljs-number">0</span>);
+        };
+
+        refreshAssigned();</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>subscribe to assignment changes so we can update the assigned list</p></div></div><div class="code"><div class="wrapper">        $scope.$on(<span class="hljs-string">'ASSIGNED-PERSON'</span>, refreshAssigned);
+        $scope.$on(<span class="hljs-string">'UNASSIGNED-PERSON'</span>, refreshAssigned);
+        $scope.$on(<span class="hljs-string">'DETACH-PERSON'</span>, refreshAssigned);
+        </div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>group filter for all shifts</p></div></div><div class="code"><div class="wrapper">        <span class="hljs-keyword">var</span> assignedGroupFilter = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(persons, shiftId)</span> </span>{
+            <span class="hljs-keyword">var</span> results = filterByGroup(persons, groups.personnel[<span class="hljs-keyword">this</span>]),
+                len = <span class="hljs-built_in">Object</span>.keys(results).length;
+            <span class="hljs-keyword">if</span> (len &gt; <span class="hljs-number">1</span>) {
+                results = $scope.sortPersonnelPanel(_.toArray(results), $scope.filterType);
+            }
+            $scope.assigned.groups[<span class="hljs-keyword">this</span> + <span class="hljs-string">'-'</span> + shiftId] = { total: len };
+            
+            <span class="hljs-keyword">return</span> results;
+        };</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>assigned panel group filters and states
+see board.html constant <code>personnel</code></p></div></div><div class="code"><div class="wrapper">        $scope.assigned.groups = (<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+            <span class="hljs-keyword">var</span> base = {},
+                personnelKeys = <span class="hljs-built_in">Object</span>.keys(groups.personnel);
+            <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>, len = personnelKeys.length; i &lt; len; i ++) {
+                base[personnelKeys[i]] = {
+                    filter: assignedGroupFilter.bind(personnelKeys[i])
+                }
+            }
+            <span class="hljs-keyword">return</span> base;
+        }());
+
+        
+    });</div></div></div></div></body></html>

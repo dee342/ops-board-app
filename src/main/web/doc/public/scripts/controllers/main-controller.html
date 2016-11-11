@@ -1,0 +1,804 @@
+<!DOCTYPE html><html lang="en"><head><title>public\scripts\controllers\main-controller</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../../"><meta name="groc-document-path" content="public\scripts\controllers\main-controller"><meta name="groc-project-path" content="public\scripts\controllers\main-controller.js"><link rel="stylesheet" type="text/css" media="all" href="../../../assets/style.css"><script type="text/javascript" src="../../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">public\scripts\controllers\main-controller.js</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="hljs-pi">'use strict'</span>;
+
+angular
+    .module(<span class="hljs-string">'OpsBoard'</span>)
+    .controller(
+        <span class="hljs-string">'MainCtrl'</span>,
+        <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($scope, $filter, $modal, $log, $controller, $timeout,
+            $window, $rootScope, states, groups, plowTypes, plowDirections, loads ,equipmentStatuses, user,
+            signOffTime, OpsBoardRepository, ClientSideError, EquipmentHelperService, 
+            PersonnelHelperService, WorkUnits, urls)</span> </span>{</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Active user</p></div></div><div class="code"><div class="wrapper">          $scope.user = user;
+
+          <span class="hljs-keyword">var</span> w = angular.element($<span class="hljs-built_in">window</span>);
+
+          w.bind(<span class="hljs-string">'resize'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+            adjustLayout();
+            $scope.$apply();
+          });</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Board details</p></div></div><div class="code"><div class="wrapper">          $scope.board = {
+            location : OpsBoardRepository.getBoardLocation(),
+            date : OpsBoardRepository.getBoardDate(),
+            realDate : <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(OpsBoardRepository.getBoardDate()
+                .substring(<span class="hljs-number">4</span>, <span class="hljs-number">6</span>)
+                + <span class="hljs-string">'/'</span>
+                + OpsBoardRepository.getBoardDate().substring(
+                    <span class="hljs-number">6</span>, <span class="hljs-number">8</span>)
+                + <span class="hljs-string">'/'</span>
+                + OpsBoardRepository.getBoardDate().substring(
+                    <span class="hljs-number">0</span>, <span class="hljs-number">4</span>)),
+            displayDate : moment(
+                <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(OpsBoardRepository.getBoardDate()
+                    .substring(<span class="hljs-number">4</span>, <span class="hljs-number">6</span>)
+                    + <span class="hljs-string">'/'</span>
+                    + OpsBoardRepository.getBoardDate()
+                        .substring(<span class="hljs-number">6</span>, <span class="hljs-number">8</span>)
+                    + <span class="hljs-string">'/'</span>
+                    + OpsBoardRepository.getBoardDate()
+                        .substring(<span class="hljs-number">0</span>, <span class="hljs-number">4</span>))).format(
+                <span class="hljs-string">'MM/DD/YYYY'</span>),
+            version : <span class="hljs-string">'Active Board'</span>,
+            boroBoard : OpsBoardRepository.isBoroBoard()
+          };
+
+          <span class="hljs-keyword">var</span> board = OpsBoardRepository
+              .getOpsBoard(
+                  angular.noop,
+                  <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span> </span>{
+                    $scope.showError = <span class="hljs-literal">true</span>;
+
+                    $scope.opData = {
+                      errors : []
+                    }
+
+                    $scope.opData.errors = [];
+
+                    <span class="hljs-keyword">if</span> (error.status == <span class="hljs-number">412</span>
+                        || error.status == <span class="hljs-number">409</span>) {
+                      $scope.opData.errors.push({
+                        type : <span class="hljs-string">'danger'</span>,
+                        message : error.data
+                      });
+                    } <span class="hljs-keyword">else</span> {
+                      $scope.opData.errors
+                          .push({
+                            type : <span class="hljs-string">'danger'</span>,
+                            message : OpsBoardRepository
+                                .getErrorMessage(error.data)
+                          });
+                    }
+
+                    $scope.passPreValidation = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+                      <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>
+                    }
+
+                    <span class="hljs-keyword">var</span> modalInstance = $modal
+                        .open({
+                          templateUrl : appPathStart
+                              + <span class="hljs-string">'/views/modals/fragments/modal-server-errors'</span>,
+                          controller : <span class="hljs-string">'ModalCtrl'</span>,
+                          backdrop : <span class="hljs-string">'static'</span>,
+                          resolve : {
+                            data : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+                              <span class="hljs-keyword">return</span> [ {} ]
+                            }
+                          },
+                          scope : $scope</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>set scope to current scope of Equipment Controller</p></div></div><div class="code"><div class="wrapper">                        });
+
+                    modalInstance.result.then(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(
+                        selectedItem)</span> </span>{
+                      $scope.selected = selectedItem;
+                    }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+                      $log.info(<span class="hljs-string">'Modal dismissed at: '</span>
+                          + <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>());
+                    });
+                  })
+
+          $scope.materialList = OpsBoardRepository.getMaterials();
+          $scope.personnelStatusList = OpsBoardRepository.getPersonnelStatusList();
+          $scope.personnelSpecialPositionsList = OpsBoardRepository
+              .getPersonnelSpecialPositionsList();
+          $scope.unavailabilityCodeList = OpsBoardRepository
+              .getPersonnelUnavailabilityCodes();
+          $scope.shifts = OpsBoardRepository.getShifts();
+          $scope.shiftData = OpsBoardRepository.getShiftData();
+          $scope.tasks = OpsBoardRepository.getTasks();
+          $scope.group = [];
+
+          $scope.equipments = OpsBoardRepository.getEquipment();
+          $scope.persons = OpsBoardRepository.getPersonnel();
+          $scope.locations = WorkUnits.getLocations();
+          </div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>will change later</p></div></div><div class="code"><div class="wrapper">          <span class="hljs-keyword">if</span> (<span class="hljs-built_in">Object</span>.prototype.toString.call($scope.materialList) !== <span class="hljs-string">'[object Array]'</span>)
+            $scope.materialList = [];
+          <span class="hljs-keyword">if</span> (<span class="hljs-built_in">Object</span>.prototype.toString
+              .call($scope.personnelStatusList) !== <span class="hljs-string">'[object Array]'</span>)
+            $scope.personnelStatusList = [];
+          <span class="hljs-keyword">if</span> (<span class="hljs-built_in">Object</span>.prototype.toString
+              .call($scope.unavailabilityCodeList) !== <span class="hljs-string">'[object Array]'</span>)
+            $scope.unavailabilityCodeList = [];
+          <span class="hljs-keyword">if</span> (<span class="hljs-built_in">Object</span>.prototype.toString.call($scope.locations) !== <span class="hljs-string">'[object Array]'</span>)
+            $scope.locations = [];</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Server connection </p></div></div><div class="code"><div class="wrapper">          $scope.connected = OpsBoardRepository.isConnected();
+
+          $scope.$on(<span class="hljs-string">'connected'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(event, connected)</span> </span>{
+            $scope.$apply(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+              $scope.connected = connected;
+            });
+          });
+
+          <span class="hljs-keyword">var</span> windowWidth = angular.element($<span class="hljs-built_in">window</span>).width();
+          <span class="hljs-keyword">var</span> boardWidth = windowWidth;
+          <span class="hljs-keyword">var</span> splitterlWidth = <span class="hljs-number">4</span>;
+          <span class="hljs-keyword">var</span> leftScreenWidth = <span class="hljs-built_in">parseInt</span>(windowWidth  / <span class="hljs-number">2</span>);
+          <span class="hljs-keyword">var</span> rightScreenWidth = <span class="hljs-built_in">parseInt</span>(windowWidth  / <span class="hljs-number">2</span>);
+          <span class="hljs-keyword">var</span> leftPanelsWidth = leftScreenWidth - <span class="hljs-number">193</span>;
+          <span class="hljs-keyword">var</span> leftPanel = <span class="hljs-built_in">parseInt</span>(leftPanelsWidth / <span class="hljs-number">2</span>);
+          <span class="hljs-keyword">var</span> rightPanel = <span class="hljs-built_in">parseInt</span>(leftPanelsWidth / <span class="hljs-number">2</span>);
+          <span class="hljs-keyword">var</span> screenHeight = angular.element($<span class="hljs-built_in">window</span>).height();
+
+          <span class="hljs-keyword">if</span> (screenHeight &lt; <span class="hljs-number">625</span>) {
+            screenHeight = <span class="hljs-number">625</span>;
+          }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Window Layout</p></div></div><div class="code"><div class="wrapper">          $scope.layout = {
+            splitter : {
+              width :  splitterlWidth + <span class="hljs-string">'px'</span>
+            },
+
+            board : {
+              width :  boardWidth + <span class="hljs-string">'px'</span>,
+              height :  screenHeight + <span class="hljs-string">'px'</span>
+
+            },
+
+            scrollpanel : {
+              height :  (screenHeight - <span class="hljs-number">39</span>) + <span class="hljs-string">'px'</span>
+            },
+
+            taskpanel : {
+              height :  (screenHeight - <span class="hljs-number">84</span>) + <span class="hljs-string">'px'</span>
+            },
+
+
+            screen1 : {
+              pane1 : {
+                visible : <span class="hljs-literal">true</span>,
+                width : leftPanel + <span class="hljs-string">'px'</span>,
+              },
+              pane2 : {
+                visible : <span class="hljs-literal">true</span>,
+                width :  rightPanel + <span class="hljs-string">'px'</span>
+              },
+              visible : <span class="hljs-literal">true</span>,
+              width :  leftScreenWidth + <span class="hljs-string">'px'</span>,
+              taskWidth :  rightScreenWidth + <span class="hljs-string">'px'</span>,
+              height :  screenHeight + <span class="hljs-string">'px'</span>,
+              boardWidth :  boardWidth + <span class="hljs-string">'px'</span>
+
+            },
+            screen2 : {
+              pane1 : {
+                visible : <span class="hljs-literal">true</span>,
+                width : rightScreenWidth + <span class="hljs-string">'px'</span>
+              },
+              visible : <span class="hljs-literal">true</span>,
+              width : rightScreenWidth + <span class="hljs-string">'px'</span>
+            }
+          };
+
+          $scope.panes = {
+            equipment : {
+              active : <span class="hljs-literal">true</span>
+            },
+            equipmentDetails : {
+              active : <span class="hljs-literal">false</span>
+            },
+            personnel : {
+              active : <span class="hljs-literal">true</span>
+            },
+            boro : {
+              active : <span class="hljs-literal">false</span>
+            },
+            personDetails : {
+              active : <span class="hljs-literal">false</span>
+            },
+            recentActivity : {
+              active : <span class="hljs-literal">false</span>,
+              visible : <span class="hljs-literal">false</span>
+            },
+            tasks : {
+              active : <span class="hljs-literal">true</span>
+            },
+            taskSettings : {
+              active : <span class="hljs-literal">false</span>
+            },
+            reports : {
+              active : <span class="hljs-literal">false</span>
+            },
+            showMultiRoutes: {
+              active: <span class="hljs-literal">false</span>
+            }
+          };
+
+          $scope.toggleEquipmentPane = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+            $scope.panes.equipmentDetails.active = <span class="hljs-literal">false</span>;
+
+            <span class="hljs-keyword">if</span> ($scope.panes.taskSettings.active)
+              <span class="hljs-keyword">return</span>;
+            $scope.panes.equipment.active = !$scope.panes.equipment.active;
+            $scope.layout.screen1.pane1.visible = $scope.panes.equipment.active
+                || $scope.panes.personDetails.active;
+            $scope.layout.screen1.pane2.visible = $scope.panes.personnel.active
+            || $scope.panes.equipmentDetails.active;
+            adjustLayout();
+          };
+
+          $scope.togglePersonnelPane = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+
+            $scope.panes.personDetails.active = <span class="hljs-literal">false</span>;
+
+            <span class="hljs-keyword">if</span> ($scope.panes.taskSettings.active)
+              <span class="hljs-keyword">return</span>;
+            $scope.panes.personnel.active = !$scope.panes.personnel.active;
+            $scope.layout.screen1.pane1.visible = $scope.panes.equipment.active
+            || $scope.panes.personDetails.active;
+            $scope.layout.screen1.pane2.visible = $scope.panes.personnel.active
+                || $scope.panes.equipmentDetails.active;
+            adjustLayout();
+          };
+
+          $scope.toggleRecentActivityPane = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+            $scope.panes.recentActivity.visible = !$scope.panes.recentActivity.visible;
+            $timeout(
+                <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+                  $scope.panes.recentActivity.active = !$scope.panes.recentActivity.active;
+                }, <span class="hljs-number">50</span>);
+          };
+
+          $scope.logout = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+            <span class="hljs-keyword">var</span> pathElements = <span class="hljs-built_in">window</span>.location.pathname.split(<span class="hljs-string">'/'</span>),
+                  pathStart = <span class="hljs-string">'/'</span> + pathElements[<span class="hljs-number">1</span>];
+            $<span class="hljs-built_in">window</span>.location = pathStart + urls.logout;
+          };
+
+            $scope.displayBoard = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(copyBoardTo, successFn, errorFn)</span> </span>{
+                <span class="hljs-keyword">var</span> destinationUrl = <span class="hljs-string">"/displayboard/"</span> + $scope.board.location + <span class="hljs-string">"#/"</span> + $scope.board.date + <span class="hljs-string">"/screen1"</span>;
+
+                <span class="hljs-keyword">if</span>(<span class="hljs-built_in">window</span>.location.pathname.indexOf(<span class="hljs-string">'smart-opsboard'</span>) &gt; -<span class="hljs-number">1</span>) {
+                    destinationUrl = <span class="hljs-string">"/smart-opsboard/displayboard/"</span> + $scope.board.location + <span class="hljs-string">"#/"</span> + $scope.board.date + <span class="hljs-string">"/screen1"</span>;
+                }
+
+                <span class="hljs-built_in">window</span>.open(destinationUrl);
+            };
+
+          $scope.districtBoard = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(location)</span> </span>{
+            <span class="hljs-keyword">var</span> destinationUrl = <span class="hljs-string">"/displayboard/"</span> + $scope.board.location + <span class="hljs-string">"/"</span> + $scope.board.date;
+
+            <span class="hljs-keyword">if</span>(<span class="hljs-built_in">window</span>.location.pathname.indexOf(<span class="hljs-string">'smart-opsboard'</span>) &gt; -<span class="hljs-number">1</span>) {
+              destinationUrl = <span class="hljs-string">"/smart-opsboard/"</span> + location + <span class="hljs-string">"/"</span> + $scope.board.date;
+            }
+
+            <span class="hljs-built_in">window</span>.open(destinationUrl);
+          };
+            
+            $scope.publishBoard = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(successFn, errorFn)</span> </span>{
+              OpsBoardRepository.publishBoard();
+            };
+
+            $scope.toggleTasksPane = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+            $scope.panes.tasks.active = !$scope.panes.tasks.active;
+            <span class="hljs-keyword">if</span> (!$scope.panes.tasks.active) {
+              $scope.panes.taskSettings.active = <span class="hljs-literal">false</span>;
+              adjustLayout();
+            }
+            $scope.layout.screen2.pane1.visible = $scope.panes.tasks.active;
+            adjustLayout();
+          };
+
+          $scope.toggleTaskSettingsPane = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($event)</span> </span>{
+
+            $scope.panes.taskSettings.active = !$scope.panes.taskSettings.active;
+            $scope.panes.reports.active = <span class="hljs-literal">false</span>;
+            $scope.layout.screen1.visible = $scope.panes.taskSettings.active;
+
+
+            $scope.layout.screen1.pane1.visible = $scope.panes.taskSettings.active ? <span class="hljs-literal">false</span>
+                : $scope.panes.equipment.active
+                    || $scope.panes.personDetails.active;
+            $scope.layout.screen1.pane2.visible = $scope.panes.taskSettings.active ? <span class="hljs-literal">false</span>
+                : $scope.panes.personnel.active
+                    || $scope.panes.equipmentDetails.active;
+            <span class="hljs-keyword">var</span> tasks = {
+                  locations:   []
+            };
+            
+            $rootScope.$broadcast(<span class="hljs-string">'task-setting-changed'</span>, tasks);
+
+            adjustLayout();
+          };
+
+          $scope.toggleBoroPane = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($event)</span> </span>{
+
+            <span class="hljs-keyword">if</span>(!$scope.panes.boro.active) {
+              $scope.panes.boro.active = <span class="hljs-literal">true</span>;
+            } <span class="hljs-keyword">else</span> {
+              $scope.panes.boro.active = <span class="hljs-literal">false</span>;
+            }
+
+            adjustLayout();
+          };
+
+          $scope.toggleReportsPane = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">($event)</span> </span>{
+
+              $scope.panes.reports.active = !$scope.panes.reports.active;
+              $scope.panes.taskSettings.active = <span class="hljs-literal">false</span>;
+              $scope.layout.screen1.visible = $scope.panes.reports.active;
+              $scope.layout.screen1.pane1.visible = $scope.panes.reports.active ? <span class="hljs-literal">false</span> : $scope.panes.equipment.active || $scope.panes.personDetails.active;
+              $scope.layout.screen1.pane2.visible = $scope.panes.reports.active ? <span class="hljs-literal">false</span> : $scope.panes.personnel.active || $scope.panes.equipmentDetails.active;
+
+              adjustLayout();
+          };
+
+          $scope.closeEquipmentDetailsPane = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+            $scope.panes.equipmentDetails.active = <span class="hljs-literal">false</span>;
+
+            $scope.layout.screen1.pane2.visible = $scope.panes.personnel.active || $scope.panes.equipmentDetails.active;
+              adjustLayout();
+            };</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>shoeDetails of person or equipment         </p></div></div><div class="code"><div class="wrapper">            $scope.ifEntityExistsAndHasLinkedDetails = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(type, id)</span> </span>{
+              <span class="hljs-keyword">if</span> (type != <span class="hljs-string">'equipment'</span> &amp;&amp; type != <span class="hljs-string">'person'</span>)
+                <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>; <span class="hljs-comment">//</span>
+
+                <span class="hljs-keyword">if</span> (type == <span class="hljs-string">'equipment'</span>
+                    &amp;&amp; $scope.equipments[id])
+                  <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+                <span class="hljs-keyword">if</span> (type == <span class="hljs-string">'person'</span>
+                    &amp;&amp; $scope.persons[id])
+                  <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+                <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+              };
+
+              $scope.ifEntityRemoved = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(type, id)</span> </span>{
+                <span class="hljs-keyword">if</span> (type == <span class="hljs-string">'equipment'</span>
+                    &amp;&amp; !$scope.equipments[id])
+                  <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+                <span class="hljs-keyword">if</span> (type == <span class="hljs-string">'person'</span>
+                    &amp;&amp; !$scope.persons[id])
+                  <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+
+                <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+              };
+
+              $scope.ifExist = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(type, id)</span> </span>{
+              <span class="hljs-keyword">if</span> (type != <span class="hljs-string">'equipment'</span> || type != <span class="hljs-string">'person'</span>)
+                <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+
+                <span class="hljs-keyword">if</span> (type == <span class="hljs-string">'equipment'</span>
+                    &amp;&amp; $scope.equipments[id])
+                  <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+                <span class="hljs-keyword">if</span> (type == <span class="hljs-string">'person'</span>
+                    &amp;&amp; $scope.persons[id])
+                  <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+                <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+              };
+
+              $scope.showDetails = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(event, type, id)</span> </span>{
+                <span class="hljs-keyword">if</span> (!$scope.ifEntityExistsAndHasLinkedDetails(type, id))
+                  <span class="hljs-keyword">return</span>;
+                <span class="hljs-keyword">if</span> (type == <span class="hljs-string">'equipment'</span>) {
+                  $scope.showEquipmentDetails(event,
+                      $scope.equipments[id]);
+                } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (type == <span class="hljs-string">'person'</span>) {
+                  $scope.showPersonDetails(event,
+                      $scope.persons[id]);
+                }
+              };
+
+            $scope.showEquipmentDetails = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(event, pieceOfEquipment)</span> </span>{
+                  <span class="hljs-keyword">if</span> (!pieceOfEquipment)
+                    <span class="hljs-keyword">return</span>;</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Disregard actions on menu items</p></div></div><div class="code"><div class="wrapper">                  <span class="hljs-keyword">if</span> (event.target.className.indexOf(<span class="hljs-string">"menu-item"</span>) &gt; -<span class="hljs-number">1</span>)
+                    <span class="hljs-keyword">return</span>;</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Format equipment values  Amanda</p></div></div><div class="code"><div class="wrapper">                  $scope.pieceOfEquipment = $scope.equipments[pieceOfEquipment.id];
+
+              <span class="hljs-keyword">if</span> ($scope.pieceOfEquipment.lastUpdated != <span class="hljs-literal">null</span> &amp;&amp; $scope.pieceOfEquipment.lastUpdated != <span class="hljs-string">''</span>) {
+                <span class="hljs-comment">//$scope.pieceOfEquipment.lastUpdated = pieceOfEquipment.lastUpdated.substring(0,16);</span>
+                $scope.pieceOfEquipment.lastUpdated = $scope.pieceOfEquipment.lastUpdated.substring(<span class="hljs-number">0</span>, <span class="hljs-number">16</span>);
+                $scope.pieceOfEquipment.formattedDetachments = $scope.pieceOfEquipment.getFormattedDetachments();
+
+              }
+
+              $scope.pieceOfEquipment.formattedBins = $scope.pieceOfEquipment.getFormattedBins($scope.materialList);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Show equipment details</p></div></div><div class="code"><div class="wrapper">              $scope.panes.equipmentDetails.active = <span class="hljs-literal">true</span>;
+              $scope.$broadcast(<span class="hljs-string">'reset-details-pane'</span>); <span class="hljs-comment">// informed details controller to reset</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Adjust layout</p></div></div><div class="code"><div class="wrapper">              $scope.layout.screen1.pane2.visible = <span class="hljs-literal">true</span>;
+              adjustLayout();
+
+
+              <span class="hljs-comment">//pagination for detachment hisotry</span>
+
+            $scope.detachmentPerPage = <span class="hljs-number">10</span>;
+            $scope.pieceOfEquipment.detachmentCurrentPage = <span class="hljs-number">1</span>;
+            $scope.pieceOfEquipment.formattedDetachments = $scope.pieceOfEquipment.getFormattedDetachments();
+            $scope.pieceOfEquipment.showPaginationLinksForDetachment = $scope.pieceOfEquipment.formattedDetachments.length &gt; $scope.detachmentPerPage;
+
+            <span class="hljs-keyword">var</span> detachmentBegin = (($scope.pieceOfEquipment.detachmentCurrentPage - <span class="hljs-number">1</span>) * $scope.detachmentPerPage);
+            <span class="hljs-keyword">var</span> detachmentEnd = detachmentBegin + $scope.detachmentPerPage;
+
+            $scope.pieceOfEquipment.equipmentDetachmentPaginationModel = $scope.pieceOfEquipment.formattedDetachments.slice(detachmentBegin, detachmentEnd);
+
+              <span class="hljs-comment">//paginatino for up/down hisotry</span>
+
+              $scope.pieceOfEquipment.FormattedUpDownHistory = $scope.pieceOfEquipment.getFormattedUpDownHistory();
+              $scope.upDownPerPage = <span class="hljs-number">5</span>;
+              $scope.pieceOfEquipment.upDownCurrentPage = <span class="hljs-number">1</span>;
+              $scope.pieceOfEquipment.showPaginationLinksForUpDown = $scope.pieceOfEquipment.getFormattedUpDownHistory().length &gt; $scope.upDownPerPage;
+               <span class="hljs-keyword">var</span> upDownBegin = (($scope.pieceOfEquipment.upDownCurrentPage - <span class="hljs-number">1</span>) * $scope.upDownPerPage);
+               <span class="hljs-keyword">var</span> upDownEnd = upDownBegin + $scope.upDownPerPage;
+
+              $scope.pieceOfEquipment.upDownPaginationModel = $scope.pieceOfEquipment.getFormattedUpDownHistory().slice(upDownBegin, upDownEnd);
+            };
+
+          $scope.closePersonDetailsPane = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+            $scope.panes.personDetails.active = <span class="hljs-literal">false</span>;
+            $scope.layout.screen1.pane1.visible = $scope.panes.equipment.active
+                || $scope.panes.personDetails.active;
+            adjustLayout();
+          };
+
+          $scope.person = { <span class="hljs-comment">// required for personnel-details-pane.html to render</span>
+            fullName : <span class="hljs-string">''</span>
+          };
+
+          $scope.showPersonDetails = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(event, person)</span> </span>{
+
+              $scope.titleMap = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(title)</span> </span>{
+                  <span class="hljs-keyword">var</span> results = OpsBoardRepository.getMappedTitle(title);
+                  <span class="hljs-keyword">return</span> results;
+              };
+
+            <span class="hljs-keyword">if</span> (!person)
+              <span class="hljs-keyword">return</span>;</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Disregard actions on context menu items</p></div></div><div class="code"><div class="wrapper">            <span class="hljs-keyword">if</span> (event.target.className.indexOf(<span class="hljs-string">"menu-item"</span>) &gt; -<span class="hljs-number">1</span>)
+              <span class="hljs-keyword">return</span>;</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Person display logic</p></div></div><div class="code"><div class="wrapper">            $scope.person = $scope.persons[person.id];
+
+            <span class="hljs-comment">//console.info($scope.person);</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>$scope.person = person;</p></div></div><div class="code"><div class="wrapper">            $scope.showQualification = <span class="hljs-literal">false</span>;
+
+            <span class="hljs-keyword">if</span> ($scope.person.civilServiceTitle.toLowerCase() === <span class="hljs-string">'sw'</span>)
+              $scope.showQualification = <span class="hljs-literal">true</span>;
+
+            $scope.person.formattedUnavailableReasons = $scope.person.getFormattedUnavailableReasons();
+            $scope.person.unavailableReasonsCount = $scope.person.formattedUnavailableReasons.length;
+            $scope.person.formattedSpecialPositions = $scope.person.getFormattedSpecialPositions();
+            $scope.person.formattedMdaStatus = $scope.person.getFormattedMdaStatus();
+            $scope.person.formattedDetachments = $scope.person.getFormattedDetachmentHistory();
+            $scope.person.formattedGroundingHistory = $scope.person.getFormattedGroundedHistory();
+            </div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Show person details</p></div></div><div class="code"><div class="wrapper">            $scope.panes.personDetails.active = <span class="hljs-literal">true</span>;
+            $scope.$broadcast(<span class="hljs-string">'reset-details-pane'</span>); <span class="hljs-comment">// informed details controller to reset</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Adjust layout</p></div></div><div class="code"><div class="wrapper">            $scope.layout.screen1.pane1.visible = <span class="hljs-literal">true</span>;
+            adjustLayout();
+            
+            
+             <span class="hljs-comment">//detachment history pagination</span>
+              $scope.personDetachItemsPerPage = <span class="hljs-number">5</span>;
+              $scope.person.personDetachCurrentPage = <span class="hljs-number">1</span>;
+              $scope.person.showPaginationLinksForDetachments = $scope.person.formattedDetachments.length &gt; <span class="hljs-number">0</span>;
+               <span class="hljs-keyword">var</span> personDetachBegin = (($scope.person.personDetachCurrentPage - <span class="hljs-number">1</span>) * $scope.personDetachItemsPerPage);
+               <span class="hljs-keyword">var</span> personDetachEnd = personDetachBegin + $scope.personDetachItemsPerPage;
+
+              $scope.person.personDetachPaginationModel = $scope.person.formattedDetachments.slice(personDetachBegin, personDetachEnd);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>MDA history</p></div></div><div class="code"><div class="wrapper">              $scope.personMDAItemsPerPage = <span class="hljs-number">5</span>;
+              $scope.person.personMDACurrentPage = <span class="hljs-number">1</span>;
+              $scope.person.showPaginationLinksForMda = $scope.person.formattedMdaStatus.length &gt; <span class="hljs-number">0</span>;
+               <span class="hljs-keyword">var</span> personMDABegin = (($scope.person.personMDACurrentPage - <span class="hljs-number">1</span>) * $scope.personMDAItemsPerPage);
+               <span class="hljs-keyword">var</span> personMDAEnd = personMDABegin + $scope.personMDAItemsPerPage;
+
+              $scope.person.personMDAPaginationModel = $scope.person.formattedMdaStatus.slice(personMDABegin, personMDAEnd);
+                        </div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Unavailability History - start</p></div></div><div class="code"><div class="wrapper">               $scope.unavailabilityItemsPerPage = <span class="hljs-number">5</span>
+              $scope.person.unavailabilityCurrentPage = <span class="hljs-number">1</span>;
+               $scope.person.totalUnavailableItems = $scope.person.formattedUnavailableReasons.length;
+               $scope.person.showUnavailabilityTable = $scope.person.formattedUnavailableReasons.length &gt; <span class="hljs-number">0</span>;
+               $scope.person.showPaginationLinksForUnavailable = $scope.person.formattedUnavailableReasons.length &gt; <span class="hljs-number">0</span>;
+            <span class="hljs-keyword">var</span> unavailBegin = (($scope.person.unavailabilityCurrentPage - <span class="hljs-number">1</span>) * $scope.unavailabilityItemsPerPage);
+                <span class="hljs-keyword">var</span> unavailEnd = unavailBegin + $scope.unavailabilityItemsPerPage;
+
+            $scope.person.unavailabilityPaginationModel = $scope.person.formattedUnavailableReasons.slice(unavailBegin, unavailEnd);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Unavailability History - end</p></div></div><div class="code"><div class="wrapper">            
+
+            
+            
+            </div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Special Positions - start</p></div></div><div class="code"><div class="wrapper">            $scope.specialPositionsItemsPerPage = <span class="hljs-number">5</span>
+              $scope.person.specialPositionsCurrentPage = <span class="hljs-number">1</span>;
+            $scope.person.totalSpecialPositions = $scope.person.formattedSpecialPositions.length;
+            $scope.person.showSpecialPositionsTable = $scope.person.formattedSpecialPositions.length &gt; <span class="hljs-number">0</span>;
+            $scope.person.showPaginationLinksForSpecialPositions = $scope.person.formattedSpecialPositions.length &gt; <span class="hljs-number">0</span>;
+             <span class="hljs-keyword">var</span> specialPositionsBegin = (($scope.person.specialPositionsCurrentPage - <span class="hljs-number">1</span>) * $scope.specialPositionsItemsPerPage);
+                 <span class="hljs-keyword">var</span> specialPositionsEnd = specialPositionsBegin + $scope.specialPositionsItemsPerPage;
+
+            $scope.person.specialPositionsPaginationModel = $scope.person.formattedSpecialPositions.slice(specialPositionsBegin, specialPositionsEnd);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Special Positions - end</p></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>grounding - start</p></div></div><div class="code"><div class="wrapper">            $scope.groundingHistoryItemsPerPage = <span class="hljs-number">5</span>
+            $scope.person.groundingHistoryCurrentPage = <span class="hljs-number">1</span>;
+            $scope.person.totalGroundingHistory = $scope.person.formattedGroundingHistory.length;
+            $scope.person.showGroundingHistoryTable = $scope.person.formattedGroundingHistory.length &gt; <span class="hljs-number">0</span>;
+            $scope.person.showPaginationLinksForGrounding = $scope.person.formattedGroundingHistory.length &gt; <span class="hljs-number">0</span>;
+            <span class="hljs-keyword">var</span> groundingBegin = (($scope.person.groundingHistoryCurrentPage - <span class="hljs-number">1</span>) * $scope.groundingHistoryItemsPerPage);
+            <span class="hljs-keyword">var</span> groundingEnd = specialPositionsBegin + $scope.groundingHistoryItemsPerPage;
+            $scope.person.groundingHistoryPaginationModel = $scope.person.formattedGroundingHistory.slice(groundingBegin, groundingEnd);
+
+            }
+
+          $scope.showEntityDetails = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(action)</span> </span>{
+            <span class="hljs-keyword">if</span> (action.entity.type === <span class="hljs-string">'equipment'</span>
+                &amp;&amp; $scope.equipments)
+              $scope.showEquipmentDetails(<span class="hljs-literal">null</span>,
+                  $scope.equipments[action.id])
+            <span class="hljs-keyword">if</span> (action.entity.type === <span class="hljs-string">'personnel'</span>
+                &amp;&amp; $scope.persons)
+              $scope.showPersonDetails(<span class="hljs-literal">null</span>,
+                  $scope.persons[action.id])
+          }
+
+          <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">adjustLayout</span><span class="hljs-params">()</span> </span>{
+            $scope.layout.screen1.visible = $scope.layout.screen1.pane1.visible
+                || $scope.layout.screen1.pane2.visible
+                || $scope.panes.taskSettings.active || $scope.panes.reports.active;
+            $scope.layout.screen2.visible = $scope.layout.screen2.pane1.visible;
+
+            <span class="hljs-keyword">var</span> windowWidth = angular.element($<span class="hljs-built_in">window</span>).width();
+            <span class="hljs-keyword">var</span> boardWidth = windowWidth;
+            <span class="hljs-keyword">var</span> splitterlWidth = <span class="hljs-number">4</span>;
+            <span class="hljs-keyword">var</span> leftScreenWidth = <span class="hljs-built_in">parseInt</span>(windowWidth  / <span class="hljs-number">2</span>);
+            <span class="hljs-keyword">var</span> rightScreenWidth = <span class="hljs-built_in">parseInt</span>(windowWidth  / <span class="hljs-number">2</span>);
+
+            <span class="hljs-keyword">var</span> leftPanelsWidth = leftScreenWidth - <span class="hljs-number">193</span>;
+            <span class="hljs-keyword">var</span> leftPanel = <span class="hljs-built_in">parseInt</span>(leftPanelsWidth / <span class="hljs-number">2</span>);
+            <span class="hljs-keyword">var</span> rightPanel = <span class="hljs-built_in">parseInt</span>(leftPanelsWidth / <span class="hljs-number">2</span>);
+
+            <span class="hljs-keyword">var</span> menuPanel =leftScreenWidth - <span class="hljs-number">193</span>;
+
+            <span class="hljs-keyword">var</span> screenHeight = angular.element($<span class="hljs-built_in">window</span>).height();
+
+            <span class="hljs-keyword">if</span> (screenHeight &lt; <span class="hljs-number">625</span>) {
+              screenHeight = <span class="hljs-number">625</span>;
+            }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h1 id="adjustlayout">adjustLayout</h1></div></div></div><div class="segment"><div class="code"><div class="wrapper">            $scope.layout.board.height  = screenHeight + <span class="hljs-string">'px'</span>;
+            $scope.layout.screen1.height  = screenHeight + <span class="hljs-string">'px'</span>;
+            $scope.layout.scrollpanel.height  = (screenHeight - <span class="hljs-number">37</span>) + <span class="hljs-string">'px'</span>;
+
+            <span class="hljs-keyword">if</span> ($scope.layout.screen1.visible &amp;&amp; $scope.layout.screen2.visible) {
+              $scope.layout.screen1.width = leftScreenWidth + <span class="hljs-string">'px'</span>;
+              $scope.layout.screen2.width = rightScreenWidth + <span class="hljs-string">'px'</span>
+
+            } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> ($scope.layout.screen1.visible) {
+              $scope.layout.screen1.width = windowWidth + <span class="hljs-string">'px'</span>;
+            } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> ($scope.layout.screen2.visible) {
+
+              $scope.layout.screen2.width = windowWidth + <span class="hljs-string">'px'</span>;
+              $scope.layout.screen1.taskWidth = windowWidth + <span class="hljs-string">'px'</span>;
+            }
+
+            <span class="hljs-keyword">if</span>($scope.panes.taskSettings.active || $scope.panes.boro.active) {
+              $scope.layout.screen1.width = leftScreenWidth + <span class="hljs-string">'px'</span>;
+              $scope.layout.screen2.width = rightScreenWidth + <span class="hljs-string">'px'</span>;
+              $scope.layout.screen1.taskWidth = rightScreenWidth + <span class="hljs-string">'px'</span>;
+            }
+            
+            <span class="hljs-keyword">if</span> ($scope.panes.reports.active) {
+                $scope.layout.screen1.width = leftScreenWidth + <span class="hljs-string">'px'</span>;
+                $scope.layout.screen2.width = rightScreenWidth + <span class="hljs-string">'px'</span>;
+                $scope.layout.screen1.taskWidth = rightScreenWidth + <span class="hljs-string">'px'</span>;
+            }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Adjust panes</p></div></div><div class="code"><div class="wrapper">            <span class="hljs-keyword">if</span> ($scope.layout.screen1.visible &amp;&amp; $scope.layout.screen2.visible) {</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Left and right screens visible</p></div></div><div class="code"><div class="wrapper">              <span class="hljs-keyword">if</span> ($scope.layout.screen1.pane1.visible &amp;&amp; $scope.layout.screen1.pane2.visible) {</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Both panels visible</p></div></div><div class="code"><div class="wrapper">                $scope.layout.screen1.pane1.width = leftPanel +<span class="hljs-string">'px'</span>;
+                $scope.layout.screen1.pane1.width = rightPanel +<span class="hljs-string">'px'</span>;
+                $scope.layout.screen1.taskWidth = rightScreenWidth + <span class="hljs-string">'px'</span>;
+
+              } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> ($scope.layout.screen1.pane1.visible &amp;&amp; !$scope.layout.screen1.pane2.visible) {
+
+                $scope.layout.screen1.width = leftScreenWidth +<span class="hljs-string">'px'</span>;
+                $scope.layout.screen1.pane1.width = leftScreenWidth +<span class="hljs-string">'px'</span>;
+                $scope.layout.screen1.taskWidth = rightScreenWidth + <span class="hljs-string">'px'</span>;
+
+              } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (!$scope.layout.screen1.pane1.visible &amp;&amp; $scope.layout.screen1.pane2.visible) {
+                $scope.layout.screen1.taskWidth = rightScreenWidth + <span class="hljs-string">'px'</span>;
+                $scope.layout.screen1.pane2.width = leftScreenWidth +<span class="hljs-string">'px'</span>;
+              }
+            } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> ($scope.layout.screen1.visible) {</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Right screen off, left screen on</p></div></div><div class="code"><div class="wrapper">              <span class="hljs-keyword">if</span> ($scope.layout.screen1.pane1.visible &amp;&amp; $scope.layout.screen1.pane2.visible) {
+
+                leftPanel = <span class="hljs-built_in">parseInt</span>(windowWidth / <span class="hljs-number">2</span>) - <span class="hljs-number">193</span>;
+                rightPanel = <span class="hljs-built_in">parseInt</span>(windowWidth / <span class="hljs-number">2</span>);
+
+                $scope.layout.screen1.pane1.width = leftPanel +<span class="hljs-string">'px'</span>;
+                $scope.layout.screen1.pane2.width = rightPanel +<span class="hljs-string">'px'</span>;
+
+              } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> ($scope.layout.screen1.pane1.visible &amp;&amp; !$scope.layout.screen1.pane2.visible) {
+                $scope.layout.screen1.width = windowWidth +<span class="hljs-string">'px'</span>;
+                $scope.layout.screen1.pane1.width = windowWidth +<span class="hljs-string">'px'</span>;
+              } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (!$scope.layout.screen1.pane1.visible &amp;&amp; $scope.layout.screen1.pane2.visible) {
+                $scope.layout.screen1.width = windowWidth +<span class="hljs-string">'px'</span>;
+                $scope.layout.screen1.pane2.width = windowWidth +<span class="hljs-string">'px'</span>;
+              }
+            } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> ($scope.layout.screen2.visible) {
+              $scope.layout.screen2.width = windowWidth + <span class="hljs-string">'px'</span>;
+              $scope.layout.screen1.taskWidth = windowWidth + <span class="hljs-string">'px'</span>;
+            }
+          }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Handle Drag &amp; Drop </p></div></div><div class="code"><div class="wrapper">          $scope.assignToTask = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(task, type, position, elementId, locationId, context, taskIndicator)</span> </span>{
+            <span class="hljs-keyword">if</span> (OpsBoardRepository.isLocked())
+              <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+            <span class="hljs-keyword">if</span>(type === <span class="hljs-string">'equipment'</span> &amp;&amp; $scope.equipments[elementId] == <span class="hljs-literal">undefined</span>)
+              <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+            <span class="hljs-keyword">if</span>(type === <span class="hljs-string">'personnel'</span> &amp;&amp; $scope.persons[elementId] == <span class="hljs-literal">undefined</span>)
+              <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+            <span class="hljs-keyword">if</span>(type === <span class="hljs-string">'personnel'</span> &amp;&amp; (type === <span class="hljs-string">'supervisor-task'</span> || type === <span class="hljs-string">'supervisor-section'</span> || context === <span class="hljs-string">'supervisor-assignment'</span> || context === <span class="hljs-string">'task-assignment'</span>))
+              <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+            <span class="hljs-keyword">if</span>((type === <span class="hljs-string">'supervisor-task'</span> || type === <span class="hljs-string">'supervisor-section'</span>) &amp;&amp; $scope.persons[elementId] == <span class="hljs-literal">undefined</span>)
+              <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+            <span class="hljs-keyword">if</span> ((type === <span class="hljs-string">'supervisor-task'</span> || type === <span class="hljs-string">'supervisor-section'</span>) &amp;&amp; context !== <span class="hljs-string">'supervisor-assignment'</span>)
+              <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+
+            <span class="hljs-keyword">if</span> (context === <span class="hljs-string">'supervisor-assignment'</span>) {
+              <span class="hljs-keyword">if</span> (type === <span class="hljs-string">'supervisor-task'</span> &amp;&amp; task.supervisorAssignments &amp;&amp; task.supervisorAssignments.length !== <span class="hljs-number">0</span>) {
+                <span class="hljs-keyword">var</span> found = <span class="hljs-literal">false</span>;
+                <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; task.supervisorAssignments.length &amp;&amp; !found; i++) {
+                  <span class="hljs-keyword">if</span> (task.supervisorAssignments[i].taskIndicator === taskIndicator &amp;&amp; elementId === task.supervisorAssignments[i].person.id) {
+                    found = <span class="hljs-literal">true</span>
+                  }
+                }
+                <span class="hljs-keyword">if</span> (found) <span class="hljs-keyword">return</span>;
+              }
+            }
+
+            <span class="hljs-keyword">if</span> (context === <span class="hljs-string">'supervisor-assignment'</span>) {
+              <span class="hljs-keyword">if</span> (type === <span class="hljs-string">'supervisor-section'</span> &amp;&amp; task.sectionSupervisorAssignments &amp;&amp; task.sectionSupervisorAssignments.length !== <span class="hljs-number">0</span>) {
+                <span class="hljs-keyword">var</span> found = <span class="hljs-literal">false</span>;
+                <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; task.sectionSupervisorAssignments.length &amp;&amp; !found; i++) {
+                  <span class="hljs-keyword">if</span> (task.sectionSupervisorAssignments[i].taskIndicator === taskIndicator &amp;&amp; elementId === task.sectionSupervisorAssignments[i].personId) {
+                    found = <span class="hljs-literal">true</span>
+                  }
+                }
+                <span class="hljs-keyword">if</span> (found) <span class="hljs-keyword">return</span>;
+              }
+            }
+            
+            <span class="hljs-keyword">if</span>(type === <span class="hljs-string">'personnel'</span> &amp;&amp; $scope.persons[elementId].state === <span class="hljs-string">'Available'</span> &amp;&amp; $scope.persons[elementId].assigned)
+              $scope.decideAssignmentType(task, type, position, elementId, locationId);
+            <span class="hljs-keyword">else</span>
+             assignToTaskByDragAndDrop($scope, OpsBoardRepository, task, type, position, elementId, locationId, context, taskIndicator, $rootScope);
+          }       
+          
+          $scope.assginmentTypeToTask=<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(task, type, position,
+                  elementId, locationId)</span></span>{
+            assignToTaskByDragAndDrop($scope, OpsBoardRepository, task, type, position, elementId, locationId, <span class="hljs-literal">null</span>, <span class="hljs-literal">null</span>, $rootScope);
+          };</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Always show date the user chooses</p></div></div><div class="code"><div class="wrapper">          <span class="hljs-keyword">var</span> lengthOfURL = <span class="hljs-built_in">window</span>.location.pathname.length;
+          <span class="hljs-keyword">var</span> dd = <span class="hljs-built_in">parseInt</span>(<span class="hljs-built_in">window</span>.location.pathname.substring(lengthOfURL - <span class="hljs-number">2</span>, lengthOfURL));
+          <span class="hljs-keyword">var</span> mm = <span class="hljs-built_in">parseInt</span>(<span class="hljs-built_in">window</span>.location.pathname.substring(lengthOfURL - <span class="hljs-number">4</span>,lengthOfURL - <span class="hljs-number">2</span>)) - <span class="hljs-number">1</span>;
+          <span class="hljs-keyword">var</span> yy = <span class="hljs-built_in">parseInt</span>(<span class="hljs-built_in">window</span>.location.pathname.substring(lengthOfURL - <span class="hljs-number">8</span>, lengthOfURL - <span class="hljs-number">4</span>));
+          <span class="hljs-keyword">var</span> ddtomorrow = dd + <span class="hljs-number">1</span>;
+
+          $scope.dt = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(yy, mm, ddtomorrow);
+
+          <span class="hljs-comment">//for function navigation to another date board.</span>
+          
+          $scope.status = {
+            isopen: <span class="hljs-literal">false</span>
+          };
+          
+          $scope.changeDate=<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(dtd)</span></span>{
+            <span class="hljs-keyword">var</span> lengthOfU=<span class="hljs-built_in">window</span>.location.pathname.length;
+            <span class="hljs-keyword">var</span> changeD=<span class="hljs-built_in">window</span>.location.pathname.substring(<span class="hljs-number">0</span>,lengthOfU-<span class="hljs-number">8</span>);
+            <span class="hljs-keyword">var</span> formatttedDate=moment(dtd).format(<span class="hljs-string">'YYYYMMDD'</span>);
+            <span class="hljs-comment">/*$window.location.pathname=changeD+formatttedDate;*/</span>
+            $scope.status.isopen=!$scope.status.isopen;
+            $<span class="hljs-built_in">window</span>.open(changeD+formatttedDate);
+          };</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Control for date picker</p></div></div><div class="code"><div class="wrapper">          $scope.datepickers = {
+            startDateOpened : <span class="hljs-literal">false</span>,
+            endDateOpened : <span class="hljs-literal">false</span>
+          };
+
+          $scope.open = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($event, opened)</span> </span>{
+            $event.preventDefault();
+            $event.stopPropagation();
+            $scope.datepickers[opened] = <span class="hljs-literal">true</span>;
+            <span class="hljs-keyword">if</span> ($scope.datepickers.startDateOpened == <span class="hljs-literal">true</span>&amp;&amp; $scope.datepickers.endDateOpened == <span class="hljs-literal">true</span>)
+              $scope.datepickers.endDateOpened = <span class="hljs-literal">false</span>;
+          };
+
+          $scope.decideAssignmentType = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(task, type, position, elementId, locationId)</span> </span>{ 
+            <span class="hljs-keyword">if</span>(task.assignedPerson1.person!=<span class="hljs-literal">null</span>&amp;&amp;task.assignedPerson2.person!=<span class="hljs-literal">null</span>) {
+              <span class="hljs-keyword">return</span>;
+            }
+
+            <span class="hljs-keyword">var</span> otherPos = (position == <span class="hljs-number">1</span>) ? <span class="hljs-number">2</span> : <span class="hljs-number">1</span>;
+            
+            <span class="hljs-keyword">if</span>(task[<span class="hljs-string">"assignedPerson"</span> + otherPos].person &amp;&amp; task[<span class="hljs-string">"assignedPerson"</span> + otherPos].person.id == elementId) {
+              <span class="hljs-keyword">return</span>;
+            }
+
+            $scope.assignmentTypes = [{id:<span class="hljs-string">'OVERTIME'</span>,checked:<span class="hljs-literal">false</span>,name:<span class="hljs-string">'Overtime'</span>}, {id:<span class="hljs-string">'NEXT_DAY'</span>,checked:<span class="hljs-literal">false</span>,name:<span class="hljs-string">'The Next Day'</span>}, {id:<span class="hljs-string">'OTHER'</span>,checked:<span class="hljs-literal">false</span>,name:<span class="hljs-string">'Diversion'</span>}];
+             
+            $scope.passPreValidation = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{
+              <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+            };
+
+             $scope.person=$scope.persons[elementId];
+             <span class="hljs-keyword">var</span> activeUnavailable=$scope.person.getFormattedUnavailableReasons();
+             <span class="hljs-keyword">var</span> current = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>();
+             <span class="hljs-keyword">var</span> tomorrow = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(current.getFullYear(),current.getMonth(),current.getDate()+<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>);
+             <span class="hljs-keyword">var</span> formattedT = moment(tomorrow).format(<span class="hljs-string">'MM/DD/YYYY'</span>);
+             <span class="hljs-keyword">var</span> toNotAvailable = <span class="hljs-literal">false</span>;
+
+             <span class="hljs-keyword">for</span>(<span class="hljs-keyword">var</span> i=<span class="hljs-number">0</span>; i&lt;activeUnavailable.length; i++){
+               <span class="hljs-keyword">if</span>((activeUnavailable[i].dispStatus == <span class="hljs-string">'Active'</span> || activeUnavailable[i].dispStatus == <span class="hljs-string">'Future'</span>)
+                 &amp;&amp; (activeUnavailable[i].startDate == formattedT || activeUnavailable[i].endDate == formattedT || (activeUnavailable[i].startDate &lt; formattedT &amp;&amp; (activeUnavailable[i].endDate&gt;formattedT || activeUnavailable[i].endDate == <span class="hljs-string">""</span>))))
+                 toNotAvailable = <span class="hljs-literal">true</span>;
+             };
+
+             $scope.opData = {
+                 errors : [],
+                 titleAction : <span class="hljs-string">'Select Assignment Type'</span>,
+                 titleEntity : <span class="hljs-string">''</span>,
+                 cancelButtonText : <span class="hljs-string">'Cancel'</span>,
+                 submitButtonText :<span class="hljs-string">'Submit'</span>,
+                 assignmentType:<span class="hljs-string">'Overtime'</span>,
+                 clientErrors:[],
+                 required:[]
+             };
+
+              $scope.changeType=<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(aType)</span></span>{
+
+                   angular.forEach($scope.assignmentTypes, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(item)</span> </span>{
+                       item.checked = <span class="hljs-literal">false</span>;
+                   });
+                   aType.checked = <span class="hljs-literal">true</span>;
+               };
+               
+              <span class="hljs-keyword">var</span> modalInstance = $modal.open({
+                  templateUrl : appPathStart + <span class="hljs-string">'/views/modals/modal-task-assignment-type'</span>,
+                  controller : <span class="hljs-string">'ModalCtrl'</span>,
+                  backdrop : <span class="hljs-string">'static'</span>,
+                  size: <span class="hljs-string">'tiny'</span>,
+                  resolve : {
+                      data : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+                          <span class="hljs-keyword">return</span> ({});
+                      }
+                  },
+                  scope : $scope
+              });
+
+              $scope.operation = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(success, error)</span> </span>{
+
+                  $scope.opData.clientErrors = [];</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>check that person is available for next day assignment</p></div></div><div class="code"><div class="wrapper">                  <span class="hljs-keyword">if</span> ($scope.opData.assignmentType === <span class="hljs-string">'NEXT_DAY'</span> &amp;&amp; toNotAvailable === <span class="hljs-literal">true</span>) {
+                      $scope.opData.clientErrors.push({
+                          type: <span class="hljs-string">'danger'</span>,
+                          message: <span class="hljs-string">'Person is not available for next day assignment.'</span>
+                      });
+                  }
+
+                  <span class="hljs-keyword">if</span> ($scope.opData.clientErrors.length &gt; <span class="hljs-number">0</span>) {
+                      <span class="hljs-keyword">return</span> error(<span class="hljs-keyword">new</span> ClientSideError(<span class="hljs-string">'ValidationError'</span>));
+                  }
+                  </div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>update task model with assignment type for position</p></div></div><div class="code"><div class="wrapper">                  <span class="hljs-keyword">if</span> ($scope.opData.assignmentType !== <span class="hljs-string">''</span>) {
+                    task[<span class="hljs-string">'assignedPerson'</span> + position].type = $scope.opData.assignmentType;
+                    $scope.assginmentTypeToTask(task, type, position, elementId, locationId);
+                  }
+
+                  modalInstance.close();
+                
+              };  
+
+             modalInstance.result.then(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+             }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>$log.info(&#39;Modal dismissed at: &#39; + new Date());</p></div></div><div class="code"><div class="wrapper">             });
+          
+          }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Show Details </p></div></div><div class="code"><div class="wrapper">          <span class="hljs-keyword">var</span> locals = {
+            $scope : $scope,
+            $filter : $filter,
+            $modal : $modal,
+            $log : $log,
+            OpsBoardRepository : OpsBoardRepository,
+            ClientSideError : ClientSideError,
+            equipmentStatuses : equipmentStatuses,
+            groups : groups,
+            states : states,
+            plowTypes : plowTypes,
+            plowDirections : plowDirections,
+            loads : loads
+          };</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>personnel logic 
+personnel Modals - Start </p></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Detach Person * </p></div></div><div class="code"><div class="wrapper">          $controller(<span class="hljs-string">'DetachPerson'</span>, locals);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Set Unavailable * </p></div></div><div class="code"><div class="wrapper">          $controller(<span class="hljs-string">'SetPersonnelUnavailableStatus'</span>, locals);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Set Unavailable - End * </p></div></div><div class="code"><div class="wrapper">          $controller(<span class="hljs-string">'SetPersonnelMDAStatus'</span>, locals);
+          $controller(<span class="hljs-string">'RemovePersonnelRecord'</span>, locals);
+          $controller(<span class="hljs-string">'CopyBoard'</span>, locals);
+          $controller(<span class="hljs-string">'ReloadBoard'</span>, locals);
+
+          $controller(<span class="hljs-string">'AddSpecialPosition'</span>, locals);
+          $controller(<span class="hljs-string">'UpdateSpecialPosition'</span>, locals);
+          
+          <span class="hljs-comment">/*Cancel Unavailable */</span>
+          $controller(<span class="hljs-string">'CancelPersonnelUnavailableStatus'</span>, locals);         
+          <span class="hljs-comment">/*Reverse Cancel Unavailable*/</span>
+          $controller(<span class="hljs-string">'ReverseCancelPersonnelUnavailableStatus'</span>, locals);
+          </div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p> $controller(&#39;PersonAssignmentType&#39;, locals);</p></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>personnel Modals - End </p></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Equipment Logic 
+Equipment Modals - Start </p></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Update Load Status * </p></div></div><div class="code"><div class="wrapper">          $controller(<span class="hljs-string">'LoadStatusEquipment'</span>, locals);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Cancel Detach * </p></div></div><div class="code"><div class="wrapper">          $controller(<span class="hljs-string">'CancelDetachEquipment'</span>, locals);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Attach Equipment * </p></div></div><div class="code"><div class="wrapper">          $controller(<span class="hljs-string">'AttachEquipment'</span>, locals);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Detach Equipment * </p></div></div><div class="code"><div class="wrapper">          $controller(<span class="hljs-string">'DetachEquipment'</span>, locals);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Down Equipment * </p></div></div><div class="code"><div class="wrapper">          $controller(<span class="hljs-string">'DownEquipment'</span>, locals);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Up Equipment *</p></div></div><div class="code"><div class="wrapper">          $controller(<span class="hljs-string">'UpEquipment'</span>, locals);
+          </div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Update Snow Equipment *</p></div></div><div class="code"><div class="wrapper">          $controller(<span class="hljs-string">'UpdateSnowReadinessEquipment'</span>, locals);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>isEquipmentSelectViewable * </p></div></div><div class="code"><div class="wrapper">                    <span class="hljs-comment">//$controller('isEquipmentSelectViewable', locals);</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Up Equipment end</p></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Equipment Modals - End </p></div></div><div class="code"><div class="wrapper">          adjustLayout();
+
+        });</div></div></div></div></body></html>

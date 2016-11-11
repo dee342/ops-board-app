@@ -1,0 +1,186 @@
+<!DOCTYPE html><html lang="en"><head><title>public\scripts\directives\uiSelect2</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../../"><meta name="groc-document-path" content="public\scripts\directives\uiSelect2"><meta name="groc-project-path" content="public\scripts\directives\uiSelect2.js"><link rel="stylesheet" type="text/css" media="all" href="../../../assets/style.css"><script type="text/javascript" src="../../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">public\scripts\directives\uiSelect2.js</div></div><div id="document"><div class="segment"><div class="comments doc-section"><div class="wrapper"><p><span class='doc-section-header'> AJAX Mode - When in this mode, your value will be an object (or array of objects) of the data used by Select2
+    This change is so that you do not have to do an additional query yourself on top of Select2&#39;s own query
+&#64;params [options] {object} The configuration options passed to $.fn.select2(). Refer to the documentation</span></p>
+<p>Enhanced Select2 Dropmenus</p></div></div><div class="code"><div class="wrapper">angular.module(<span class="hljs-string">'ui.select2'</span>, [])
+  .value(<span class="hljs-string">'uiSelect2Config'</span>, {})
+  .directive(<span class="hljs-string">'uiSelect2'</span>, [<span class="hljs-string">'uiSelect2Config'</span>, <span class="hljs-string">'$timeout'</span>,
+    <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(uiSelect2Config, $timeout)</span> </span>{
+      <span class="hljs-keyword">var</span> options = {};
+      <span class="hljs-keyword">if</span> (uiSelect2Config) {
+        angular.extend(options, uiSelect2Config);
+      }
+      <span class="hljs-keyword">return</span> {
+        <span class="hljs-built_in">require</span>: <span class="hljs-string">'ngModel'</span>,
+        priority: <span class="hljs-number">1</span>,
+        compile: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(tElm, tAttrs)</span> </span>{
+          <span class="hljs-keyword">var</span> watch,
+            repeatOption,
+            repeatAttr,
+            isSelect = tElm.is(<span class="hljs-string">'select'</span>),
+            isMultiple = angular.isDefined(tAttrs.multiple);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Enable watching of the options dataset if in use</p></div></div><div class="code"><div class="wrapper">          <span class="hljs-keyword">if</span> (tElm.is(<span class="hljs-string">'select'</span>)) {
+            repeatOption = tElm.find(<span class="hljs-string">'optgroup[ng-repeat], optgroup[data-ng-repeat], option[ng-repeat], option[data-ng-repeat]'</span>);
+
+            <span class="hljs-keyword">if</span> (repeatOption.length) {
+              repeatAttr = repeatOption.attr(<span class="hljs-string">'ng-repeat'</span>) || repeatOption.attr(<span class="hljs-string">'data-ng-repeat'</span>);
+              watch = jQuery.trim(repeatAttr.split(<span class="hljs-string">'|'</span>)[<span class="hljs-number">0</span>])
+                .split(<span class="hljs-string">' '</span>)
+                .pop();
+            }
+          }
+
+          <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(scope, elm, attrs, controller)</span> </span>{</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Instance-specific options</p></div></div><div class="code"><div class="wrapper">            <span class="hljs-keyword">var</span> opts = angular.extend({}, options, scope.$<span class="hljs-built_in">eval</span>(attrs.uiSelect2));</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Convert from Select2 view-model to Angular view-model.</p></div></div><div class="code"><div class="wrapper">            <span class="hljs-keyword">var</span> convertToAngularModel = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(select2_data)</span> </span>{
+              <span class="hljs-keyword">var</span> model;
+              <span class="hljs-keyword">if</span> (opts.simple_tags) {
+                model = [];
+                angular.forEach(select2_data, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(value, index)</span> </span>{
+                  model.push(value.id);
+                });
+              } <span class="hljs-keyword">else</span> {
+                model = select2_data;
+              }
+              <span class="hljs-keyword">return</span> model;
+            };</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Convert from Angular view-model to Select2 view-model.</p></div></div><div class="code"><div class="wrapper">            <span class="hljs-keyword">var</span> convertToSelect2Model = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(angular_data)</span> </span>{
+              <span class="hljs-keyword">var</span> model = [];
+              <span class="hljs-keyword">if</span> (!angular_data) {
+                <span class="hljs-keyword">return</span> model;
+              }
+
+              <span class="hljs-keyword">if</span> (opts.simple_tags) {
+                model = [];
+                angular.forEach(
+                  angular_data,
+                  <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(value, index)</span> </span>{
+                    model.push({
+                      <span class="hljs-string">'id'</span>: value,
+                      <span class="hljs-string">'text'</span>: value
+                    });
+                  });
+              } <span class="hljs-keyword">else</span> {
+                model = angular_data;
+              }
+              <span class="hljs-keyword">return</span> model;
+            };
+
+            <span class="hljs-keyword">if</span> (isSelect) {</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Use &lt;select multiple&gt; instead</p></div></div><div class="code"><div class="wrapper">              <span class="hljs-keyword">delete</span> opts.multiple;
+              <span class="hljs-keyword">delete</span> opts.initSelection;
+            } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (isMultiple) {
+              opts.multiple = <span class="hljs-literal">true</span>;
+            }
+
+            <span class="hljs-keyword">if</span> (controller) {</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Watch the model for programmatic changes</p></div></div><div class="code"><div class="wrapper">              scope.$watch(tAttrs.ngModel, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(current, old)</span> </span>{
+                <span class="hljs-keyword">if</span> (!current) {
+                  <span class="hljs-keyword">return</span>;
+                }
+                <span class="hljs-keyword">if</span> (current === old) {
+                  <span class="hljs-keyword">return</span>;
+                }
+                controller.$render();
+              }, <span class="hljs-literal">true</span>);
+              controller.$render = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+                <span class="hljs-keyword">if</span> (isSelect) {
+                  elm.select2(<span class="hljs-string">'val'</span>, controller.$viewValue);
+                } <span class="hljs-keyword">else</span> {
+                  <span class="hljs-keyword">if</span> (opts.multiple) {
+                    <span class="hljs-keyword">var</span> viewValue = controller.$viewValue;
+                    <span class="hljs-keyword">if</span> (angular.isString(viewValue)) {
+                      viewValue = viewValue.split(<span class="hljs-string">','</span>);
+                    }
+                    elm.select2(
+                      <span class="hljs-string">'data'</span>, convertToSelect2Model(viewValue));
+                  } <span class="hljs-keyword">else</span> {
+                    <span class="hljs-keyword">if</span> (angular.isObject(controller.$viewValue)) {
+                      elm.select2(<span class="hljs-string">'data'</span>, controller.$viewValue);
+                    } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (!controller.$viewValue) {
+                      elm.select2(<span class="hljs-string">'data'</span>, <span class="hljs-literal">null</span>);
+                    } <span class="hljs-keyword">else</span> {
+                      elm.select2(<span class="hljs-string">'val'</span>, controller.$viewValue);
+                    }
+                  }
+                }
+              };</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Watch the options dataset for changes</p></div></div><div class="code"><div class="wrapper">              <span class="hljs-keyword">if</span> (watch) {
+                scope.$watch(watch, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(newVal, oldVal, scope)</span> </span>{
+                  <span class="hljs-keyword">if</span> (angular.equals(newVal, oldVal)) {
+                    <span class="hljs-keyword">return</span>;
+                  }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Delayed so that the options have time to be rendered</p></div></div><div class="code"><div class="wrapper">                  $timeout(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+                    elm.select2(<span class="hljs-string">'val'</span>, controller.$viewValue);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Refresh angular to remove the superfluous option</p></div></div><div class="code"><div class="wrapper">                    elm.trigger(<span class="hljs-string">'change'</span>);
+                    <span class="hljs-keyword">if</span> (newVal &amp;&amp; !oldVal &amp;&amp; controller.$setPristine) {
+                      controller.$setPristine(<span class="hljs-literal">true</span>);
+                    }
+                  });
+                });
+              }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Update valid and dirty statuses</p></div></div><div class="code"><div class="wrapper">              controller.$parsers.push(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(value)</span> </span>{
+                <span class="hljs-keyword">var</span> div = elm.prev();
+                div
+                  .toggleClass(<span class="hljs-string">'ng-invalid'</span>, !controller.$valid)
+                  .toggleClass(<span class="hljs-string">'ng-valid'</span>, controller.$valid)
+                  .toggleClass(<span class="hljs-string">'ng-invalid-required'</span>, !controller.$valid)
+                  .toggleClass(<span class="hljs-string">'ng-valid-required'</span>, controller.$valid)
+                  .toggleClass(<span class="hljs-string">'ng-dirty'</span>, controller.$dirty)
+                  .toggleClass(<span class="hljs-string">'ng-pristine'</span>, controller.$pristine);
+                <span class="hljs-keyword">return</span> value;
+              });
+
+              <span class="hljs-keyword">if</span> (!isSelect) {</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Set the view and model value and update the angular template manually for the ajax/multiple select2.</p></div></div><div class="code"><div class="wrapper">                elm.bind(<span class="hljs-string">"change"</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(e)</span> </span>{
+                  e.stopImmediatePropagation();
+
+                  <span class="hljs-keyword">if</span> (scope.$$phase || scope.$root.$$phase) {
+                    <span class="hljs-keyword">return</span>;
+                  }
+                  scope.$apply(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+                    controller.$setViewValue(
+                      convertToAngularModel(elm.select2(<span class="hljs-string">'data'</span>)));
+                  });
+                });
+
+                <span class="hljs-keyword">if</span> (opts.initSelection) {
+                  <span class="hljs-keyword">var</span> initSelection = opts.initSelection;
+                  opts.initSelection = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(element, callback)</span> </span>{
+                    initSelection(element, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(value)</span> </span>{
+                      <span class="hljs-keyword">var</span> isPristine = controller.$pristine;
+                      controller.$setViewValue(convertToAngularModel(value));
+                      callback(value);
+                      <span class="hljs-keyword">if</span> (isPristine) {
+                        controller.$setPristine();
+                      }
+                      elm.prev()
+                        .toggleClass(<span class="hljs-string">'ng-pristine'</span>, controller.$pristine);
+                    });
+                  };
+                }
+              }
+            }
+
+            elm.bind(<span class="hljs-string">"$destroy"</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+              elm.select2(<span class="hljs-string">"destroy"</span>);
+            });
+
+            attrs.$observe(<span class="hljs-string">'disabled'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(value)</span> </span>{
+              elm.select2(<span class="hljs-string">'enable'</span>, !value);
+            });
+
+            attrs.$observe(<span class="hljs-string">'readonly'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(value)</span> </span>{
+              elm.select2(<span class="hljs-string">'readonly'</span>, !!value);
+            });
+
+            <span class="hljs-keyword">if</span> (attrs.ngMultiple) {
+              scope.$watch(attrs.ngMultiple, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(newVal)</span> </span>{
+                attrs.$set(<span class="hljs-string">'multiple'</span>, !!newVal);
+                elm.select2(opts);
+              });
+            }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Initialize the plugin late so that the injected DOM does not disrupt the template compiler</p></div></div><div class="code"><div class="wrapper">            $timeout(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+              elm.select2(opts);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Set initial value - I&#39;m not sure about this but it seems to need to be there</p></div></div><div class="code"><div class="wrapper">              elm.select2(<span class="hljs-string">'data'</span>, controller.$modelValue);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>important!</p></div></div><div class="code"><div class="wrapper">              controller.$render();</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Not sure if I should just check for !isSelect OR if I should check for &#39;tags&#39; key</p></div></div><div class="code"><div class="wrapper">              <span class="hljs-keyword">if</span> (!opts.initSelection &amp;&amp; !isSelect) {
+                <span class="hljs-keyword">var</span> isPristine = controller.$pristine;
+                controller.$setViewValue(
+                  convertToAngularModel(elm.select2(<span class="hljs-string">'data'</span>))
+                );
+                <span class="hljs-keyword">if</span> (isPristine) {
+                  controller.$setPristine();
+                }
+                elm.prev()
+                  .toggleClass(<span class="hljs-string">'ng-pristine'</span>, controller.$pristine);
+              }
+            });
+          };
+        }
+      };
+}]);</div></div></div></div></body></html>

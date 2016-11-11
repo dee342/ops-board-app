@@ -1,0 +1,419 @@
+<!--/* Thymeleaf fragment to display the Personnel Details Pane. */-->
+<div th:fragment="personnel-details-pane">
+    <div class="personnel-details" ng-controller="PersonDetailsCtrl as ctrl" ng-show="panes.personDetails.active">
+        <div class="header details-header">
+            <div class="row" style="margin:0px;">
+                <div class="col-md-12 personnelTitle" style="text-align: center; padding: 0px;">
+                    <span style="float: left; padding: 5px 0px 0px 10px;" class="paneTitle {{ person.departmentType }}" ng-class="titleMap(person.civilServiceTitle)">
+                        {{person.fullName}}
+                    </span>
+                    <span style="border-left: 1px solid #000; width: 38px; float:right; padding: 9px 12px;">
+                        <i class="fa fa-times fa-lg" ng-click="closePersonDetailsPane()"></i>
+                    </span>
+                    <span style="border-left: 1px solid #000; text-align: center; padding: 7px 12px 8px; float:right;" ng-hide="person.state === states.personnel.hidden">
+                        <div class="btn-group-xs dropdown">
+                            <button type="button" class="btn btn-success left dropdown-toggle">Action</button>
+                            <button type="button" class="btn btn-success right dropdown-toggle">
+                                <span class="caret"></span>
+                            </button>
+                            <ul class="dropdown-menu right-aligned" role="menu">
+                                <li ng-hide="person.dayBeforeShifts &amp;&amp; person.dayBeforeShifts.length &amp;&amp; !person.availableNextDay" ng-click="detachPerson(person)">Detach</li>
+                                <li ng-show="person.activeMDA" ng-click="setMdaStatus(person)">Add MDA</li>
+                                <li ng-show="person.civilServiceTitle == 'SW'" ng-click="addPersonSpecialPosition(person)">Add Special Position</li>
+                                <li ng-click="setUnavailableStatus(person)">Add Unavailable</li>
+                                <li ng-show="person.dayBeforeShifts &amp;&amp; person.dayBeforeShifts.length &amp;&amp; !person.availableNextDay" ng-click="setAvailableNextDay(person)">Make Available</li>
+                                <li ng-show="person.availableNextDay" ng-click="removeAvailableNextDay(person)">Remove From Available</li>
+                            </ul>
+                        </div>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <perfect-scrollbar class="scroller" style="position: relative;" ng-style="{'height': layout.scrollpanel.height}" min-scrollbar-length="1" max-scrollbar-length="1"  wide-scrollbar="true" use-both-wheel-axes="true" id="personnel-details-pane">
+            <div class="scrollerpadding">
+                <div id="details">
+                    <div class="pane-subpane pane-subpane-person pane-subpane-detail flex person-unavailable-hist">
+                        <div class="header">
+                            Detachment History
+                            <span class="arrowleft">
+                                <i class="fa fa-caret-{{detachmentHistory.show ? 'down' : 'right'}}" ng-click="detachmentHistory.show = !detachmentHistory.show"></i>
+                            </span>
+                        </div>
+                        <div class="body" ng-show="detachmentHistory.show">
+                            <table class="table table-bordered" ng-show="detachmentHistory.show">
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Action</th>
+                                    <th>Status</th>
+                                    <th class="text-center">Start Date</th>
+                                    <th>Detach From</th>
+                                    <th>Detach To</th>
+                                    <th class="text-center">End Date</th>
+                                    <th>Remarks</th>
+                                    <th class="text-center">Shift</th>
+                                    <th class="actioncol">&nbsp;</th>
+                                </tr>
+                                <tr ng-repeat="reason in person.personDetachPaginationModel | orderBy: 'start':true">
+                                    <td>Detach</td>
+                                    <td ng-if="reason.displayStatus!='Active'">{{reason.displayStatus}}</td>
+                                    <td ng-if="reason.displayStatus=='Active'"><span class="user" style="color: #74c40d;margin-left:0%" >{{reason.displayStatus}}</span></td>
+                                    <td><div ng-if="reason.end">Temp</div><div ng-if="!reason.end">Perm</div></td>
+                                    <td class="text-center">{{reason.start}}</td>
+                                    <td>{{reason.from}}</td>
+                                    <td>{{reason.to}}</td>
+                                    <td class="text-center">{{reason.end}}</td>
+                                    <td>{{reason.reasonForChange ? reason.reasonForChange : reason.comments}}</td>
+                                    <td class="text-center">{{reason.shift}}</td>
+                                    <td class="editcol" style="white-space: nowrap; text-align: center;">
+                                        <span ng-show="{{reason.editable}} &amp;&amp; person.state !== states.personnel.hidden" class="fa fa-pencil fa-fw personnelIcon" ng-click="updateDetachment(reason, person)" title="Edit"></span>
+                                        <span ng-show="{{reason.removable}} &amp;&amp; person.state !== states.personnel.hidden" class="fa fa-trash-o fa-lg personnelIcon2" ng-click="removeStatus(person, reason, 'DETACH')">
+                                        </span>
+                                    </td>                                    
+                                </tr>
+                            </table>
+                            <div ng-if="person.showPaginationLinksForDetachments"><pagination ng-model="person.personDetachCurrentPage" ng-change="$event.preventDefault(); $event.stopPropagation(); personDetachmentChanged(person)" boundary-links="false" total-items="person.detachmentCount" items-per-page="size" max-size="5" rotate="false"></pagination></div>
+                        </div>
+                    </div>
+                    <div class="pane-subpane pane-subpane-person pane-subpane-detail flex ">
+                        <div class="header">
+                            Employee Information
+                            <span class="arrowleft">
+                                <i class="fa fa-caret-{{employeeInfo.show ? 'down' : 'right'}}" ng-click="employeeInfo.show = !employeeInfo.show"></i>
+                            </span>
+                        </div>
+                        <div class="body">
+                            <table class="table table-transparent person" ng-show="employeeInfo.show">
+                                <tr ng-if="person.probationEndDate.active">
+                                    <td colspan="2">
+                                        <strong class="text-danger">
+                                            Probation End Date: {{ person.probationEndDate.endDate | date:dateFormat }}
+                                        </strong>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <label>Title Entry Date</label>
+                                        <span>{{person.promotionDate | date:dateFormat }}</span>
+                                    </td>
+                                    <td>
+                                        <label>Badge No.</label>
+                                        <span>{{person.badgeNumber}}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <label>List No.</label>
+                                        <span>{{person.listNumber}}</span>
+                                    </td>
+                                    <td>
+                                        <label>Payroll Location/ID</label>
+                                        <span>{{person.homeLocation | payrollLocation:person.payrollLocationId}}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <label>Seniority Date</label>
+                                        <span>{{person.seniorityDate | date:dateFormat }}</span>
+                                    </td>
+                                    <td>
+                                        <label>Civil Service Title</label>
+                                        <span>{{person.civilServiceTitle}}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <label>Qualifications</label>
+                                        <div class="qualifications">
+                                            <span ng-hide="person.civilServiceTitle != 'SW'" ng-repeat="id in (person.qualifications | qualification)"
+                                            class="qualification">
+                                                {{id}}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <label>Chart Name &amp; No.</label>
+                                        <span>{{person.chartName | appendChartNumber:person.chartNumber}}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <label>Reference No.</label>
+                                        <span>{{person.referenceNum}}</span>
+                                    </td>
+                                    <td>
+                                        <label>Date of Birth</label>
+                                        <span>{{person.birthDate | date:dateFormat}}</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="pane-subpane pane-subpane-person pane-subpane-detail flex ">
+                        <div class="header">
+                            Contact Information
+                            <span class="arrowleft">
+                                <i class="fa fa-caret-{{contactInfo.show ? 'down' : 'right'}}" ng-click="contactInfo.show = !contactInfo.show"></i>
+                            </span>
+                        </div>
+                        <div class="body">
+                            <table class="table table-transparent person" ng-show="contactInfo.show">
+                                <tr>
+                                    <td>
+                                        <label>Address</label>
+                                        <span>{{person.address1}}</span>
+                                    </td>
+                                    <td>
+                                        <label>Home Phone</label>
+                                        <span>{{person.homePhone}}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <label>City</label>
+                                        <span>{{person.city}}</span>
+                                    </td>
+                                    <td>
+                                        <label>Mobile Phone</label>
+                                        <span>{{person.mobilePhone}}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="no-padding">
+                                        <table class="table table-transparent person">
+                                            <tr>
+                                                <td>
+                                                    <label>State</label>
+                                                    <span>{{person.homeAddressState}}</span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <label>Zip Code</label>
+                                                    <span>{{person.homeAddressPostalCode}}</span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <label>County</label>
+                                                    <span>{{person.homeAddressCounty}}</span>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <label>Emergency Contact Information</label>
+                                        <div class="callout">
+                                            <div>
+                                                <p>
+                                                    <label>Name</label>
+                                                    <span>{{person.emergencyContact.name}}</span>
+                                                </p>
+                                                <p>
+                                                    <label>Relation</label>
+                                                    <span>{{person.emergencyContact.relation}}</span>
+                                                </p>
+                                                <p>
+                                                    <label>Phone</label>
+                                                    <span>{{person.emergencyContact.phone}}</span>
+                                                </p>
+                                            </div>
+                                            <!-- <div ng-repeat="emergency in person.getEmergencyContactInformation()">
+                                                <p>
+                                                    <label>Name</label>
+                                                    <span>{{emergency.name}}</span>
+                                                </p>
+                                                <p>
+                                                    <label>Relation</label>
+                                                    <span>{{emergency.relation}}</span>
+                                                </p>
+                                                <p>
+                                                    <label>Phone</label>
+                                                    <span>{{emergency.phone}}</span>
+                                                </p>
+                                            </div> -->
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="pane-subpane pane-subpane-person pane-subpane-detail flex person-grounding-hist">
+                        <div class="header">
+                            Grounding History
+                            <span class="arrowleft">
+                                <i class="fa fa-caret-{{grounded.show ? 'down' : 'right'}}" ng-click="grounded.show = !grounded.show"></i>
+                            </span>
+                        </div>
+                        <div class="body" ng-show="grounded.show">
+                            <table class="table table-bordered">
+                                <tr>
+                                    <th>Status</th>
+                                    <th class="text-center">Start Date</th>
+                                    <th class="text-center">End Date</th>
+                                    <th>Grounded By</th>
+                                    <th>Division</th>
+                                    <th class="col-md-4">Remark</th>
+                                </tr>
+                                <tr ng-repeat="record in person.groundingHistoryPaginationModel">
+                                    <td>
+                                        <span ng-if="isActive(record.startDate, record.endDate, record.removedFlag, person)" class="user" style="color: #74c40d;margin-left:0%">Active</span>
+                                        <span ng-if="isComplete(record.endDate, person, record.removedFlag)">Completed</span>
+                                        <span ng-if="isFuture(record.startDate, person, record.removedFlag)">Future</span>
+                                        <span ng-if="isRemoved(record.removedFlag, person)">Removed</span>
+                                    </td>
+                                    <td class="text-center">{{record.startDate | date:dateFormat}}</td>
+                                    <td class="text-center">{{record.endDate | date:dateFormat}}</td>
+                                    <td>{{record.actualUser}}</td>
+                                    <td><span style="color: red;">Not Implemented</span></td>
+                                    <td>{{record.comments}}</td>
+                                </tr>
+                            </table>
+                             <div ng-if="person.showPaginationLinksForGrounding">
+                                <pagination
+                                    ng-model="person.groundingHistoryCurrentPage"
+                                    ng-change="groundedPageChanged(person)"
+                                    boundary-links="false"
+                                    total-items="person.groundingStatusCount"
+                                    items-per-page="size"
+                                    max-size="3"
+                                    rotate="false">
+                                </pagination>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pane-subpane pane-subpane-person pane-subpane-detail flex person-unavailable-hist">
+                        <div class="header">
+                            Unavailability History
+                            <span class="arrowleft">
+                                <i class="fa fa-caret-{{unavailableHistory.show ? 'down' : 'right'}}" ng-click="unavailableHistory.show = !unavailableHistory.show"></i>
+                            </span>
+                        </div>
+                        <div class="body" ng-show="unavailableHistory.show">
+                            <table class="table table-bordered">
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Action</th>
+                                    <th>Status</th>
+                                    <th class="text-center">Start Date</th>
+                                    <th class="text-center">Start Time</th>
+                                    <th class="text-center">End Date</th>
+                                    <th class="text-center">End Time</th>
+                                    <th>Remarks</th>
+                                    <th class="actioncol">&nbsp;</th>
+                                </tr>
+                                <tr ng-repeat="reason in person.unavailabilityPaginationModel">
+                                    <td>{{reason.code}}</td>
+                                    <td ng-if="reason.action =='Cancelled'"><span style="color: red;margin-left:0%" >{{reason.action}}</span></td>
+                                    <td ng-if="reason.action !='Cancelled'">{{reason.action}}</td>
+                                    <td ng-if="reason.isActive"><span class="user" style="color: #74c40d;margin-left:0%">{{reason.dispStatus}}</span></td>
+                                    <td ng-if="!reason.isActive">{{reason.dispStatus}}</td>                                    
+                                    <td class="text-center">{{reason.startDate}}</td>
+                                    <td class="text-center">{{reason.startTime}}</td>
+                                    <td class="text-center">{{reason.endDate}}</td>
+                                    <td class="text-center">{{reason.endTime}}</td>
+                                    <td>{{!reason.reasonForChange ? reason.comments : reason.reasonForChange}}</td>
+                                    <td ng-if="reason.action != 'Cancelled' " class="editcolUnavail" style="white-space: nowrap; text-align: center;">
+                                        <span ng-show="{{reason.canceleditable}} &amp;&amp; person.state !== states.personnel.hidden" class="fa fa-ban fa-fw personnelIcon red" ng-click="cancelUnavailableStatus(person, reason)" title="Cancel"></span>
+                                        <span ng-show="{{reason.editable}} &amp;&amp; person.state !== states.personnel.hidden" class="fa fa-trash-o fa-lg personnelIcon trashMarginLeft" ng-click="removeStatus(person, reason, 'UNAVAILABLE')" title="Delete"></span>
+                                        <span ng-show="{{reason.editable}} &amp;&amp; person.state !== states.personnel.hidden" class="fa fa-pencil fa-fw personnelIcon" ng-click="setUnavailableStatus(person, reason)" style="" title="Edit"></span>
+                                    </td>
+                                    <td ng-if="reason.action == 'Cancelled'" class="editcolUnavail" style="white-space: nowrap; text-align: center;">
+                                        <span ng-show="{{reason.undocanceleditable}}" class="fa fa-reply fa-fw personnelIcon red" ng-click="undoCancelUnavailableStatus(person, reason)"></span>
+                                    </td>
+                                </tr>
+                            </table>
+                             <div ng-if="person.showPaginationLinksForUnavailable"><pagination ng-model="person.unavailabilityCurrentPage" ng-change="$event.preventDefault(); $event.stopPropagation(); unAvailPageChanged(person)" boundary-links="false" total-items="person.unavailabilityReasonCount" items-per-page="size" max-size="3" rotate="false"></pagination></div>
+                        </div>
+                    </div>
+                    <div class="pane-subpane pane-subpane-person pane-subpane-detail flex person-unavailable-hist">
+                        <div class="header">
+                            MDA History
+                            <span class="arrowleft">
+                                <i class="fa fa-caret-{{mdaHistory.show ? 'down' : 'right'}}" ng-click="mdaHistory.show = !mdaHistory.show"></i>
+                            </span>
+                        </div>
+                        <div class="body" ng-show="mdaHistory.show">
+                            <table class="table table-bordered" >
+                                <tr>
+                                    <th class="text-center">Type</th>
+                                    <th>Action</th>
+                                    <th>Status</th>
+                                    <th class="text-center">Start Date</th>
+                                    <th class="text-center">Appointment Date</th>
+                                    <th class="text-center">End Date</th>
+                                    <th class="text-center">End Time</th>
+                                    <th>Remarks</th>
+                                    <th class="actioncol">&nbsp;</th>
+                                </tr>
+                                <tr ng-repeat="mda in person.personMDAPaginationModel">
+                                    <td class="text-center">{{mda.subType}}</td>
+                                    <td>{{mda.action}}</td>
+                                    <td  ng-if="mda.dispStatus!='Active'">{{mda.dispStatus}}</td>
+                                    <td  ng-if="mda.dispStatus=='Active'"><span class="user" style="color: #74c40d;margin-left:0%" >{{mda.dispStatus}}</span></td>                                    
+                                    <td class="text-center">{{mda.startDate}}</td>
+                                    <td class="text-center">{{mda.appointmentDate}}</td>
+                                    <td class="text-center">{{mda.endDate}}</td>
+                                    <td class="text-center">{{mda.endTime}}</td>
+                                    <td>{{!mda.reasonForChange ? mda.comments : mda.reasonForChange}}</td>
+                                    <td class="editcol" style="white-space: nowrap; text-align: center;">
+
+                                         <span ng-show="{{mda.editable}} &amp;&amp; person.state !== states.personnel.hidden" class="fa fa-pencil fa-fw personnelIcon2" ng-click="setMdaStatus(person, mda)">
+                                        </span>
+                                        <span ng-show="{{mda.editable}} &amp;&amp; person.state !== states.personnel.hidden" class="fa fa-trash-o fa-lg personnelIcon2" ng-click="removeStatus(person, mda, 'MDA')">
+                                        </span>
+                                    </td>
+                                </tr>
+                            </table>
+                            <div ng-if="person.showPaginationLinksForMda"><pagination ng-model="person.personMDACurrentPage" ng-change="$event.preventDefault(); $event.stopPropagation(); personMDAPageChanged(person)" total-items="person.mdaStatusCount" boundary-links="false" items-per-page="size" max-size="3" rotate="false"></pagination></div>
+                        </div>
+                    </div>
+                    <div class="pane-subpane pane-subpane-person pane-subpane-detail flex person-unavailable-hist">
+                        <div class="header">
+                            Special Positions History
+                            <span class="arrowleft">
+                                <i class="fa fa-caret-{{specialPositionHistory.show ? 'down' : 'right'}}" ng-click="specialPositionHistory.show = !specialPositionHistory.show"></i>
+                            </span>
+                        </div>
+                        <div class="body" ng-show="specialPositionHistory.show">
+                            <table class="table table-bordered" ng-show="specialPositionHistory.show">
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Action</th>
+                                    <th>Status</th>
+                                    <th>Description</th>
+                                    <th class="text-center">Start Date</th>
+                                    <th class="text-center">End Date</th>
+                                    <th>Remarks</th>
+                                    <th class="actioncol">&nbsp;</th>
+                                </tr>
+                                <tr ng-repeat="specialPosition in person.specialPositionsPaginationModel">
+                                    <td>{{specialPosition.code}}</td>
+                                    <td>{{specialPosition.action}}</td>
+                                    <td ng-if="!specialPosition.isActive">{{specialPosition.dispStatus}}</td>
+                                    <td ng-if="specialPosition.isActive"><span class="user" style="color: #74c40d;margin-left:0%">{{specialPosition.dispStatus}}</span></td>
+                                    <td>{{specialPosition.description}}</td>
+                                    <td class="text-center">{{specialPosition.startDate}}</td>
+                                    <td class="text-center">{{specialPosition.endDate}}</td>
+                                    <td ng-show="{{specialPosition.comments != 'null'}}">{{!specialPosition.reasonForChange ? specialPosition.comments : specialPosition.reasonForChange}}</td>
+                                    <td ng-show="{{specialPosition.comments == 'null'}}"></td>
+
+                                    <td class="editcol" style="white-space: nowrap; text-align: center;">
+                                        <span ng-show="{{specialPosition.editable}} &amp;&amp; person.state !== states.personnel.hidden" class="fa fa-pencil fa-fw personnelIcon2" ng-click="updateSpecialPosition(person, specialPosition)">
+                                        </span>
+                                        <span ng-show="{{specialPosition.editable}} &amp;&amp; person.state !== states.personnel.hidden" class="fa fa-trash-o fa-lg personnelIcon2" ng-click="removeStatus(person, specialPosition, 'SWSPECIALPOSITION')">
+                                        </span>
+
+                                    </td>
+
+                                </tr>
+                            </table>
+                            <div ng-if="person.showPaginationLinksForSpecialPositions">
+                                <pagination ng-model="person.specialPositionsCurrentPage" ng-change="$event.preventDefault(); $event.stopPropagation(); specialPositionsPageChanged(person)" boundary-links="false" total-items="person.specialPositionCount" items-per-page="size" max-size="3" rotate="false"></pagination>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </perfect-scrollbar>
+    </div>
+</div>

@@ -1,0 +1,23 @@
+<!DOCTYPE html><html lang="en"><head><title>public\scripts\services\browser-service</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../../"><meta name="groc-document-path" content="public\scripts\services\browser-service"><meta name="groc-project-path" content="public\scripts\services\browser-service.js"><link rel="stylesheet" type="text/css" media="all" href="../../../assets/style.css"><script type="text/javascript" src="../../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">public\scripts\services\browser-service.js</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="hljs-pi">'use strict'</span>;
+
+angular.module(<span class="hljs-string">'about-us'</span>)
+  .service(
+    <span class="hljs-string">'BrowserService'</span>,
+	    <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($window)</span> </span>{
+    	
+    		<span class="hljs-keyword">return</span> {
+    			getBrowser: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{
+	
+    				<span class="hljs-keyword">var</span> userAgent = $<span class="hljs-built_in">window</span>.navigator.userAgent;
+    				<span class="hljs-keyword">var</span> browsers = {chrome: <span class="hljs-regexp">/chrome/i</span>, safari: <span class="hljs-regexp">/safari/i</span>, firefox: <span class="hljs-regexp">/firefox/i</span>, ie: <span class="hljs-regexp">/internet explorer/i</span>};
+	
+				    <span class="hljs-keyword">for</span>(<span class="hljs-keyword">var</span> key <span class="hljs-keyword">in</span> browsers) {
+				        <span class="hljs-keyword">if</span> (browsers[key].test(userAgent)) {
+				            <span class="hljs-keyword">return</span> key;
+				        }
+				    };
+	
+				    <span class="hljs-keyword">return</span> <span class="hljs-string">'unknown'</span>;
+    			}
+    		}
+    });</div></div></div></div></body></html>

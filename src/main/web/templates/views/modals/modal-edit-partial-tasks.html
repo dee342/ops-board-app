@@ -1,0 +1,50 @@
+<!--/* Modal window view for canceling a persons unavailability. */-->
+
+<form id="modal" name="modal" class="container-fluid form-horizontal" novalidate="true" centered-modal="false">
+  <!-- novalidate disables HTML5 native validation -->
+  <div th:include="views/modals/fragments/modal-header :: header" th:remove="tag"></div>
+  <div class="modal-body">
+    <div class="row" ng-hide="showWarning"> 
+      <div class="col-md-12 text-left" ng-repeat="route in opData.routes | orderBy:'sequence'">
+        <div class="col-md-1 text-left">
+          <span class="{{'group' + route.groupId}}">
+            <i class="fa fa-map-marker fa-2x partial"></i>
+          </span>
+        </div>
+        <div class="col-md-1 text-left">{{route.sequence}}.</div>
+        <div class="col-md-7 text-left">{{route.label}}</div>
+        <div class="col-md-3 text-left">{{route.duration}}</div>
+      </div>
+    </div>
+    <div class="row" ng-show="showWarning"> 
+      <div class="col-md-12 text-left">
+        <span>
+             <label style ="color:red;">{{opData.warning}}</label>
+        </span>
+      </div>
+    </div>
+    <div class="row">
+      <div class="actions">
+        <button class="btn btn-sm col-md-2 reset" ng-click="reset()" ng-disabled="{{opData.hasCompletedTask}}">
+          <i class="fa fa-refresh"></i>
+          {{::opData.resetButtonText}}
+        </button>
+        <button class="btn btn-sm col-md-2 col-md-offset-6" ng-click="cancel()">
+          {{opData.cancelButtonText}}
+        </button>
+        <button class="btn btn-primary btn-sm col-md-2 confirm" ng-disabled="!showWarning" ng-click="confirm()">
+          {{opData.submitButtonText}}
+        </button>
+      </div>
+    </div>
+    <div class="row">
+      <div th:include="views/modals/fragments/modal-client-errors :: client-errors" th:remove="tag"></div>
+    </div>
+    <div class="row">
+      <div th:include="views/modals/fragments/modal-server-errors :: server-errors" th:remove="tag"></div>
+    </div>
+  </div>
+  <div th:include="views/modals/fragments/modal-footer :: footer" th:remove="tag"></div>
+   <div th:include="views/modals/fragments/modal-exceptions :: exceptions" th:remove="tag"></div>
+  <div th:include="views/modals/fragments/modal-processing :: processing" th:remove="tag"></div>
+</form>

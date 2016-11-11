@@ -1,0 +1,126 @@
+<!DOCTYPE html><html lang="en"><head><title>public\scripts\filters\display-board-sorting</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../../"><meta name="groc-document-path" content="public\scripts\filters\display-board-sorting"><meta name="groc-project-path" content="public\scripts\filters\display-board-sorting.js"><link rel="stylesheet" type="text/css" media="all" href="../../../assets/style.css"><script type="text/javascript" src="../../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">public\scripts\filters\display-board-sorting.js</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="hljs-pi">'use strict'</span>;
+
+angular.module(<span class="hljs-string">'displayBoardSorting'</span>, [])
+
+
+
+
+    .factory(<span class="hljs-string">'sortPersonnelPanel'</span>,<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{
+
+        <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(list, filterType)</span> </span>{
+
+            <span class="hljs-keyword">if</span> (!list) <span class="hljs-keyword">return</span> list;
+            <span class="hljs-keyword">if</span> (!filterType) filterType = <span class="hljs-string">'Location Seniority'</span>;
+
+            <span class="hljs-keyword">return</span> list.sort(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(me, that)</span> </span>{
+
+                <span class="hljs-keyword">if</span> (filterType === <span class="hljs-string">'Last Name'</span>) {
+
+                    <span class="hljs-keyword">if</span> (me.lastName &gt; that.lastName)
+                        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+                    <span class="hljs-keyword">if</span> (me.lastName &lt; that.lastName)
+                        <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+
+                    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+                }
+
+                <span class="hljs-keyword">if</span> (!me.activeDetachment &amp;&amp; that.activeDetachment &amp;&amp; me.state === <span class="hljs-string">'Available'</span>)
+                    <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+
+                <span class="hljs-keyword">if</span> (me.activeDetachment &amp;&amp; !that.activeDetachment &amp;&amp; me.state === <span class="hljs-string">'Available'</span>)
+                    <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+                <span class="hljs-keyword">if</span> ((!me.activeDetachment &amp;&amp; !that.activeDetachment) || me.state !== <span class="hljs-string">'Available'</span>) {
+
+                    <span class="hljs-keyword">if</span> (titleHierarchy.indexOf(me.civilServiceTitle) &gt; titleHierarchy.indexOf(that.civilServiceTitle))
+                        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+                    <span class="hljs-keyword">if</span> (titleHierarchy.indexOf(me.civilServiceTitle) &lt; titleHierarchy.indexOf(that.civilServiceTitle))
+                        <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+
+                    <span class="hljs-keyword">if</span> (me.civilServiceTitle === titles.civilian &amp;&amp; that.civilServiceTitle === titles.civilian) {
+
+                        <span class="hljs-keyword">if</span> (me.lastName &gt; that.lastName)
+                            <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+                        <span class="hljs-keyword">if</span> (me.lastName &lt; that.lastName)
+                            <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+                    }
+
+                    <span class="hljs-keyword">if</span>(filterType === <span class="hljs-string">'Location Seniority'</span> || filterType === <span class="hljs-string">'Location Reverse Seniority'</span>) {</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><pre><code>                   if (me.homeLocation !== $scope.board.location &amp;&amp; that.homeLocation === $scope.board.location)</code></pre>
+<p> return 1;</p>
+<p> if (me.homeLocation === $scope.board.location &amp;&amp; that.homeLocation !== $scope.board.location)
+ return -1;</p></div></div><div class="code"><div class="wrapper">                        <span class="hljs-keyword">if</span> (me.homeLocation &gt; that.homeLocation)
+                            <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+                        <span class="hljs-keyword">if</span> (me.homeLocation &lt; that.homeLocation)
+                            <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+
+                        <span class="hljs-keyword">if</span> (me.payrollLocationId &gt; that.payrollLocationId)
+                            <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+                        <span class="hljs-keyword">if</span> (me.payrollLocationId &lt; that.payrollLocationId)
+                            <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+                    }
+                }
+
+
+                <span class="hljs-keyword">if</span> (filterType === <span class="hljs-string">'Seniority'</span> || filterType === <span class="hljs-string">'Location Seniority'</span>) {
+
+                    <span class="hljs-keyword">if</span>(me.seniorityDate &gt; that.seniorityDate)
+                        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+                    <span class="hljs-keyword">if</span>(me.seniorityDate &lt; that.seniorityDate)
+                        <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+
+                    <span class="hljs-keyword">if</span>(me.listNumber &amp;&amp; !that.listNumber)
+                        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+                    <span class="hljs-keyword">if</span>(!me.listNumber &amp;&amp; that.listNumber)
+                        <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+
+                    <span class="hljs-keyword">if</span>(!me.listNumber &amp;&amp; !that.listNumber)
+                        <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+
+                    <span class="hljs-keyword">if</span>(<span class="hljs-built_in">Number</span>(me.listNumber.replace(<span class="hljs-regexp">/[^0-9]+/g</span>, <span class="hljs-string">''</span>)) &gt; <span class="hljs-built_in">Number</span>(that.listNumber.replace(<span class="hljs-regexp">/[^0-9]+/g</span>, <span class="hljs-string">''</span>)))
+                        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+                    <span class="hljs-keyword">if</span>(<span class="hljs-built_in">Number</span>(me.listNumber.replace(<span class="hljs-regexp">/[^0-9]+/g</span>, <span class="hljs-string">''</span>)) &lt; <span class="hljs-built_in">Number</span>(that.listNumber.replace(<span class="hljs-regexp">/[^0-9]+/g</span>, <span class="hljs-string">''</span>)))
+                        <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+
+                    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+                }
+
+                <span class="hljs-keyword">if</span> (filterType === <span class="hljs-string">'Reverse Seniority'</span> || filterType === <span class="hljs-string">'Location Reverse Seniority'</span>) {
+
+
+                    <span class="hljs-keyword">if</span>(me.seniorityDate &lt; that.seniorityDate)
+                        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+                    <span class="hljs-keyword">if</span>(me.seniorityDate &gt; that.seniorityDate)
+                        <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+
+                    <span class="hljs-keyword">if</span>(me.listNumber &amp;&amp; !that.listNumber)
+                        <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+
+                    <span class="hljs-keyword">if</span>(!me.listNumber &amp;&amp; that.listNumber)
+                        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+                    <span class="hljs-keyword">if</span>(!me.listNumber &amp;&amp; !that.listNumber)
+                        <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+
+                    <span class="hljs-keyword">if</span>(<span class="hljs-built_in">Number</span>(me.listNumber.replace(<span class="hljs-regexp">/[^0-9]+/g</span>, <span class="hljs-string">''</span>)) &lt; <span class="hljs-built_in">Number</span>(that.listNumber.replace(<span class="hljs-regexp">/[^0-9]+/g</span>, <span class="hljs-string">''</span>)))
+                        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+                    <span class="hljs-keyword">if</span>(<span class="hljs-built_in">Number</span>(me.listNumber.replace(<span class="hljs-regexp">/[^0-9]+/g</span>, <span class="hljs-string">''</span>)) &gt; <span class="hljs-built_in">Number</span>(that.listNumber.replace(<span class="hljs-regexp">/[^0-9]+/g</span>, <span class="hljs-string">''</span>)))
+                        <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+
+                    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+                }
+            });
+        };
+
+
+
+    });</div></div></div></div></body></html>

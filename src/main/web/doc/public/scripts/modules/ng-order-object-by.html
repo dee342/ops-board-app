@@ -1,0 +1,58 @@
+<!DOCTYPE html><html lang="en"><head><title>public\scripts\modules\ng-order-object-by</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../../"><meta name="groc-document-path" content="public\scripts\modules\ng-order-object-by"><meta name="groc-project-path" content="public\scripts\modules\ng-order-object-by.js"><link rel="stylesheet" type="text/css" media="all" href="../../../assets/style.css"><script type="text/javascript" src="../../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">public\scripts\modules\ng-order-object-by.js</div></div><div id="document"><div class="segment"><div class="comments "><div class="wrapper"><p>Created by Justin Klemm ... modified by Dan</p></div></div><div class="code"><div class="wrapper"><span class="hljs-pi">'use strict'</span>;
+
+(
+  <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(angular)</span> </span>{
+    <span class="hljs-keyword">return</span> angular
+      .module(<span class="hljs-string">'ngOrderObjectBy'</span>, [])
+      .filter(<span class="hljs-string">'orderObjectBy'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+        <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(items, field, reverse, key)</span> </span>{ <span class="hljs-comment">//modified parameters</span>
+          <span class="hljs-keyword">var</span> filtered = [];
+          angular.forEach(items, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(item)</span> </span>{
+        	  <span class="hljs-keyword">if</span> (!field.then) { <span class="hljs-comment">// Dan - add check to make sure added object is the one interested (i.e. not promise)</span>
+              <span class="hljs-comment">//modified - not very good check but fast and avoids error if field is a.b.c</span>
+        		  filtered.push(item);
+        	  }
+          });
+          <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">index</span><span class="hljs-params">(obj, i)</span> </span>{
+            <span class="hljs-keyword">return</span> obj[i];
+          }
+          filtered.sort(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(a, b)</span> </span>{
+            <span class="hljs-keyword">var</span> comparator;
+            <span class="hljs-keyword">var</span> reducedA = field.split(<span class="hljs-string">'.'</span>).reduce(index, a);
+            <span class="hljs-keyword">var</span> reducedB = field.split(<span class="hljs-string">'.'</span>).reduce(index, b);
+            <span class="hljs-keyword">if</span> (reducedA === reducedB) {
+              comparator = <span class="hljs-number">0</span>;
+            } <span class="hljs-keyword">else</span> {
+              comparator = (reducedA &gt; reducedB ? <span class="hljs-number">1</span> : -<span class="hljs-number">1</span>);
+            }
+            <span class="hljs-keyword">return</span> comparator;
+          });
+          <span class="hljs-keyword">if</span> (reverse) {
+            filtered.reverse();
+          }<span class="hljs-comment">/*
+          if (typeof items === 'object' &amp;&amp; key) { //if I give you object gimme object back :)
+            var filtered = {};
+            angular.forEach(items, function(item) {
+              filtered[item[key]] = item;
+            });
+          }*/</span>
+          <span class="hljs-keyword">return</span> filtered;
+        };
+      }).filter(<span class="hljs-string">'orderObjectBy2'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+
+          <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(items, field, reverse)</span> </span>{
+            <span class="hljs-keyword">var</span> filtered = [];
+            angular.forEach(items, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(item)</span> </span>{
+              filtered.push(item);
+            });
+            filtered.sort(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(a, b)</span> </span>{
+              <span class="hljs-keyword">return</span> (a[field] &gt; b[field] ? <span class="hljs-number">1</span> : -<span class="hljs-number">1</span>);
+            });
+            <span class="hljs-keyword">if</span>(reverse) filtered.reverse();
+
+
+            <span class="hljs-keyword">return</span> filtered;
+          };
+        });
+  }
+)(angular);</div></div></div></div></body></html>

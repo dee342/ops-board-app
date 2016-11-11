@@ -1,0 +1,690 @@
+<!DOCTYPE html><html lang="en"><head><title>public\scripts\services\task-settings-service</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../../"><meta name="groc-document-path" content="public\scripts\services\task-settings-service"><meta name="groc-project-path" content="public\scripts\services\task-settings-service.js"><link rel="stylesheet" type="text/css" media="all" href="../../../assets/style.css"><script type="text/javascript" src="../../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">public\scripts\services\task-settings-service.js</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="hljs-pi">'use strict'</span>;
+
+angular
+    .module(<span class="hljs-string">'OpsBoard'</span>)
+    .service(
+        <span class="hljs-string">'TaskSettingsService'</span>,
+        <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(InfoService, UUIDGenerator)</span> </span>{
+
+          <span class="hljs-keyword">var</span> constructTaskSettingsCommand = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(commandName, clientSequence, boardLocation, boardDate,
+              serviceLocationId, locationShiftId)</span> </span>{
+
+            <span class="hljs-keyword">var</span> command = {
+              <span class="hljs-string">'commandName'</span> : commandName,
+              <span class="hljs-string">'clientSequence'</span> : clientSequence++,
+              <span class="hljs-string">'commandContent'</span> : {
+                <span class="hljs-string">'serviceLocationId'</span> : serviceLocationId,
+                <span class="hljs-string">'locationShiftId'</span> : locationShiftId
+              },
+              <span class="hljs-string">'date'</span> : boardDate,
+              <span class="hljs-string">'location'</span> : boardLocation
+            }
+
+            <span class="hljs-keyword">return</span> command;
+          }
+
+          <span class="hljs-keyword">var</span> getPersonKey = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(id)</span> </span>{
+            <span class="hljs-keyword">if</span> (id == <span class="hljs-literal">null</span> || <span class="hljs-keyword">typeof</span> id == <span class="hljs-literal">undefined</span> || id == <span class="hljs-string">''</span>)
+              <span class="hljs-keyword">return</span>;
+            <span class="hljs-keyword">if</span> (id.indexOf(<span class="hljs-string">'_'</span>) &lt; <span class="hljs-number">0</span>)
+              <span class="hljs-keyword">return</span> id;
+            <span class="hljs-keyword">return</span> id.split(<span class="hljs-string">'_'</span>)[<span class="hljs-number">0</span>];
+          }
+
+          <span class="hljs-keyword">var</span> getEquipmentKey = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(id)</span> </span>{
+            <span class="hljs-keyword">if</span> (id == <span class="hljs-literal">null</span> || <span class="hljs-keyword">typeof</span> id == <span class="hljs-literal">undefined</span> || id == <span class="hljs-string">''</span>)
+              <span class="hljs-keyword">return</span>;
+            <span class="hljs-keyword">if</span> (id.indexOf(<span class="hljs-string">'_'</span>) &lt; <span class="hljs-number">0</span>)
+              <span class="hljs-keyword">return</span> id;
+            <span class="hljs-keyword">return</span> id.split(<span class="hljs-string">'_'</span>)[<span class="hljs-number">0</span>];
+          }
+
+          <span class="hljs-keyword">var</span> unassignPersons = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(personnel, personnelIds)</span> </span>{
+            <span class="hljs-keyword">if</span> (personnelIds != <span class="hljs-literal">null</span>) {
+              <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> k = <span class="hljs-number">0</span>; k &lt; personnelIds.length; k++) {
+                <span class="hljs-keyword">var</span> personId = personnelIds[k].substring(<span class="hljs-number">0</span>, personnelIds[k].indexOf(<span class="hljs-string">"_"</span>));
+                <span class="hljs-keyword">var</span> person = personnel[getPersonKey(personId)];
+                <span class="hljs-keyword">if</span> (person != <span class="hljs-literal">null</span>) {
+                  person.state = <span class="hljs-string">'Available'</span>;
+                  person.assigned = <span class="hljs-literal">false</span>;
+                }
+              }
+            }
+          }
+
+          <span class="hljs-keyword">var</span> checkIfPersonAlreadyAssigned = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(personnel, personnelIds, assignedPersonMap)</span> </span>{
+            <span class="hljs-keyword">if</span> (personnelIds != <span class="hljs-literal">null</span>)
+              <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> k = <span class="hljs-number">0</span>; k &lt; personnelIds.length; k++) {
+                <span class="hljs-keyword">var</span> p = personnel[getPersonKey(personnelIds[k])];
+                <span class="hljs-keyword">if</span> (!assignedPersonMap[personnelIds[k]]) {
+                  <span class="hljs-keyword">if</span> (p &amp;&amp; p.state)
+                    p.state = <span class="hljs-string">'Available'</span>
+                } <span class="hljs-keyword">else</span> {
+                  <span class="hljs-keyword">if</span> (p &amp;&amp; p.state)
+                    p.state = <span class="hljs-string">'Assigned'</span>
+                }
+              }
+          }
+
+          <span class="hljs-keyword">return</span> {
+
+            createClearAllLocationsCommand : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(states, clientSequence, boardLocation, boardDate)</span> </span>{
+              <span class="hljs-keyword">var</span> command = {
+                <span class="hljs-string">'commandName'</span> : <span class="hljs-string">"ClearAllLocations"</span>,
+                <span class="hljs-string">'clientSequence'</span> : clientSequence++,
+                <span class="hljs-string">'date'</span> : boardDate,
+                <span class="hljs-string">'location'</span> : boardLocation
+              }
+              <span class="hljs-keyword">return</span> command;
+            },
+
+            createPublishBoardCommand : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(states, clientSequence, boardLocation, boardDate)</span> </span>{
+              <span class="hljs-keyword">var</span> command = {
+                <span class="hljs-string">'commandName'</span> : <span class="hljs-string">"PublishBoard"</span>,
+                <span class="hljs-string">'clientSequence'</span> : clientSequence++,
+                <span class="hljs-string">'date'</span> : boardDate,
+                <span class="hljs-string">'location'</span> : boardLocation
+              }
+              <span class="hljs-keyword">return</span> command;
+            },
+            createClearSpecificLocationCommand : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(states, clientSequence, boardLocation, boardDate,
+                serviceLocationId)</span> </span>{
+              <span class="hljs-keyword">var</span> command = {
+                <span class="hljs-string">'commandName'</span> : <span class="hljs-string">"ClearSpecificLocation"</span>,
+                <span class="hljs-string">'clientSequence'</span> : clientSequence++,
+                <span class="hljs-string">'commandContent'</span> : {
+                  <span class="hljs-string">'serviceLocationId'</span> : serviceLocationId
+                },
+                <span class="hljs-string">'date'</span> : boardDate,
+                <span class="hljs-string">'location'</span> : boardLocation
+              }
+              <span class="hljs-keyword">return</span> command;
+            },
+
+            createAddShiftCommand : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(states, clientSequence, boardLocation, boardDate, locationShiftId,
+                serviceLocationId, shiftId)</span> </span>{
+              <span class="hljs-keyword">var</span> command = constructTaskSettingsCommand(<span class="hljs-string">'AddShift'</span>, clientSequence, boardLocation, boardDate,
+                  serviceLocationId, locationShiftId);
+              command.commandContent.shiftId = shiftId.toString();
+              <span class="hljs-keyword">return</span> command;
+            },
+
+            createRemoveShiftCommand : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(states, clientSequence, boardLocation, boardDate, locationShiftId,
+                serviceLocationId, shiftId)</span> </span>{
+              <span class="hljs-keyword">var</span> command = constructTaskSettingsCommand(<span class="hljs-string">'RemoveShift'</span>, clientSequence, boardLocation, boardDate,
+                  serviceLocationId, locationShiftId);
+              command.commandContent.shiftId = shiftId.toString();
+              <span class="hljs-keyword">return</span> command;
+            },
+
+            createAddCategoryCommand : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(states, clientSequence, boardLocation, boardDate, locationShiftId,
+                shiftCategoryId, serviceLocationId, shiftId, categoryId)</span> </span>{
+              <span class="hljs-keyword">var</span> command = constructTaskSettingsCommand(<span class="hljs-string">'AddCategory'</span>, clientSequence, boardLocation, boardDate,
+                  serviceLocationId, locationShiftId);
+              command.commandContent.shiftCategoryId = shiftCategoryId;
+              command.commandContent.shiftId = shiftId.toString();
+              command.commandContent.categoryId = categoryId.toString();
+              <span class="hljs-keyword">return</span> command;
+            },
+
+            createRemoveCategoryCommand : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(states, clientSequence, boardLocation, boardDate, locationShiftId,
+                shiftCategoryId, serviceLocationId, shiftId, categoryId)</span> </span>{
+              <span class="hljs-keyword">var</span> command = constructTaskSettingsCommand(<span class="hljs-string">'RemoveCategory'</span>, clientSequence, boardLocation, boardDate,
+                  serviceLocationId, locationShiftId);
+              command.commandContent.shiftCategoryId = shiftCategoryId;
+              command.commandContent.shiftId = shiftId.toString();
+              command.commandContent.categoryId = categoryId.toString();
+              <span class="hljs-keyword">return</span> command;
+            },
+
+            createUpdateCategoryCommand : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(states, clientSequence, boardLocation, boardDate, locationId,
+                shiftId, locationShiftId, shiftCategoryId, oldCategory, newCategory)</span> </span>{
+              <span class="hljs-keyword">var</span> command = constructTaskSettingsCommand(<span class="hljs-string">'UpdateCategory'</span>, clientSequence, boardLocation, boardDate,
+                  locationId, locationShiftId);
+              command.commandContent.shiftCategoryId = shiftCategoryId;
+              command.commandContent.shiftId = shiftId.toString();
+              command.commandContent.categoryId = newCategory.id.toString();
+              command.commandContent.oldCategoryId = oldCategory.id.toString();
+              <span class="hljs-keyword">return</span> command;
+            },
+
+            createAddSubcategoryCommand : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(states, clientSequence, boardLocation, boardDate, locationShiftId,
+                shiftCategoryId, subcategoryTaskId, serviceLocationId, shiftId, categoryId, subcategoryId,
+                containsSections, taskId)</span> </span>{
+              <span class="hljs-keyword">var</span> command = constructTaskSettingsCommand(<span class="hljs-string">'AddSubcategory'</span>, clientSequence, boardLocation, boardDate,
+                  serviceLocationId, locationShiftId);
+              command.commandContent.shiftCategoryId = shiftCategoryId;
+              command.commandContent.subcategoryTaskId = subcategoryTaskId;
+              command.commandContent.shiftId = shiftId.toString();
+              command.commandContent.categoryId = categoryId.toString();
+              command.commandContent.subcategoryId = subcategoryId.toString();
+              <span class="hljs-keyword">if</span> (!containsSections) {
+                command.commandContent.taskId = taskId.toString();
+              }
+              <span class="hljs-keyword">return</span> command;
+            },
+
+            createRemoveSubcategoryCommand : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(states, clientSequence, boardLocation, boardDate,
+                locationShiftId, shiftCategoryId, subcategoryTaskId, serviceLocationId, shiftId, categoryId,
+                subcategoryId, containsSections, taskId)</span> </span>{
+              <span class="hljs-keyword">var</span> command = constructTaskSettingsCommand(<span class="hljs-string">'RemoveSubcategory'</span>, clientSequence, boardLocation, boardDate,
+                  serviceLocationId, locationShiftId);
+              command.commandContent.shiftCategoryId = shiftCategoryId;
+              command.commandContent.subcategoryTaskId = subcategoryTaskId;
+              command.commandContent.shiftId = shiftId.toString();
+              command.commandContent.categoryId = categoryId.toString();
+              command.commandContent.subcategoryId = subcategoryId.toString();
+              <span class="hljs-keyword">return</span> command;
+            },
+
+            createAddSectionCommand : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(states, clientSequence, boardLocation, boardDate, locationShiftId,
+                shiftCategoryId, subcategoryTaskId, sectionTaskId, taskIds, serviceLocationId, shiftId, categoryId,
+                subcategoryId, sectionId)</span> </span>{
+              <span class="hljs-keyword">var</span> command = constructTaskSettingsCommand(<span class="hljs-string">'AddSection'</span>, clientSequence, boardLocation, boardDate,
+                  serviceLocationId, locationShiftId);
+              command.commandContent.shiftCategoryId = shiftCategoryId;
+              command.commandContent.subcategoryTaskId = subcategoryTaskId;
+              command.commandContent.sectionTaskId = sectionTaskId;
+              command.commandContent.taskIds = taskIds;
+              command.commandContent.shiftId = shiftId.toString();
+              command.commandContent.categoryId = categoryId.toString();
+              command.commandContent.subcategoryId = subcategoryId.toString();
+              command.commandContent.sectionId = sectionId.toString();
+              <span class="hljs-keyword">return</span> command;
+            },
+
+            createRemoveSectionCommand : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(states, clientSequence, boardLocation, boardDate, locationShiftId,
+                shiftCategoryId, subcategoryTaskId, sectionTaskId, serviceLocationId, shiftId, categoryId,
+                subcategoryId, sectionId)</span> </span>{
+              <span class="hljs-keyword">var</span> command = constructTaskSettingsCommand(<span class="hljs-string">'RemoveSection'</span>, clientSequence, boardLocation, boardDate,
+                  serviceLocationId, locationShiftId);
+              command.commandContent.shiftCategoryId = shiftCategoryId;
+              command.commandContent.subcategoryTaskId = subcategoryTaskId;
+              command.commandContent.sectionTaskId = sectionTaskId;
+              command.commandContent.shiftId = shiftId.toString();
+              command.commandContent.categoryId = categoryId.toString();
+              command.commandContent.subcategoryId = subcategoryId.toString();
+              command.commandContent.sectionId = sectionId.toString();
+              <span class="hljs-keyword">return</span> command;
+            },
+
+            createAddTaskCommand : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(states, clientSequence, boardLocation, boardDate, locationShiftId,
+                shiftCategoryId, subcategoryTaskId, taskIds, serviceLocationId, shiftId, categoryId, subcategoryId,
+                containsSections, sectionTaskId, sectionId)</span> </span>{
+              <span class="hljs-keyword">var</span> command = constructTaskSettingsCommand(<span class="hljs-string">'AddTasks'</span>, clientSequence, boardLocation, boardDate,
+                  serviceLocationId, locationShiftId);
+              command.commandContent.shiftCategoryId = shiftCategoryId;
+              command.commandContent.subcategoryTaskId = subcategoryTaskId;
+              command.commandContent.taskIds = taskIds;
+              command.commandContent.shiftId = shiftId.toString();
+              command.commandContent.categoryId = categoryId.toString();
+              command.commandContent.subcategoryId = subcategoryId.toString();
+              <span class="hljs-keyword">if</span> (containsSections) {
+                command.commandContent.sectionId = sectionId.toString();
+                command.commandContent.sectionTaskId = sectionTaskId;
+              }
+              <span class="hljs-keyword">return</span> command;
+            },
+
+            createUpdateTaskCommand : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(states, clientSequence, boardLocation, boardDate, task, locationShiftId,
+                shiftCategoryId, subcategoryTaskId, taskIds, serviceLocationId, shiftId, categoryId, subcategoryId,
+                containsSections, sectionTaskId, sectionId)</span> </span>{
+
+              <span class="hljs-keyword">var</span> command = constructTaskSettingsCommand(<span class="hljs-string">'UpdateTask'</span>, clientSequence, boardLocation, boardDate,
+                  serviceLocationId, locationShiftId);
+
+              command.commandContent.taskid = task.id;
+              command.commandContent.taskname = task.taskName;
+              command.commandContent.taskcomments = task.comments;
+              command.commandContent.taskstartdate = task.startDate;
+              command.commandContent.taskenddate = task.endDate;
+
+              command.commandContent.shiftCategoryId = shiftCategoryId;
+              command.commandContent.subcategoryTaskId = subcategoryTaskId;
+              command.commandContent.shiftId = shiftId.toString();
+              command.commandContent.categoryId = categoryId.toString();
+              command.commandContent.subcategoryId = subcategoryId.toString();
+              <span class="hljs-keyword">if</span> (containsSections) {
+                command.commandContent.sectionId = sectionId.toString();
+                command.commandContent.sectionTaskId = sectionTaskId;
+              }
+
+              <span class="hljs-keyword">return</span> command;
+            },
+
+            createRemoveTasksCommand : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(states, clientSequence, boardLocation, boardDate, locationShiftId,
+                shiftCategoryId, subcategoryTaskId, size, serviceLocationId, shiftId, categoryId, subcategoryId,
+                containsSections, sectionTaskId, sectionId)</span> </span>{
+              <span class="hljs-keyword">var</span> command = constructTaskSettingsCommand(<span class="hljs-string">'RemoveTasks'</span>, clientSequence, boardLocation, boardDate,
+                  serviceLocationId, locationShiftId);
+              command.commandContent.shiftCategoryId = shiftCategoryId;
+              command.commandContent.subcategoryTaskId = subcategoryTaskId;
+              command.commandContent.size = size;
+              command.commandContent.shiftId = shiftId.toString();
+              command.commandContent.categoryId = categoryId.toString();
+              command.commandContent.subcategoryId = subcategoryId.toString();
+              <span class="hljs-keyword">if</span> (containsSections) {
+                command.commandContent.sectionId = sectionId.toString();
+                command.commandContent.sectionTaskId = sectionTaskId;
+              }
+              <span class="hljs-keyword">return</span> command;
+            },
+
+            createDeleteSingleTaskCommand : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(states, clientSequence, boardLocation, boardDate, task, section,
+                subcategory, category, shift, location, locationId, containsSections)</span> </span>{
+              <span class="hljs-keyword">var</span> command = constructTaskSettingsCommand(<span class="hljs-string">'RemoveSingleTask'</span>, clientSequence, boardLocation, boardDate,
+                  locationId, shift.id);
+              command.commandContent.shiftCategoryId = category.id;
+              command.commandContent.subcategoryTaskId = subcategory.id;
+              command.commandContent.shiftId = shift.shift.id.toString();
+              command.commandContent.categoryId = category.category.id.toString();
+              command.commandContent.subcategoryId = subcategory.subcategory.id.toString();
+              command.commandContent.taskId = task.id;
+              <span class="hljs-keyword">if</span> (containsSections) {
+                command.commandContent.sectionId = section.sectionName;
+                command.commandContent.sectionTaskId = section.id;
+              }
+              <span class="hljs-keyword">return</span> command;
+            },
+
+            processClearAllLocationsCommand : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(tasks, equipment, personnel, command)</span> </span>{
+              <span class="hljs-keyword">var</span> equipmentIds = command.commandContent.equipmentIds, personnelIds = command.commandContent.personnelIds;
+              unassignPersons(personnel, personnelIds);
+              <span class="hljs-keyword">var</span> locationIds = <span class="hljs-built_in">Object</span>.keys(tasks.locations);
+              <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; locationIds.length; i++) {
+                tasks.locations[locationIds[i]].locationShifts = {};
+              }
+            },
+
+            processClearSpecificLocationCommand : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(tasks, equipment, personnel, command)</span> </span>{
+              <span class="hljs-keyword">var</span> equipmentIds = command.commandContent.equipmentIds, personnelIds = command.commandContent.personnelIds, serviceLocationId = command.commandContent.serviceLocation.code;
+              unassignPersons(personnel, personnelIds);
+              <span class="hljs-keyword">var</span> locationIds = <span class="hljs-built_in">Object</span>.keys(tasks.locations);
+              <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; locationIds.length; i++) {
+                <span class="hljs-keyword">if</span> (locationIds[i] == serviceLocationId) {
+                  tasks.locations[locationIds[i]].locationShifts = {};
+                }
+              }
+            },
+            processAddShiftCommand : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(tasks, command)</span> </span>{
+              <span class="hljs-keyword">var</span> locationId = command.commandContent.serviceLocation.code, locationShiftId = command.commandContent.locationShiftId, shift = InfoService
+                  .getShiftInfo(locationShiftId, command.commandContent.shift);
+              <span class="hljs-keyword">var</span> locationShiftIdOfExistingShift;
+              <span class="hljs-keyword">var</span> shiftExists = <span class="hljs-literal">false</span>;
+              <span class="hljs-built_in">Object</span>.keys(tasks.locations[locationId].locationShifts).forEach(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(key)</span> </span>{ <span class="hljs-comment">// check</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>if
+shift
+exists,
+to
+prevent
+duplicate
+shifts
+getting
+added
+on
+front
+end</p></div></div><div class="code"><div class="wrapper">                <span class="hljs-keyword">if</span> (tasks.locations[locationId].locationShifts[key].shift.id == shift.shift.id) {
+                  shiftExists = <span class="hljs-literal">true</span>;
+                  locationShiftIdOfExistingShift = key;
+                }
+              });
+              <span class="hljs-keyword">if</span> (shiftExists) {
+                <span class="hljs-keyword">delete</span> tasks.locations[locationId].locationShifts[locationShiftIdOfExistingShift]; <span class="hljs-comment">// delete</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>shift
+which
+does
+not
+exist
+in
+backend</p></div></div><div class="code"><div class="wrapper">              }
+              tasks.locations[locationId].locationShifts[locationShiftId] = shift; <span class="hljs-comment">// overwrite</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>shift
+received
+from
+server</p></div></div><div class="code"><div class="wrapper">            },
+
+            processRemoveShiftCommand : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(tasks, equipment, personnel, command)</span> </span>{
+              <span class="hljs-keyword">var</span> equipmentIds = command.commandContent.equipmentIds, personnelIds = command.commandContent.personnelIds, serviceLocationId = command.commandContent.serviceLocation.code;
+              unassignPersons(personnel, personnelIds);
+              <span class="hljs-keyword">var</span> locationId = command.commandContent.serviceLocation.code, locationShiftId = command.commandContent.locationShiftId, shift = InfoService
+                  .getShiftInfo(locationShiftId, command.commandContent.shift);
+              <span class="hljs-keyword">delete</span> tasks.locations[locationId].locationShifts[locationShiftId];
+            },
+
+            processAddCategoryCommand : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(tasks, command)</span> </span>{
+              <span class="hljs-keyword">var</span> locationId = command.commandContent.serviceLocation.code, locationShiftId = command.commandContent.locationShiftId, shiftCategoryId = command.commandContent.shiftCategoryId, category = InfoService
+                  .getCategoryInfo(shiftCategoryId, command.commandContent.category), categoryExists = <span class="hljs-literal">false</span>, idOfExistingCategory;
+
+              <span class="hljs-built_in">Object</span>
+                  .keys(tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories)
+                  .forEach(
+                      <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(key)</span> </span>{
+                        <span class="hljs-keyword">if</span> (tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[key].category.id == category.category.id) {
+                          categoryExists = <span class="hljs-literal">true</span>;
+                          idOfExistingCategory = key;
+                        }
+                      });
+              <span class="hljs-keyword">if</span> (categoryExists) {
+                <span class="hljs-keyword">delete</span> tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[idOfExistingCategory];
+              }
+              tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId] = category;
+              <span class="hljs-keyword">if</span> (tasks.locations[locationId].locationShifts[locationShiftId].addedCategories == <span class="hljs-literal">null</span>
+                  || tasks.locations[locationId].locationShifts[locationShiftId].addedCategories == <span class="hljs-literal">undefined</span>)
+                tasks.locations[locationId].locationShifts[locationShiftId].addedCategories = {};
+              tasks.locations[locationId].locationShifts[locationShiftId].addedCategories[shiftCategoryId] = category.category;
+            },
+
+            processRemoveCategoryCommand : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(tasks, equipment, personnel, command)</span> </span>{
+              <span class="hljs-keyword">var</span> equipmentIds = command.commandContent.equipmentIds, personnelIds = command.commandContent.personnelIds, serviceLocationId = command.commandContent.serviceLocation.code;
+              unassignPersons(personnel, personnelIds);
+              <span class="hljs-keyword">var</span> locationId = command.commandContent.serviceLocation.code, locationShiftId = command.commandContent.locationShiftId, shiftCategoryId = command.commandContent.shiftCategoryId, category = InfoService
+                  .getCategoryInfo(shiftCategoryId, command.commandContent.category);
+              <span class="hljs-keyword">delete</span> tasks.locations[locationId].locationShifts[locationShiftId].addedCategories[shiftCategoryId];
+              <span class="hljs-keyword">delete</span> tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId];
+            },
+
+            processUpdateCategoryCommand : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(tasks, equipment, personnel, command)</span> </span>{
+              <span class="hljs-keyword">var</span> locationId = command.commandContent.serviceLocation.code, locationShiftId = command.commandContent.locationShiftId, shiftCategoryId = command.commandContent.shiftCategoryId, equipmentIds = command.commandContent.equipmentIds, personnelIds = command.commandContent.personnelIds, category = InfoService
+                  .getCategoryInfo(shiftCategoryId, command.commandContent.category);
+              unassignPersons(personnel, personnelIds);
+              tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId] = category;
+              <span class="hljs-keyword">if</span> (tasks.locations[locationId].locationShifts[locationShiftId].addedCategories == <span class="hljs-literal">null</span>
+                  || tasks.locations[locationId].locationShifts[locationShiftId].addedCategories == <span class="hljs-literal">undefined</span>)
+                tasks.locations[locationId].locationShifts[locationShiftId].addedCategories = {};
+              tasks.locations[locationId].locationShifts[locationShiftId].addedCategories[shiftCategoryId] = category.category;
+            },
+
+            processAddSubcategoryCommand : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(tasks, command)</span> </span>{
+              <span class="hljs-keyword">var</span> locationId = command.commandContent.serviceLocation.code, locationShiftId = command.commandContent.locationShiftId, shiftCategoryId = command.commandContent.shiftCategoryId, subcategoryTaskId = command.commandContent.subcategoryTaskId, subcategory = InfoService
+                  .getSubcategoryInfo(subcategoryTaskId, command.commandContent.subcategory,
+                      tasks.locations[locationId].location.sections);
+
+              <span class="hljs-keyword">var</span> subcategoryExists = <span class="hljs-literal">false</span>, idOfExistingSubcategory;
+
+              <span class="hljs-keyword">if</span> (!subcategory.subcategory.containsSections) {
+                <span class="hljs-built_in">Object</span>
+                    .keys(
+                        tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].subcategoryTasks)
+                    .forEach(
+                        <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(key)</span> </span>{
+                          <span class="hljs-keyword">if</span> (tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].subcategoryTasks[key].subcategory.id == subcategory.subcategory.id) {
+                            subcategoryExists = <span class="hljs-literal">true</span>;
+                            idOfExistingSubcategory = key;
+                          }
+                        });
+              }
+              <span class="hljs-keyword">if</span> (subcategoryExists) {
+                <span class="hljs-keyword">delete</span> tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].subcategoryTasks[idOfExistingSubcategory];
+              }
+              <span class="hljs-keyword">if</span> (!subcategory.subcategory.containsSections) {
+                <span class="hljs-keyword">if</span> (!subcategory.tasks)
+                  subcategory.tasks = {}
+                subcategory.tasks[command.commandContent.taskId] = command.commandContent.task;
+              }
+              <span class="hljs-keyword">var</span> allSubcategoryTasks = tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].allsubcategoryTasks;
+
+              <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-built_in">Object</span>.keys(allSubcategoryTasks).length; i++) {
+                <span class="hljs-keyword">if</span> (allSubcategoryTasks[i].id == subcategory.subcategory.id)
+                  allSubcategoryTasks[i].selected = <span class="hljs-literal">true</span>;
+              }
+              tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].allsubcategoryTasks = allSubcategoryTasks;
+              tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].subcategoryTasks[subcategoryTaskId] = subcategory;
+              <span class="hljs-keyword">if</span> (tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].addedSubcategories == <span class="hljs-literal">null</span>
+                  || tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].addedSubcategories == <span class="hljs-literal">undefined</span>)
+                tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].addedSubcategories = {};
+              tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].addedSubcategories[subcategory.subcategory.id] = subcategory.id;
+            },
+
+            processRemoveSubcategoryCommand : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(tasks, equipment, personnel, command)</span> </span>{
+              <span class="hljs-keyword">var</span> locationId = command.commandContent.serviceLocation.code, locationShiftId = command.commandContent.locationShiftId, shiftCategoryId = command.commandContent.shiftCategoryId, subcategoryTaskId = command.commandContent.subcategoryTaskId, equipmentIds = command.commandContent.equipmentIds, personnelIds = command.commandContent.personnelIds, serviceLocationId = command.commandContent.serviceLocation.code;
+              unassignPersons(personnel, personnelIds);
+              <span class="hljs-keyword">var</span> subcategory = InfoService.getSubcategoryInfo(subcategoryTaskId, command.commandContent.subcategory,
+                  tasks.locations[locationId].location.sections);
+              <span class="hljs-keyword">if</span> (!subcategory.subcategory.containsSections) {
+                <span class="hljs-keyword">if</span> (!subcategory.tasks)
+                  subcategory.tasks = {}
+                subcategory.tasks[command.commandContent.taskId] = command.commandContent.task;
+              }
+              <span class="hljs-keyword">var</span> allSubcategoryTasks = tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].allsubcategoryTasks;
+
+              <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-built_in">Object</span>.keys(allSubcategoryTasks).length; i++) {
+                <span class="hljs-keyword">if</span> (allSubcategoryTasks[i].id == subcategory.subcategory.id)
+                  allSubcategoryTasks[i].selected = <span class="hljs-literal">false</span>;
+              }
+              <span class="hljs-keyword">delete</span> tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].subcategoryTasks[subcategoryTaskId];
+            },
+
+            processAddSectionCommand : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(tasks, command)</span> </span>{
+              <span class="hljs-keyword">var</span> locationId = command.commandContent.serviceLocation.code, locationShiftId = command.commandContent.locationShiftId, shiftCategoryId = command.commandContent.shiftCategoryId, subcategoryTaskId = command.commandContent.subcategoryTaskId, sectionTaskId = command.commandContent.sectionTaskId, section = InfoService
+                  .getSectionInfo(sectionTaskId, <span class="hljs-built_in">Object</span>.keys(command.commandContent.tasksMap).length,
+                      command.commandContent.section);
+              section.tasks = command.commandContent.tasksMap;
+              <span class="hljs-keyword">var</span> sectionExists = <span class="hljs-literal">false</span>, sectionTaskIdOfExistingSection;
+              <span class="hljs-built_in">Object</span>
+                  .keys(
+                      tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].subcategoryTasks[subcategoryTaskId].sections)
+                  .forEach(
+                      <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(key)</span> </span>{
+                        <span class="hljs-keyword">if</span> (tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].subcategoryTasks[subcategoryTaskId].sections[key].section.id == section.section.id) {
+                          sectionExists = <span class="hljs-literal">true</span>;
+                          sectionTaskIdOfExistingSection = key;
+                        }
+                      });
+              <span class="hljs-keyword">if</span> (sectionExists) {
+                <span class="hljs-keyword">delete</span> tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].subcategoryTasks[subcategoryTaskId].sections[sectionTaskIdOfExistingSection];
+              }
+              <span class="hljs-keyword">var</span> allSections = tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].subcategoryTasks[subcategoryTaskId].allSections
+              <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> j = <span class="hljs-number">0</span>; j &lt; allSections.length; j++) {
+                <span class="hljs-keyword">if</span> (allSections[j].id == section.section.id) {
+                  allSections[j].numOfTasks = <span class="hljs-built_in">Object</span>.keys(command.commandContent.tasksMap).length;
+                }
+              }
+
+              tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].subcategoryTasks[subcategoryTaskId].sections[sectionTaskId] = section;
+              tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].subcategoryTasks[subcategoryTaskId].allSections = allSections;
+            },
+
+            processAddTasksCommand : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(tasks, command)</span> </span>{
+              <span class="hljs-keyword">var</span> locationId = command.commandContent.serviceLocation.code, locationShiftId = command.commandContent.locationShiftId, shiftCategoryId = command.commandContent.shiftCategoryId, subcategoryTaskId = command.commandContent.subcategoryTaskId, sectionTaskId = command.commandContent.sectionTaskId, numOfTasks = command.commandContent.numOfTasks;
+              <span class="hljs-keyword">var</span> subcategory = tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].subcategoryTasks[subcategoryTaskId];
+              <span class="hljs-keyword">if</span> (!subcategory.subcategory.containsSections) {
+                <span class="hljs-keyword">if</span> (!subcategory.tasks)
+                  subcategory.tasks = {}
+                <span class="hljs-keyword">var</span> lastSequence = <span class="hljs-number">1</span>, key;
+                <span class="hljs-keyword">for</span> (key <span class="hljs-keyword">in</span> subcategory.tasks) {
+                  <span class="hljs-keyword">if</span> (subcategory.tasks[key][<span class="hljs-string">'sequence'</span>]) {
+                    <span class="hljs-keyword">if</span> (lastSequence &lt; subcategory.tasks[key][<span class="hljs-string">'sequence'</span>])
+                      lastSequence = subcategory.tasks[key][<span class="hljs-string">'sequence'</span>];
+                  }
+                }
+                <span class="hljs-keyword">for</span> (key <span class="hljs-keyword">in</span> subcategory.tasks) {
+                  <span class="hljs-keyword">if</span> (!subcategory.tasks[key][<span class="hljs-string">'sequence'</span>]) {
+                    subcategory.tasks[key].sequence = ++lastSequence;
+                  }
+                }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Re-add task to map as tasks from server have additional
+fields</p></div></div><div class="code"><div class="wrapper">                <span class="hljs-built_in">Object</span>.keys(command.commandContent.tasksMap).forEach(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(taskId)</span> </span>{
+                  <span class="hljs-keyword">var</span> task = InfoService.getTaskInfo(taskId);
+                  subcategory.tasks[taskId] = command.commandContent.tasksMap[taskId];
+                  <span class="hljs-keyword">if</span> (task.sequence) {
+                    subcategory.tasks[taskId].sequence = task.sequence;
+                  } <span class="hljs-keyword">else</span> {
+                    subcategory.tasks[taskId].sequence = ++lastSequence;
+                  }
+                })
+                subcategory.numOfTasks = <span class="hljs-built_in">Number</span>(numOfTasks);
+              } <span class="hljs-keyword">else</span> {
+                <span class="hljs-keyword">var</span> section = tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].subcategoryTasks[subcategoryTaskId].sections[sectionTaskId];
+                <span class="hljs-keyword">var</span> sequence = <span class="hljs-number">1</span>, offset, key;
+                <span class="hljs-keyword">if</span> (command.commandContent.numOfTasks != <span class="hljs-built_in">Object</span>.keys(section.tasks).length) {
+                  offset = <span class="hljs-built_in">Math</span>.abs(<span class="hljs-built_in">Object</span>.keys(section.tasks).length - command.commandContent.numOfTasks);
+                  <span class="hljs-keyword">if</span> (<span class="hljs-built_in">Object</span>.keys(section.tasks).length &lt; command.commandContent.numOfTasks) {
+                    sequence = <span class="hljs-built_in">Object</span>.keys(section.tasks).length;
+                    sequence++;
+                  } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (<span class="hljs-built_in">Object</span>.keys(section.tasks).length = command.commandContent.numOfTasks) {
+
+                  }
+                }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Re-add task to map as tasks from server have additional
+fields</p></div></div><div class="code"><div class="wrapper">                <span class="hljs-built_in">Object</span>.keys(command.commandContent.tasksMap).forEach(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(taskId)</span> </span>{
+                  <span class="hljs-keyword">var</span> task = InfoService.getTaskInfo(taskId);
+                  section.tasks[taskId] = command.commandContent.tasksMap[taskId];
+                  <span class="hljs-keyword">if</span> (task.sequence) {
+                    section.tasks[taskId].sequence = task.sequence;
+                  } <span class="hljs-keyword">else</span> {
+                    section.tasks[taskId].sequence = sequence++;
+                  }
+                })
+
+                <span class="hljs-keyword">var</span> allSections = tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].subcategoryTasks[subcategoryTaskId].allSections;
+                <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> j = <span class="hljs-number">0</span>; j &lt; allSections.length; j++) {
+                  <span class="hljs-keyword">if</span> (allSections[j].id == section.section.id) {
+                    allSections[j].numOfTasks = <span class="hljs-built_in">Number</span>(numOfTasks);
+                  }
+                }
+
+                tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].subcategoryTasks[subcategoryTaskId].allSections = allSections;
+              }
+            },
+
+            processUpdateTasksCommand : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(tasks, command)</span> </span>{
+              <span class="hljs-keyword">var</span> locationId = command.commandContent.serviceLocation.code, locationShiftId = command.commandContent.locationShiftId, shiftCategoryId = command.commandContent.shiftCategoryId, subcategoryTaskId = command.commandContent.subcategoryTaskId, sectionTaskId = command.commandContent.sectionTaskId, taskId = command.commandContent.taskId;
+              <span class="hljs-keyword">var</span> taskObj = <span class="hljs-literal">null</span>;
+              <span class="hljs-keyword">if</span> (sectionTaskId !== <span class="hljs-literal">null</span>) {
+                <span class="hljs-keyword">var</span> sectionId = command.commandContent.section.id;
+                taskObj = tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].subcategoryTasks[subcategoryTaskId].sections[sectionId].tasks[taskId];
+              } <span class="hljs-keyword">else</span> {
+                taskObj = tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].subcategoryTasks[subcategoryTaskId].tasks[taskId];
+              }
+
+              taskObj.taskName = command.commandContent.taskName;
+              taskObj.startDate = command.commandContent.taskStartDate;
+              taskObj.endDate = command.commandContent.taskEndDate;
+              taskObj.comments = command.commandContent.taskComments;
+            },
+
+            processRemoveTasksCommand : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(tasks, equipment, personnel, command)</span> </span>{
+              <span class="hljs-keyword">var</span> locationId = command.commandContent.serviceLocation.code, locationShiftId = command.commandContent.locationShiftId, shiftCategoryId = command.commandContent.shiftCategoryId, subcategoryTaskId = command.commandContent.subcategoryTaskId, sectionTaskId = command.commandContent.sectionTaskId, size = command.commandContent.size, taskIds = command.commandContent.taskIds, equipmentIds = command.commandContent.equipmentIds, personnelIds = command.commandContent.personnelIds;
+
+              <span class="hljs-keyword">var</span> subcategory = tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].subcategoryTasks[subcategoryTaskId];
+              unassignPersons(personnel, personnelIds);
+              <span class="hljs-keyword">if</span> (!subcategory.subcategory.containsSections) {
+                <span class="hljs-keyword">if</span> (subcategory.numOfTasks != <span class="hljs-built_in">Number</span>(size)) {
+                  subcategory.numOfTasks = <span class="hljs-built_in">Number</span>(size);
+                  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; taskIds.length; i++) {
+                    <span class="hljs-keyword">delete</span> subcategory.tasks[taskIds[i]]
+                  }
+                }
+              } <span class="hljs-keyword">else</span> {
+                <span class="hljs-keyword">var</span> section = tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].subcategoryTasks[subcategoryTaskId].sections[sectionTaskId];
+                <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; taskIds.length; i++) {
+                  <span class="hljs-keyword">delete</span> section.tasks[taskIds[i]]
+                }
+                <span class="hljs-keyword">var</span> allSections = tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].subcategoryTasks[subcategoryTaskId].allSections;
+                <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> l = <span class="hljs-number">0</span>; l &lt; allSections.length; l++) {
+                  <span class="hljs-keyword">if</span> (allSections[l].id == section.section.id) {
+                    allSections[l].numOfTasks = <span class="hljs-built_in">Number</span>(size);
+                  }
+                }
+              }
+            },
+
+            processDeleteSingleTaskCommand : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(tasks, equipment, personnel, command)</span> </span>{
+              <span class="hljs-keyword">var</span> locationId = command.commandContent.serviceLocation.code, locationShiftId = command.commandContent.locationShiftId, shiftCategoryId = command.commandContent.shiftCategoryId, subcategoryTaskId = command.commandContent.subcategoryTaskId, sectionTaskId = command.commandContent.sectionTaskId, size = command.commandContent.size, taskId = command.commandContent.taskId, equipmentIds = command.commandContent.equipmentIds, personnelIds = command.commandContent.personnelIds, assignedPersonMap = command.commandContent.assignedPersonMap;
+
+              <span class="hljs-keyword">var</span> subcategory = tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].subcategoryTasks[subcategoryTaskId];
+              unassignPersons(personnel, personnelIds);
+              checkIfPersonAlreadyAssigned(personnel, personnelIds, assignedPersonMap);
+              <span class="hljs-keyword">if</span> (!subcategory.subcategory.containsSections) {
+                <span class="hljs-keyword">delete</span> subcategory.tasks[taskId]
+                subcategory.numOfTasks = subcategory.numOfTasks - <span class="hljs-number">1</span>;
+              } <span class="hljs-keyword">else</span> {
+                <span class="hljs-keyword">var</span> section = tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].subcategoryTasks[subcategoryTaskId].sections[sectionTaskId];
+                <span class="hljs-keyword">delete</span> section.tasks[taskId]
+                <span class="hljs-keyword">var</span> allSections = tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].subcategoryTasks[subcategoryTaskId].allSections;
+                <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> l = <span class="hljs-number">0</span>; l &lt; allSections.length; l++) {
+                  <span class="hljs-keyword">var</span> id;
+                  <span class="hljs-keyword">if</span> (section.sectionName != <span class="hljs-literal">null</span>)
+                    id = section.sectionName;
+                  <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (section.section != <span class="hljs-literal">null</span>)
+                    id = section.section.id;
+                  <span class="hljs-keyword">if</span> (allSections[l].id == id) {
+                    allSections[l].numOfTasks = allSections[l].numOfTasks - <span class="hljs-number">1</span>;
+                  }
+                }
+              }
+            },
+
+            processRemoveSectionCommand : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(tasks, equipment, personnel, command)</span> </span>{
+              <span class="hljs-keyword">var</span> locationId = command.commandContent.serviceLocation.code, locationShiftId = command.commandContent.locationShiftId, shiftCategoryId = command.commandContent.shiftCategoryId, subcategoryTaskId = command.commandContent.subcategoryTaskId, sectionTaskId = command.commandContent.sectionTaskId, equipmentIds = command.commandContent.equipmentIds, personnelIds = command.commandContent.personnelIds;
+              unassignPersons(personnel, personnelIds);
+              <span class="hljs-keyword">var</span> sections = tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].subcategoryTasks[subcategoryTaskId].sections;
+              <span class="hljs-keyword">var</span> allSections = tasks.locations[locationId].locationShifts[locationShiftId].shiftCategories[shiftCategoryId].subcategoryTasks[subcategoryTaskId].allSections;
+              <span class="hljs-keyword">if</span> (!sections[sectionTaskId])
+                <span class="hljs-keyword">return</span>;
+              <span class="hljs-built_in">Object</span>
+                  .keys(sections[sectionTaskId].tasks)
+                  .forEach(
+                      <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(taskId)</span> </span>{
+                        <span class="hljs-keyword">var</span> e = sections[sectionTaskId].tasks[taskId].assignedEquipment, p1 = sections[sectionTaskId].tasks[taskId].assignedPerson1, p2 = sections[sectionTaskId].tasks[taskId].assignedPerson2;
+                        <span class="hljs-keyword">if</span> (e &amp;&amp; e.id &amp;&amp; equipment[e.id])
+                          equipment[e.id].state = <span class="hljs-string">'Available'</span>;
+                        <span class="hljs-keyword">if</span> (p1 &amp;&amp; p1.id &amp;&amp; personnel[p1.id])
+                          personnel[p1.id].state = <span class="hljs-string">'Available'</span>;
+                        <span class="hljs-keyword">if</span> (p2 &amp;&amp; p2.id &amp;&amp; personnel[p2.id])
+                          personnel[p2.id].state = <span class="hljs-string">'Available'</span>;
+                      });
+              <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> l = <span class="hljs-number">0</span>; l &lt; allSections.length; l++) {
+                <span class="hljs-keyword">if</span> (allSections[l].id == sections[sectionTaskId].section.id)
+                  allSections[l].numOfTasks = <span class="hljs-number">0</span>;
+              }
+
+              <span class="hljs-keyword">delete</span> sections[sectionTaskId];
+
+            },
+
+            saveGroupOnServer : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($resource, group, boardData, successFn, errorFn)</span> </span>{
+
+              <span class="hljs-keyword">var</span> locationId;
+              <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; group.length; i++) {
+                locationId = group[i].locationId;
+                <span class="hljs-keyword">break</span>;
+              }
+
+              <span class="hljs-keyword">var</span> resource = $resource(boardData.pathStart + <span class="hljs-string">'/SetPartialTask/:district/:date/'</span>, {
+                district : boardData.boardLocation,
+                date : boardData.boardDate
+              }, {
+                save : {
+                  method : <span class="hljs-string">'POST'</span>,
+                  headers : {
+                    <span class="hljs-string">'Content-Type'</span> : <span class="hljs-string">'application/json'</span>
+                  }
+                }
+              });
+
+              <span class="hljs-keyword">var</span> partialTasks = [];
+
+              <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; group.length; i++) {
+                partialTasks.push({
+                  <span class="hljs-string">"id"</span> : group[i].taskId,
+                  <span class="hljs-string">"sequence"</span> : group[i].sequence,
+                  <span class="hljs-string">"hours"</span> : group[i].duration,
+                  <span class="hljs-string">"subCategoryId"</span> : group[i].subcategoryTaskId,
+                  <span class="hljs-string">"sectionId"</span> : group[i].sectionId,
+                  <span class="hljs-string">"categoryId"</span> : group[i].shiftCategoryId
+                })
+              }
+
+              <span class="hljs-keyword">var</span> group = {
+                <span class="hljs-string">"locationId"</span> : locationId,
+                <span class="hljs-string">"locationShiftId"</span> : group[<span class="hljs-number">0</span>].locationShiftId,
+                <span class="hljs-string">"boardId"</span> : boardData.boardLocation + <span class="hljs-string">"_"</span> + boardData.boardDate,
+                <span class="hljs-string">"partialTasks"</span> : partialTasks
+              }
+
+              <span class="hljs-keyword">var</span> response = resource.save(<span class="hljs-built_in">JSON</span>.stringify(group), <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span> </span>{
+                <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'success, got data: '</span>, data);
+                successFn(data);
+              }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span> </span>{
+                errorFn(error);
+              });
+            }
+          }
+
+        });</div></div></div></div></body></html>

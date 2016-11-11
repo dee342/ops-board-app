@@ -1,0 +1,377 @@
+<!DOCTYPE html><html lang="en"><head><title>public\scripts\filters\display-board-filters</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../../"><meta name="groc-document-path" content="public\scripts\filters\display-board-filters"><meta name="groc-project-path" content="public\scripts\filters\display-board-filters.js"><link rel="stylesheet" type="text/css" media="all" href="../../../assets/style.css"><script type="text/javascript" src="../../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">public\scripts\filters\display-board-filters.js</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="hljs-pi">'use strict'</span>;
+
+<span class="hljs-keyword">var</span> titleHierarchy =  [<span class="hljs-string">'GS V'</span>, <span class="hljs-string">'GS IV'</span>, <span class="hljs-string">'GS III'</span>,<span class="hljs-string">'GS II'</span>, <span class="hljs-string">'GS I'</span>, <span class="hljs-string">'SUP'</span>, <span class="hljs-string">'SW'</span>, <span class="hljs-string">'Civilian'</span>];
+<span class="hljs-keyword">var</span> titles =   {
+    <span class="hljs-string">'gsI'</span> : <span class="hljs-string">'GS I'</span>,
+    <span class="hljs-string">'gsII'</span> : <span class="hljs-string">'GS II'</span>,
+    <span class="hljs-string">'gsIII'</span> : <span class="hljs-string">'GS III'</span>,
+    <span class="hljs-string">'sup'</span> : <span class="hljs-string">'SUP'</span>,
+    <span class="hljs-string">'sw'</span> : <span class="hljs-string">'SW'</span>,
+    <span class="hljs-string">'civilian'</span> : <span class="hljs-string">'Civilian'</span>
+};
+
+<span class="hljs-keyword">var</span> sortPersonnelPanel = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(list, filterType, location)</span> </span>{
+    <span class="hljs-keyword">if</span> (!list) <span class="hljs-keyword">return</span> list;
+    <span class="hljs-keyword">if</span> (!filterType) filterType = <span class="hljs-string">'Location Seniority'</span>;
+
+    <span class="hljs-keyword">return</span> list.sort(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(me, that)</span> </span>{
+
+
+        <span class="hljs-keyword">if</span>(filterType === <span class="hljs-string">'Location Seniority'</span> || filterType === <span class="hljs-string">'Location Reverse Seniority'</span>) {
+
+            <span class="hljs-keyword">if</span> (me.homeLocation !== location &amp;&amp; that.homeLocation === location)
+             <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+             <span class="hljs-keyword">if</span> (me.homeLocation === location &amp;&amp; that.homeLocation !== location)
+             <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+
+            <span class="hljs-keyword">if</span> (me.homeLocation &gt; that.homeLocation)
+                <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+            <span class="hljs-keyword">if</span> (me.homeLocation &lt; that.homeLocation)
+                <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+
+            <span class="hljs-keyword">if</span> (me.payrollLocationId &gt; that.payrollLocationId)
+                <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+            <span class="hljs-keyword">if</span> (me.payrollLocationId &lt; that.payrollLocationId)
+                <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+        }
+
+        <span class="hljs-keyword">if</span> (filterType === <span class="hljs-string">'Seniority'</span> || filterType === <span class="hljs-string">'Location Seniority'</span>) {
+
+            <span class="hljs-keyword">if</span>(me.seniorityDate &gt; that.seniorityDate)
+                <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+            <span class="hljs-keyword">if</span>(me.seniorityDate &lt; that.seniorityDate)
+                <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+
+            <span class="hljs-keyword">if</span>(me.listNumber &amp;&amp; !that.listNumber)
+                <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+            <span class="hljs-keyword">if</span>(!me.listNumber &amp;&amp; that.listNumber)
+                <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+
+            <span class="hljs-keyword">if</span>(!me.listNumber &amp;&amp; !that.listNumber)
+                <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+
+            <span class="hljs-keyword">if</span>(<span class="hljs-built_in">Number</span>(me.listNumber.replace(<span class="hljs-regexp">/[^0-9]+/g</span>, <span class="hljs-string">''</span>)) &gt; <span class="hljs-built_in">Number</span>(that.listNumber.replace(<span class="hljs-regexp">/[^0-9]+/g</span>, <span class="hljs-string">''</span>)))
+                <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+            <span class="hljs-keyword">if</span>(<span class="hljs-built_in">Number</span>(me.listNumber.replace(<span class="hljs-regexp">/[^0-9]+/g</span>, <span class="hljs-string">''</span>)) &lt; <span class="hljs-built_in">Number</span>(that.listNumber.replace(<span class="hljs-regexp">/[^0-9]+/g</span>, <span class="hljs-string">''</span>)))
+                <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+
+            <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+        }
+
+        <span class="hljs-keyword">if</span> (filterType === <span class="hljs-string">'Reverse Seniority'</span> || filterType === <span class="hljs-string">'Location Reverse Seniority'</span>) {
+
+
+            <span class="hljs-keyword">if</span>(me.seniorityDate &lt; that.seniorityDate)
+                <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+            <span class="hljs-keyword">if</span>(me.seniorityDate &gt; that.seniorityDate)
+                <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+
+            <span class="hljs-keyword">if</span>(me.listNumber &amp;&amp; !that.listNumber)
+                <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+
+            <span class="hljs-keyword">if</span>(!me.listNumber &amp;&amp; that.listNumber)
+                <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+            <span class="hljs-keyword">if</span>(!me.listNumber &amp;&amp; !that.listNumber)
+                <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+
+            <span class="hljs-keyword">if</span>(<span class="hljs-built_in">Number</span>(me.listNumber.replace(<span class="hljs-regexp">/[^0-9]+/g</span>, <span class="hljs-string">''</span>)) &lt; <span class="hljs-built_in">Number</span>(that.listNumber.replace(<span class="hljs-regexp">/[^0-9]+/g</span>, <span class="hljs-string">''</span>)))
+                <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+            <span class="hljs-keyword">if</span>(<span class="hljs-built_in">Number</span>(me.listNumber.replace(<span class="hljs-regexp">/[^0-9]+/g</span>, <span class="hljs-string">''</span>)) &gt; <span class="hljs-built_in">Number</span>(that.listNumber.replace(<span class="hljs-regexp">/[^0-9]+/g</span>, <span class="hljs-string">''</span>)))
+                <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+
+            <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+        }
+    });
+};
+
+angular.module(<span class="hljs-string">'displayBoardFilters'</span>, [])
+
+    .filter(<span class="hljs-string">'unavailablePersonnel'</span>,<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{
+
+        <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(persons, code)</span></span>{
+            <span class="hljs-keyword">var</span> results = [];
+            <span class="hljs-keyword">var</span> nowloop = <span class="hljs-built_in">Date</span>.now();
+
+            angular.forEach(persons, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(value, key)</span> </span>{
+                nowloop = <span class="hljs-built_in">Date</span>.now();
+                <span class="hljs-keyword">if</span> (value.hasOwnProperty(<span class="hljs-string">'state'</span>) &amp;&amp; ((value.state === <span class="hljs-string">'PartiallyAvailable'</span> || value.state === <span class="hljs-string">'Unavailable'</span>) &amp;&amp; value.activeUnavailabilityReasons[<span class="hljs-number">0</span>]) &amp;&amp; value.activeUnavailabilityReasons[<span class="hljs-number">0</span>].code === code &amp;&amp; nowloop &gt; <span class="hljs-built_in">parseInt</span>(value.activeUnavailabilityReasons[<span class="hljs-number">0</span>].start) &amp;&amp; nowloop &lt; <span class="hljs-built_in">parseInt</span>(value.activeUnavailabilityReasons[<span class="hljs-number">0</span>].end)) {
+                    results[key] = value;
+                }
+            });
+
+            <span class="hljs-keyword">var</span> results = _.uniq(results);
+
+            <span class="hljs-keyword">if</span> (!results || results.length == <span class="hljs-number">0</span>)
+                <span class="hljs-keyword">return</span> results
+
+            <span class="hljs-keyword">var</span> sortedResults = sortPersonnelPanel(results, <span class="hljs-string">'Location Seniority'</span>);
+            <span class="hljs-keyword">return</span> sortedResults;
+        }
+
+    }).filter(<span class="hljs-string">'detachedPersonnel'</span>,<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{
+
+        <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(persons)</span></span>{
+            <span class="hljs-keyword">var</span> results = [];
+
+            angular.forEach(persons, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(value, key)</span> </span>{
+                <span class="hljs-keyword">if</span> (value.hasOwnProperty(<span class="hljs-string">'state'</span>) &amp;&amp; value.state === <span class="hljs-string">'Detached'</span>) {
+                    results[key] = value;
+                }
+            });
+
+            <span class="hljs-keyword">var</span> results = _.uniq(results);
+
+            <span class="hljs-keyword">if</span> (!results || results.length == <span class="hljs-number">0</span>) {
+                <span class="hljs-keyword">return</span> results;
+            }
+
+            <span class="hljs-keyword">return</span> results;
+        }
+
+    }).filter(<span class="hljs-string">'detachedWithinZonePersonnel'</span>,<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{
+        <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(persons)</span></span>{
+            <span class="hljs-keyword">var</span> results = [];
+
+            angular.forEach(persons, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(value, key)</span> </span>{
+                <span class="hljs-keyword">if</span> (value.hasOwnProperty(<span class="hljs-string">'state'</span>) &amp;&amp; value.state === <span class="hljs-string">'Detached'</span>) {
+                    <span class="hljs-keyword">if</span> (value.activeDetachment.from.code.substr(<span class="hljs-number">0</span>,<span class="hljs-number">2</span>) === value.activeDetachment.to.code.substr(<span class="hljs-number">0</span>,<span class="hljs-number">2</span>)) {
+                        results[key] = value;
+                    }
+                }
+            });
+
+            <span class="hljs-keyword">var</span> results = _.uniq(results);
+
+            <span class="hljs-keyword">if</span> (!results || results.length == <span class="hljs-number">0</span>) {
+                <span class="hljs-keyword">return</span> results;
+            }
+
+            <span class="hljs-keyword">return</span> results;
+        }
+
+
+
+    }).filter(<span class="hljs-string">'detachedZoneTasks'</span>,
+
+  <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+      <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(taskContainers, id)</span></span>{
+          <span class="hljs-keyword">var</span> results = [], person = {}, shift = <span class="hljs-string">''</span>, code = <span class="hljs-string">''</span>, departmentType = <span class="hljs-string">''</span>;
+          _.forEach(taskContainers, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(location)</span> </span>{
+              code = location.location.code;
+              _.forEach(location.locationShifts, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(locationShift)</span> </span>{
+                    shift = locationShift.shift.name;
+                  _.forEach(locationShift.shiftCategories, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(shiftCategory)</span> </span>{
+                      _.forEach(shiftCategory.subcategoryTasks, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(subcategoryTask)</span> </span>{
+                          <span class="hljs-keyword">if</span>(<span class="hljs-built_in">parseInt</span>(subcategoryTask.subcategory.id) === <span class="hljs-built_in">parseInt</span>(id)) {
+                              _.forEach(subcategoryTask.tasks, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(task)</span> </span>{
+                                  <span class="hljs-keyword">if</span>(task.assignedPerson1.person) {
+                                      person = task.assignedPerson1.person;
+                                      person.activeDetachment = {};
+                                      person.activeDetachment.shift = shift;
+                                      person.activeDetachment.to = {};
+                                      person.activeDetachment.to.code = code;
+                                      results.push(person);
+                                  } <span class="hljs-keyword">else</span> {
+                                      person = {};
+                                      person.activeDetachment = {};
+                                      person.activeDetachment.shift = shift;
+                                      person.activeDetachment.to = {};
+                                      person.activeDetachment.to.code = code;
+                                      results.push(person);
+                                  }
+                              });
+                          }
+                      });
+                  });
+              });
+          });
+
+          <span class="hljs-keyword">return</span> results;
+      }
+  }).filter(<span class="hljs-string">'detachedOutsideZonePersonnel'</span>,
+
+    <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+        <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(persons)</span></span>{
+            <span class="hljs-keyword">var</span> results = [];
+
+            angular.forEach(persons, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(value, key)</span> </span>{
+                <span class="hljs-keyword">if</span> (value.hasOwnProperty(<span class="hljs-string">'state'</span>) &amp;&amp; value.state === <span class="hljs-string">'Detached'</span>) {
+
+                    <span class="hljs-keyword">if</span> (value.activeDetachment.from.code.substr(<span class="hljs-number">0</span>,<span class="hljs-number">2</span>) !== value.activeDetachment.to.code.substr(<span class="hljs-number">0</span>,<span class="hljs-number">2</span>)) {
+                        results[key] = value;
+                    }
+                }
+            });
+
+            <span class="hljs-keyword">var</span> results = _.uniq(results);
+
+            <span class="hljs-keyword">if</span> (!results || results.length == <span class="hljs-number">0</span>)
+                <span class="hljs-keyword">return</span> results
+
+
+            <span class="hljs-keyword">var</span> sortedResults = sortPersonnelPanel(results, <span class="hljs-string">'Location Seniority'</span>);
+            <span class="hljs-keyword">return</span> sortedResults;
+        }
+    }).filter(<span class="hljs-string">'firstInitial'</span>,
+
+    <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+        <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(input)</span> </span>{
+            <span class="hljs-keyword">if</span>(!input) {
+                <span class="hljs-keyword">return</span> <span class="hljs-string">''</span>;
+            }
+            <span class="hljs-keyword">var</span> initial = input.substring(<span class="hljs-number">0</span>, <span class="hljs-number">1</span>) + <span class="hljs-string">'. '</span>;
+
+            <span class="hljs-keyword">return</span> initial;
+        }
+    }).filter(<span class="hljs-string">'orderByShiftId'</span>,
+
+    <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+        <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(items, reverse)</span> </span>{
+
+            <span class="hljs-keyword">var</span> filtered = [];
+
+            angular.forEach(items, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(item)</span> </span>{
+                filtered.push(item);
+            });
+
+            filtered.sort(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(a, b)</span> </span>{
+                <span class="hljs-keyword">return</span> (a.shift.id &gt; b.shift.id ? <span class="hljs-number">1</span> : -<span class="hljs-number">1</span>);
+            });
+
+            <span class="hljs-keyword">if</span>(reverse) filtered.reverse();
+
+
+            <span class="hljs-keyword">return</span> filtered;
+        };
+    }).filter(<span class="hljs-string">'orderByCategoryId'</span>,
+
+    <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+        <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(items, reverse)</span> </span>{
+
+            <span class="hljs-keyword">var</span> filtered = [];
+
+            angular.forEach(items, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(item)</span> </span>{
+                filtered.push(item);
+            });
+
+            filtered.sort(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(a, b)</span> </span>{
+
+                <span class="hljs-keyword">return</span> (a.category.sequence &gt; b.category.sequence ? <span class="hljs-number">1</span> : -<span class="hljs-number">1</span>);
+            });
+
+            <span class="hljs-keyword">if</span>(reverse) filtered.reverse();
+
+
+            <span class="hljs-keyword">return</span> filtered;
+        };
+    }).filter(<span class="hljs-string">'orderBySubcategorySequence'</span>,
+
+    <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+        <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(items, reverse)</span> </span>{
+
+            <span class="hljs-keyword">var</span> filtered = [];
+
+            angular.forEach(items, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(item)</span> </span>{
+                <span class="hljs-keyword">if</span>(item.subcategory.id !== <span class="hljs-number">263</span> &amp;&amp; item.subcategory.id !== <span class="hljs-number">264</span>) {
+                    filtered.push(item);
+                }
+            });
+
+            filtered.sort(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(a, b)</span> </span>{
+                <span class="hljs-keyword">return</span> (a.subcategory.sequence &gt; b.subcategory.sequence ? <span class="hljs-number">1</span> : -<span class="hljs-number">1</span>);
+            });
+
+            <span class="hljs-keyword">if</span>(reverse) filtered.reverse();
+
+
+            <span class="hljs-keyword">return</span> filtered;
+        };
+    }).filter(<span class="hljs-string">'orderBySection'</span>,
+
+    <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+        <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(items, reverse)</span> </span>{
+
+            <span class="hljs-keyword">var</span> filtered = [];
+
+            angular.forEach(items, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(item)</span> </span>{
+                filtered.push(item);
+            });
+
+            filtered.sort(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(a, b)</span> </span>{
+
+                <span class="hljs-keyword">return</span> (a.sectionName &gt; b.sectionName ? <span class="hljs-number">1</span> : -<span class="hljs-number">1</span>);
+            });
+
+            <span class="hljs-keyword">if</span>(reverse) filtered.reverse();
+
+
+            <span class="hljs-keyword">return</span> filtered;
+        };
+    }).filter(<span class="hljs-string">'orderByTaskId'</span>,
+
+    <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+        <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(items, reverse)</span> </span>{
+
+            <span class="hljs-keyword">var</span> filtered = [];
+
+            angular.forEach(items, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(item)</span> </span>{
+                filtered.push(item);
+            });
+
+            filtered.sort(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(a, b)</span> </span>{
+                <span class="hljs-keyword">return</span> (a.sequence &gt; b.sequence ? <span class="hljs-number">1</span> : -<span class="hljs-number">1</span>);
+            });
+
+            <span class="hljs-keyword">if</span>(reverse) filtered.reverse();
+
+
+            <span class="hljs-keyword">return</span> filtered;
+        };
+    }).filter(<span class="hljs-string">'orderByLocation'</span>,
+
+    <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+        <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(items, reverse)</span> </span>{
+
+            <span class="hljs-keyword">var</span> filtered = [];
+
+            angular.forEach(items, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(item)</span> </span>{
+                filtered.push(item);
+            });
+
+            filtered.sort(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(a, b)</span> </span>{
+                <span class="hljs-keyword">return</span> (a.location.code &gt; b.location.code ? <span class="hljs-number">1</span> : -<span class="hljs-number">1</span>);
+            });
+
+            <span class="hljs-keyword">if</span>(reverse) filtered.reverse();
+
+
+            <span class="hljs-keyword">return</span> filtered;
+        };
+    }).filter(<span class="hljs-string">'orderBySequence'</span>,
+
+  <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+      <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(items)</span> </span>{
+
+          <span class="hljs-keyword">var</span> filtered = [];
+
+          angular.forEach(items, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(item)</span> </span>{
+              filtered.push(item);
+          });
+
+          filtered.sort(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(a, b)</span> </span>{
+              <span class="hljs-keyword">return</span> (a.partialTaskSequence &gt; b.partialTaskSequence ? <span class="hljs-number">1</span> : -<span class="hljs-number">1</span>);
+          });
+
+
+          <span class="hljs-keyword">return</span> filtered;
+      };
+  });</div></div></div></div></body></html>

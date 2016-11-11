@@ -1,0 +1,115 @@
+<!--/* Modal window view for setting a persons unavailability. */-->
+
+<form id="modal" name="modal" class="container-fluid form-horizontal" novalidate="true" centered-modal="false">
+  <!-- novalidate disables HTML5 native validation -->
+  <div th:include="views/modals/fragments/modal-header :: header" th:remove="tag"></div>
+  <div class="modal-body" ng-show="showContent">
+  <div class="text-font-md">
+  	<div class="row">
+      <label class="col-md-3 text-right">Civil Service Title:</label> 
+      <div class="col-md-3 text-left">{{::person.civilServiceTitle}}</div>
+      <label class="col-md-3 text-right">Reference No:</label> 
+      <div class="col-md-3 text-left">{{::person.referenceNum}}</div>
+    </div>
+    <div class="row">
+      <label class="col-md-3 text-right">Address:</label> 
+      <div class="col-md-3 text-left">{{::person.getHomeAddress("full")}}</div>
+      <label class="col-md-3 text-right">Payroll Location:</label>
+      <div class="col-md-3 text-left">{{::person.homeLocation}}</div>
+    </div>
+    <div class="row">
+      <label class="col-md-3 text-right">Home Phone:</label> 
+      <div class="col-md-3 text-left">{{::person.getPhone('home')}}</div>
+      <label class="col-md-3 text-right">Chart Name:</label>
+      <div class="col-md-3 text-left">{{::person.chartName}}</div>
+    </div>
+    <div class="row">
+      <label class="col-md-3 text-right">Emergency Phone:</label> 
+      <div class="col-md-3 text-left">{{::person.getPhone('emergency')}}</div>
+      <label class="col-md-3 text-right">Chart No:</label>
+      <div class="col-md-3 text-left">{{::person.chartNumber}}</div>
+    </div>
+  </div>
+    <div class="new-code">
+      <div class="spacer10"></div>
+      <fieldset class="text-font-sm">
+        <legend>{{::opData.legend}}</legend> 
+	      <div class="row">
+	        <label class="col-md-4 text-right">Unavailable Code<i class="fa fa-asterisk"></i>:</label>
+	        <div class="col-md-6 text-left">
+	          <select ui-select2="unavailableSelect2Options" name="unavailCode" class="form-control" ng-class="{'submitted' : submitted}" ng-model="opData.unavailableCode"
+	            data-placeholder="Select a code..." ng-required="true" ng-disabled="update">
+	            <option value=""></option>
+	            <option ng-repeat="unavailCode in opData.unavailabilityCodeList">{{::unavailCode.code}}</option>
+	          </select>
+	        </div>
+	      </div>
+	      <div class="row">
+	        <label class="col-md-4 text-right">Effective Date<i class="fa fa-asterisk"></i>:</label>
+	        <div class="col-md-6 text-left">
+	          <p class="input-group date-picker">
+	            <input type="text" class="form-control" datepicker-popup="MM/dd/yyyy" ng-model="opData.startDate" is-open="datepickers.startDateOpened" ng-readonly="update" ng-disabled="update"
+	              datepicker-options="detachPersonDateOpts" min-date="{{::$parent.min}}" ng-class="{'submitted' : submitted}" ng-required="true" ng-change="resetEffectiveTime()"/> <span class="input-group-btn">
+	              <button type="button" class="btn btn-default" ng-click="open($event,'startDateOpened')" ng-disabled="update">
+	                <i class="glyphicon glyphicon-calendar"></i>
+	              </button>
+	            </span>
+	          </p>
+	        </div>
+	      </div>
+	      <div class="row modal-time-row-lg">
+	        <label class="col-md-4 text-right">Effective Time<i class="fa fa-asterisk"></i>:</label>
+	        <div class="col-md-3">
+	          <timepicker class="timepicker down" ng-model="opData.startTime" show-meridian="false"></timepicker>
+	        </div>
+	      </div>
+	      <div class="row">
+	        <label class="col-md-4 text-right">End Date:</label>
+	        <div class="col-md-6 text-left">
+	          <p class="input-group date-picker">
+	            <input type="text" class="form-control" datepicker-popup="MM/dd/yyyy" ng-model="opData.endDate" is-open="datepickers.endDateOpened" ng-readonly="update" ng-disabled="update"
+	              datepicker-options="detachPersonDateOpts" ng-required="true" close-text="Close" ng-class="{'submitted' : $parent.isRequired('endDate')}" ng-change="resetEndTime()" /> <span
+	              class="input-group-btn">
+	              <button type="button" class="btn btn-default" ng-click="open($event,'endDateOpened')" ng-disabled="update">
+	                <i class="glyphicon glyphicon-calendar"></i>
+	              </button>
+	            </span>
+	          </p>
+	        </div>
+	      </div>
+	      <div class="row modal-time-row-lg">
+	        <label class="col-md-4 text-right">End Time<i class="fa fa-asterisk"></i>:</label>
+	        <div class="col-md-3">
+	          <timepicker class="timepicker down" ng-model="opData.endTime" show-meridian="false"></timepicker>
+	        </div>
+	      </div>
+	      <div class="row">
+	        <label class="col-md-4 text-right">Remarks:</label>
+	        <div class="col-md-6 text-left">
+	          <input type="text" id="remarks" name="remarks" class="form-control" ng-model="opData.remarks" ng-maxlength="{{::remarksMaxLength}}" maxlength="{{::remarksMaxLength}}" />
+	        </div>
+	      </div>
+	    </fieldset>
+	    <div class="reason" ng-show="update">
+      	<div class="spacer10"></div>
+		    <fieldset>
+	        <legend>Reason for change</legend> 
+		      <div class="row">
+	          <div class="col-md-6 text-left">
+		          <input type="text" id="reasonForChange" name="reasonForChange" class="form-control" ng-model="opData.reasonForChange" ng-maxlength="{{::remarksMaxLength}}" maxlength="{{::remarksMaxLength}}" ng-required="true"/>
+		        </div>
+		      </div>
+		    </fieldset>
+		  </div>
+	  	<div class="row">
+        	<div th:include="views/modals/fragments/modal-client-errors :: client-errors" th:remove="tag"></div>
+        </div>
+        <div class="row">
+      		<div th:include="views/modals/fragments/modal-server-errors :: server-errors" th:remove="tag"></div>
+      	</div>
+	  </div>
+  </div>
+  <div th:include="views/modals/fragments/modal-footer :: footer" th:remove="tag"></div>
+   <div th:include="views/modals/fragments/modal-exceptions :: exceptions" th:remove="tag"></div>
+  <div th:include="views/modals/fragments/modal-processing :: processing" th:remove="tag"></div>
+</form>

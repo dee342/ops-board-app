@@ -1,0 +1,69 @@
+body, #mainWrapper {
+	height: 70%;
+	background-color:rgb(245, 245, 245);
+}
+
+body, .form-control{
+	font-size:12px!important;
+}
+
+.floatRight{
+	float:right;
+	margin-right: 18px;
+}
+
+.has-error{
+	color:red;
+}
+
+.formcontainer{
+	background-color: #DAE8E8;
+	padding: 20px;
+}
+
+.tablecontainer{
+	padding-left: 20px;
+}
+
+.fixed-headers {
+	width: 100%;
+	table-layout: fixed;
+  	border-collapse: collapse;	
+}
+
+table thead tr {
+	display: block;
+    position: relative;
+}
+
+table tbody {
+	display: block;
+    overflow: auto;
+    width: 100%;
+    height: 250px;
+}
+
+td:nth-child(1), th:nth-child(1) { width: 4% }
+td:nth-child(2), th:nth-child(2) { width: 6%; }
+td:nth-child(3), th:nth-child(3) { width: 6%; }
+td:nth-child(4), th:nth-child(4) { width: 7%; }
+td:nth-child(5), th:nth-child(5) { width: 7%; }
+td:nth-child(6), th:nth-child(6) { width: 7%; }
+td:nth-child(7), th:nth-child(7) { width: 8%; }
+td:nth-child(8), th:nth-child(8) { width: 8%; }
+
+.generic-container {
+  width:80%;
+  margin-left: 20px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  padding: 20px;
+  background-color: #EAE7E7;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 0 30px black;
+}
+
+.custom-width {
+    width: 80px !important;
+}

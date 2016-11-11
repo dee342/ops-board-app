@@ -1,0 +1,325 @@
+// Allow mousewheel but remove scroll bar
+
+::-webkit-scrollbar { 
+	display: none; 
+}
+
+@app-background: #1d1e23;
+@app-color: #fff;
+@link-hover-color: #2a6496;
+@dropdown-select-background: #74c40d;
+@dropdown-select-color: #000;
+@dropdown-menu-background: #32353c;
+@dropdown-menu-item-hover-background: #5e5f63;
+@semibold: 600;
+@regular: 400;
+@light: 300;
+@dropdown-menu-text-color: #cccccc;
+
+
+@font-face {
+  font-family: 'Open Sans';
+  src: url('../../fonts/opensans-extrabold-webfont.eot');
+  src: url('../../fonts/opensans-extrabold-webfont.eot?#iefix') format('embedded-opentype'),
+    url('../../fonts/opensans-extrabold-webfont.woff') format('woff'),
+    url('../../fonts/opensans-extrabold-webfont.ttf') format('truetype'),
+    url('../../fonts/opensans-extrabold-webfont.svg#open_sansextrabold') format('svg');
+  font-weight: 800;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Open Sans';
+  src: url('../../fonts/opensans-regular-webfont.eot');
+  src: url('../../fonts/opensans-regular-webfont.eot?#iefix') format('embedded-opentype'),
+    url('../../fonts/opensans-regular-webfont.woff') format('woff'),
+    url('../../fonts/opensans-regular-webfont.ttf') format('truetype'),
+    url('../../fonts/opensans-regular-webfont.svg#open_sansregular') format('svg');
+  font-weight: 400;
+  font-style: normal;
+
+}
+
+body {
+  overflow-y: scroll;
+  height: 101%;
+}
+
+html, body {
+  background-color: #000;
+  color: @app-color;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 12px;
+  margin: 0;
+  overflow: hidden;
+  padding: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+	font-family: 'Open Sans', sans-serif;
+	font-weight: 400;
+}
+
+h1 {
+  font-size: 36px;
+  font-weight: 800;
+}
+
+h2 {
+  font-size: 30px;
+}
+
+h3 {
+  font-size: 24px;
+}
+
+h4 {
+  font-size: 20px;
+}
+
+h5 {
+  font-size: 18px;
+}
+
+h6 {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.pointer {
+  cursor: pointer;
+}
+
+
+// Bootstrap overrides 
+.badge {
+	font-size: 12px;
+	font-weight: 600;
+	padding: 2px 5px;
+}
+.pagination {
+	margin: 5px 0 0 5px;
+}
+.pagination>li:last-child>a, .pagination>li:first-child>a {
+	background-color: #1d1e23;
+	color: #ffffff;
+	border-color: #424348;
+}
+.pagination>li>a {
+	background-color: #000000;
+	color: #ffffff;
+	border-color: #424348;
+}
+.pagination>li.disabled>a, .pagination>.disabled>a:hover, .pagination>.disabled>a:focus, 
+.pagination>li.disabled:last-child>a, .pagination>.disabled:last-child>a:hover, .pagination>.disabled>a:focus,
+.pagination>li.disabled:first-child>a, .pagination>.disabled:first-child>a:hover, .pagination>.disabled:first-child>a:focus{
+	color: #9a9898 ;
+	background-color: #1d1e23;
+	border-color: #424348;
+}
+.pagination>.active>a:hover, .pagination>.active>a, .pagination>.active>a:focus {
+	z-index: 1;
+	background-color: #74c40d;
+	color: #1d1e23;
+	border-color: #424348;
+}
+
+.pagination>li>a:hover, .pagination>li>a:focus {
+	color: #74c40d;
+	border-color: #424348;
+	background-color: #000000;
+}
+.pagination>li:last-child>a:hover, .pagination>li:first-child>a:hover, .pagination>li:last-child>a:focus, .pagination>li:first-child>a:focus {
+	background-color: #424348;
+	color: #ffffff;
+	border-color: #424348;
+}
+
+.header .col-md-9 h4 {
+	margin-left: 25%;
+}
+
+.fa-lg {
+  cursor: pointer;
+}
+
+.no-padding {
+	padding: 0 !important;
+}
+
+.dropdown {
+	display: inline-block;
+	& > .dropdown-toggle {
+		&.btn-success {
+			background-color: @dropdown-select-background;
+			border-color: @dropdown-select-background;
+			color: @dropdown-select-color;
+			font-weight: @regular;
+		}
+	}
+	& > .btn-success {
+		background-color: @dropdown-select-background;
+		border-color: @dropdown-select-background;
+		color: @dropdown-select-color;
+		font-weight: @regular;
+		&.left {
+			border-radius: 4px 0 0 4px;
+		}
+		&.right {
+			border-radius: 0 4px 4px 0;
+			margin-left: -2px;
+		}
+	} 
+	& > .dropdown-menu {
+			background-color: @dropdown-menu-background;
+			font-size: 12px;
+			font-weight: @semibold;
+			color: @dropdown-menu-text-color;
+			margin: 0 0 0 -1px;
+			min-width: initial;
+			left: 0;
+			white-space: nowrap;
+		&.right-aligned {
+			left: initial;
+			margin: 0 -1px 0 0;
+			right: 0;
+			text-align: left;
+		}
+		& > li {
+			padding: 0 10px;
+			& > a {
+				clear: right;
+				&:hover {
+					background-color: @dropdown-menu-item-hover-background;
+					font-weight: @semibold;
+					color: #ffffff;
+				}
+				&:focus {
+					background-color: transparent;
+				}
+			}
+			&:hover {
+				background-color: @dropdown-menu-item-hover-background;
+				font-weight: @semibold;
+				color: #ffffff;
+			}
+		}
+		
+	}
+}
+
+.open {
+   .dropdown-menu{
+   		background-color: @dropdown-menu-background;
+		font-weight: @semibold;
+		margin: 0 0 0 -1px;
+		min-width: initial;
+		left: 0;
+		white-space: nowrap;
+   		&>li {
+			padding: 0;
+			&>a {
+				display: inline-block;
+				width: 165px;
+				font-size: 13px;
+				color: @dropdown-menu-text-color;
+				clear: right;
+				&:hover {
+					background-color: @dropdown-menu-item-hover-background;
+					font-weight: @semibold;
+					color: #ffffff;
+				}
+			}
+			
+		}
+   }
+   &.btn-group-xs{
+	   	.dropdown-menu{
+	   		li {
+	   			padding: 0 10px;
+	   		}
+	   	}
+   }
+}
+
+.actioncol {
+  width: 78px;
+}
+
+.editcol {
+  width: 78px;
+  white-space: nowrap;
+  text-align: center;
+  & .fa-pencil {
+	font-weight: normal;
+	margin-left: 0px;
+  }
+
+  & .fa-trash-o {
+	font-weight: normal;
+	margin-right: 4px;
+  }
+}
+
+.clickable {
+  cursor: pointer;
+}  
+  
+.editcolunavail {
+  width: 78px;
+  white-space: nowrap;
+  text-align: center;
+  & .fa-pencil {
+	font-weight: normal;
+	margin-left: 0px;
+  }
+  & .fa-ban {
+	font-weight: normal;
+	margin-left: 0px;
+  }
+  & .fa-trash-o {
+	font-weight: normal;
+	margin-right: 4px;
+  }
+}
+
+.scrollerpadding {
+  padding: 10px 21px 10px 10px;
+}
+
+
+.scrollerpaddingtasks {
+  padding: 10px 21px 10px 5px;
+}
+
+span.personnelIcon {
+  cursor: pointer;
+  font-weight: normal;
+  margin: 0px 2px;
+}
+
+span.personnelIcon2 {
+  cursor: pointer;
+  font-weight: normal;
+  margin: 0px 4px;
+}
+span.red,
+.text-danger {
+   color: #ff0000;
+   margin-left: 0px;
+   margin-right: 3px;
+}
+.callout {
+	padding-left: 10px;
+	margin: 4px 0 0 10px;
+	position: relative;
+	&:after {
+		content: '';
+		background-color: #666;
+		width: 2px;
+		height: 82%;
+		position: absolute;
+		top: 5px;
+		left: 0;
+	}
+}

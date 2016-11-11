@@ -1,0 +1,96 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-spring4-4.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<title>SMART Operations Board</title>
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+	<link rel="stylesheet" type="text/css" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/font-awesome.min.css')}}" />
+	<link rel="stylesheet" type="text/css" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/less/fonts.less')}}" />
+	<style>
+		body {
+			background-color: #000;
+			font: 18px 'Open Sans', sans-serif;
+			margin: 0;
+			padding: 0;
+		}
+		h2,
+		h3,
+		h4,
+		h5,
+		h6,
+		p {
+			color: #ffe400;
+			font-weight: 400;
+		}
+		a {
+			color: #fff;
+			display: inline-block;
+			text-decoration: none;
+			margin-top: 12px;
+		}
+		a:hover {
+			color: #0dddff;
+		}
+		a i {
+			margin-right: 6px;
+		}
+		.container {
+			width: 80%;
+			padding: 20px;
+			margin: 40px auto 0 auto;
+		}
+		.container .lead {
+			font-size: 38px;
+			color: #ffe400;
+			position: relative;
+			left: -7px;
+			margin-bottom: 22px;
+		}
+		.container .lead i {
+			font-size: 58px;
+			position: absolute;
+			top: -4px;
+			left: -76px;
+		}
+	</style>
+</head>
+<body>
+
+	<div class="container">
+		<p class="lead">
+			<i class="fa fa-warning fa-2x"></i>
+			The page cannot be displayed
+		</p>
+		
+		<p>
+			<h4 class="err-msg">Cause Unknown</h4>
+			<h5 class="err-date">(no exception details available)</h5>
+		</p>
+		
+	
+		<a href="javascript:window.history.back()">			
+			 <i class="fa fa-angle-double-left"></i>
+			 Go back to the previous page
+		</a>
+	</div>
+	
+	<script th:inline="javascript">
+		var errorData = localStorage.getItem('errorData'),
+			serverMessage = [[${message}]];
+		if (errorData) {
+			errorData = JSON.parse(errorData);
+			if (errorData.message) document.querySelector('.err-msg').innerText = errorData.message;
+			if (errorData.date) document.querySelector('.err-date').innerText = errorData.date;
+			localStorage.removeItem('errorData');
+		} else if (serverMessage) {
+			if(serverMessage == 'The value you entered is not valid!' || serverMessage == 'Access is denied' || serverMessage == 'No message available') {
+				document.querySelector('.err-msg').innerText = 'You don\'t have permission to access this page.'
+			} else {
+				document.querySelector('.err-msg').innerText = serverMessage;
+			}			
+			document.querySelector('.err-date').innerText = '';
+		}
+	</script>
+</body>
+</html>

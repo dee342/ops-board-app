@@ -1,0 +1,126 @@
+<!DOCTYPE html><html lang="en"><head><title>public\scripts\controllers\modal-controller</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../../"><meta name="groc-document-path" content="public\scripts\controllers\modal-controller"><meta name="groc-project-path" content="public\scripts\controllers\modal-controller.js"><link rel="stylesheet" type="text/css" media="all" href="../../../assets/style.css"><script type="text/javascript" src="../../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">public\scripts\controllers\modal-controller.js</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="hljs-pi">'use strict'</span>;
+
+angular.module(<span class="hljs-string">'OpsBoard'</span>)
+  .controller(<span class="hljs-string">'ModalCtrl'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($scope, $modalInstance, $resource, data, $timeout, OpsBoardRepository)</span> </span>{
+
+    $scope.data = data;
+    $scope.selected = {
+      item: $scope.data[<span class="hljs-number">0</span>]
+    };
+
+    <span class="hljs-keyword">if</span> ($scope.passPreValidation()) {</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Display content</p></div></div><div class="code"><div class="wrapper">      $scope.showContent = <span class="hljs-literal">true</span>;
+      $scope.showProcessing = <span class="hljs-literal">false</span>;
+      $scope.showError = <span class="hljs-literal">false</span>;
+    } <span class="hljs-keyword">else</span> {</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Display error</p></div></div><div class="code"><div class="wrapper">      $scope.showContent = <span class="hljs-literal">false</span>;
+      $scope.showProcessing = <span class="hljs-literal">false</span>;
+      $scope.showError = <span class="hljs-literal">true</span>;
+    }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Ok button selected</p></div></div><div class="code"><div class="wrapper">    $scope.ok = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+
+      $scope.showContent = <span class="hljs-literal">false</span>;
+      $scope.showProcessing = <span class="hljs-literal">true</span>;
+      $scope.showError = <span class="hljs-literal">false</span>;
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"the shift has been selected"</span>, $scope.selected.item);
+
+      $scope.operation(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(success)</span> </span>{
+        $modalInstance.close($scope.selected.item);
+      }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span> </span>{
+        <span class="hljs-comment">//client side error handle</span>
+        <span class="hljs-keyword">if</span> (error <span class="hljs-keyword">instanceof</span> <span class="hljs-built_in">Error</span> &amp;&amp; error.name === <span class="hljs-string">'ClientSideError'</span>) {
+          $scope.showProcessing = <span class="hljs-literal">false</span>;
+          $scope.showContent = <span class="hljs-literal">true</span>;
+          <span class="hljs-keyword">return</span>;
+        }
+
+        $scope.opData.errors = [];
+        <span class="hljs-comment">//server side error handle</span>
+        <span class="hljs-keyword">if</span> (error.data &amp;&amp; error.data.code === <span class="hljs-number">3901</span>) {
+          <span class="hljs-comment">//server side validation error</span>
+          $scope.showProcessing = <span class="hljs-literal">false</span>;    
+          $scope.showContent = <span class="hljs-literal">true</span>;  
+          <span class="hljs-keyword">if</span> (error.data.extendedMessages) {
+            <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; error.data.extendedMessages.length; i++) {
+              $scope.opData.serverErrors[i] = {
+                message: error.data.extendedMessages[i]
+              }
+            }
+          } <span class="hljs-keyword">else</span> {
+            $scope.opData.serverErrors = {
+              message: <span class="hljs-string">'Generic Server Error'</span>
+            }
+          }
+          <span class="hljs-keyword">return</span>;
+        }
+
+        $scope.showContent = <span class="hljs-literal">false</span>;
+        $scope.showProcessing = <span class="hljs-literal">false</span>;
+
+        <span class="hljs-keyword">if</span> (error.status == <span class="hljs-number">412</span> || error.status == <span class="hljs-number">409</span>) {
+          $scope.opData.errors.push({
+            type: <span class="hljs-string">'danger'</span>,
+            message: error.data
+          });
+        } <span class="hljs-keyword">else</span> {
+          $scope.opData.errors.push({
+            type: <span class="hljs-string">'danger'</span>,
+            message: OpsBoardRepository.getErrorMessage(error.data)
+          });
+        }
+        <span class="hljs-built_in">console</span>.log(error)
+      });</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>keeping for backward compatibility</p></div></div><div class="code"><div class="wrapper">      <span class="hljs-comment">//$scope.showProcessing = false;		</span>
+      <span class="hljs-comment">//$scope.showContent = true;	</span>
+    };</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Cancel button selected</p></div></div><div class="code"><div class="wrapper">    $scope.cancel = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(fromUpdate)</span> </span>{
+    	<span class="hljs-keyword">if</span>(fromUpdate)
+    		{
+    		$scope.cancelOperation(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(success)</span> </span>{
+    	        $modalInstance.close($scope.selected.item);
+    	      }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span> </span>{
+    	        <span class="hljs-comment">//client side error handle</span>
+    	        <span class="hljs-keyword">if</span> (error <span class="hljs-keyword">instanceof</span> <span class="hljs-built_in">Error</span> &amp;&amp; error.name === <span class="hljs-string">'ClientSideError'</span>) {
+    	          $scope.showProcessing = <span class="hljs-literal">false</span>;
+    	          $scope.showContent = <span class="hljs-literal">true</span>;
+    	          <span class="hljs-keyword">return</span>;
+    	        }
+    	        <span class="hljs-built_in">console</span>.log(error)
+    	      });
+    		}
+    	<span class="hljs-keyword">else</span> $modalInstance.dismiss(<span class="hljs-string">'cancel'</span>);
+      };</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Exit button selected</p></div></div><div class="code"><div class="wrapper">    $scope.exit = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+      $modalInstance.dismiss(<span class="hljs-string">'cancel'</span>);
+    };
+    </div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Remove button selected</p></div></div><div class="code"><div class="wrapper">    $scope.remove = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+
+        $scope.showContent = <span class="hljs-literal">false</span>;
+        $scope.showProcessing = <span class="hljs-literal">true</span>;
+
+        $scope.removeOperation(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(success)</span> </span>{
+          $modalInstance.close($scope.selected.item);
+        }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span> </span>{
+          <span class="hljs-comment">//client side error handle</span>
+          <span class="hljs-keyword">if</span> (error <span class="hljs-keyword">instanceof</span> <span class="hljs-built_in">Error</span> &amp;&amp; error.name === <span class="hljs-string">'ClientSideError'</span>) {
+            $scope.showProcessing = <span class="hljs-literal">false</span>;
+            $scope.showContent = <span class="hljs-literal">true</span>;
+            <span class="hljs-keyword">return</span>;
+          }
+
+          <span class="hljs-comment">//server side error handle</span>
+          $scope.opData.errors = [];
+
+          $scope.showContent = <span class="hljs-literal">false</span>;
+          $scope.showProcessing = <span class="hljs-literal">false</span>;
+          $scope.showError = <span class="hljs-literal">true</span>;
+
+          <span class="hljs-keyword">if</span> (error.status == <span class="hljs-number">412</span> || error.status == <span class="hljs-number">409</span>) {
+            $scope.opData.errors.push({
+              type: <span class="hljs-string">'danger'</span>,
+              message: error.data
+            });
+          } <span class="hljs-keyword">else</span> {
+            $scope.opData.errors.push({
+              type: <span class="hljs-string">'danger'</span>,
+              message: OpsBoardRepository.getErrorMessage(error.data)
+            });
+          }
+          <span class="hljs-built_in">console</span>.log(error)
+        });
+      };
+  });</div></div></div></div></body></html>

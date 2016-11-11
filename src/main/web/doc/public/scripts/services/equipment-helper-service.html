@@ -1,0 +1,358 @@
+<!DOCTYPE html><html lang="en"><head><title>public\scripts\services\equipment-helper-service</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../../"><meta name="groc-document-path" content="public\scripts\services\equipment-helper-service"><meta name="groc-project-path" content="public\scripts\services\equipment-helper-service.js"><link rel="stylesheet" type="text/css" media="all" href="../../../assets/style.css"><script type="text/javascript" src="../../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">public\scripts\services\equipment-helper-service.js</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="hljs-pi">'use strict'</span>;</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>This file contains all the logic for working with Equipment, including
+creating commands, processing server commands, formatting and manipulating
+task data.</p></div></div><div class="code"><div class="wrapper">angular
+    .module(<span class="hljs-string">'OpsBoard'</span>)
+    .service(
+        <span class="hljs-string">'EquipmentHelperService'</span>,
+        <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+          
+          <span class="hljs-keyword">var</span> _processGeneralEquipmentCommand = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment, command)</span> </span>{
+            <span class="hljs-keyword">var</span> e = equipment[command.commandContent.equipmentId];
+            <span class="hljs-keyword">if</span> (e != <span class="hljs-literal">null</span>) {
+              e.assigned = command.commandContent.assigned;
+              e.state = command.commandContent.state;          
+            }
+            
+            <span class="hljs-keyword">return</span> e;
+          }
+
+          <span class="hljs-keyword">return</span> {
+            </div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Section - Perform synchronous operations on server - Start </p></div></div><div class="code"><div class="wrapper">            
+            acceptAttachEquipmentOnServer : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($resource, pieceOfEquipment, receivedBy, receivedDate,
+                receivedTime, remarks, boardData, successFn, errorFn)</span> </span>{
+
+              <span class="hljs-keyword">var</span> datetime = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(receivedDate.slice(<span class="hljs-number">6</span>, <span class="hljs-number">10</span>), receivedDate.slice(<span class="hljs-number">0</span>, <span class="hljs-number">2</span>) - <span class="hljs-number">1</span>,
+                  receivedDate.slice(<span class="hljs-number">3</span>, <span class="hljs-number">5</span>), receivedTime.slice(<span class="hljs-number">0</span>, <span class="hljs-number">2</span>), receivedTime.slice(<span class="hljs-number">3</span>, <span class="hljs-number">5</span>));
+
+              <span class="hljs-built_in">console</span>.log(boardData.pathStart + <span class="hljs-string">'/AttachEquipment/:district/:date?receivedBy='</span> + receivedBy
+                  + <span class="hljs-string">'&amp;receivedDatetime='</span> + datetime + <span class="hljs-string">'&amp;remarks='</span> + remarks);
+
+              <span class="hljs-keyword">var</span> resource = $resource(boardData.pathStart
+                  + <span class="hljs-string">'/AttachEquipment/:district/:date/:equipmentId?&amp;receivedBy='</span> + <span class="hljs-built_in">encodeURIComponent</span>(receivedBy)
+                  + <span class="hljs-string">'&amp;receivedDatetime='</span> + <span class="hljs-built_in">encodeURIComponent</span>(datetime) + <span class="hljs-string">'&amp;remarks='</span> + <span class="hljs-built_in">encodeURIComponent</span>(remarks), {
+                district : boardData.boardLocation,
+                date : boardData.boardDate,
+                equipmentId : pieceOfEquipment.id
+              });
+
+              <span class="hljs-keyword">var</span> response = resource.get({
+                district : boardData.boardLocation,
+                date : boardData.boardDate,
+                equipmentId : pieceOfEquipment.id
+              }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span> </span>{
+                <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'success with AttachEquipment, got data: '</span>, data);
+                successFn(data);
+              }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span> </span>{
+                errorFn(error);
+              });
+            },
+
+            cancelEquipmentDetachmentOnServer : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($resource, pieceOfEquipment, boardData, successFn, errorFn)</span> </span>{
+
+              <span class="hljs-keyword">var</span> equipmentId = pieceOfEquipment.id;
+
+              <span class="hljs-built_in">console</span>.log(boardData.pathStart + <span class="hljs-string">'/CancelEquipmentDetachment/:district/:date/:equipmentId'</span>);
+
+              <span class="hljs-keyword">var</span> resource = $resource(boardData.pathStart + <span class="hljs-string">'/CancelEquipmentDetachment/:district/:date/:equipmentId'</span>,
+                  {
+                    district : boardData.boardLocation,
+                    date : boardData.boardDate
+                  });
+
+              <span class="hljs-keyword">var</span> response = resource.get({
+                district : boardData.boardLocation,
+                date : boardData.boardDate,
+                equipmentId : equipmentId
+              }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span> </span>{
+                <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'success, got data: '</span>, data);
+                successFn(data);
+              }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span> </span>{
+                errorFn(error);
+              });
+            },
+
+            detachEquipmentOnServer : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($resource, pieceOfEquipment, to, time, driver, boardData, successFn,
+                errorFn)</span> </span>{
+
+              <span class="hljs-keyword">var</span> datetime = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(boardData.boardDate.slice(<span class="hljs-number">0</span>, <span class="hljs-number">4</span>), boardData.boardDate.slice(<span class="hljs-number">4</span>, <span class="hljs-number">6</span>) - <span class="hljs-number">1</span>,
+                  boardData.boardDate.slice(<span class="hljs-number">6</span>, <span class="hljs-number">8</span>), time.slice(<span class="hljs-number">0</span>, <span class="hljs-number">2</span>), time.slice(<span class="hljs-number">3</span>, <span class="hljs-number">5</span>));
+
+              <span class="hljs-built_in">console</span>.log(boardData.pathStart + <span class="hljs-string">'/DetachEquipment/:district/:date?from='</span> + boardData.boardLocation
+                  + <span class="hljs-string">'&amp;to='</span> + to + <span class="hljs-string">'&amp;equipmentId='</span> + pieceOfEquipment.id + <span class="hljs-string">'&amp;datetime='</span> + datetime + <span class="hljs-string">'&amp;d='</span> + driver);
+
+              <span class="hljs-keyword">var</span> resource = $resource(boardData.pathStart + <span class="hljs-string">'/DetachEquipment/:district/:date?from='</span>
+                  + <span class="hljs-built_in">encodeURIComponent</span>(boardData.boardLocation) + <span class="hljs-string">'&amp;to='</span> + <span class="hljs-built_in">encodeURIComponent</span>(to) + <span class="hljs-string">'&amp;equipmentId='</span>
+                  + <span class="hljs-built_in">encodeURIComponent</span>(pieceOfEquipment.id) + <span class="hljs-string">'&amp;datetime='</span> + <span class="hljs-built_in">encodeURIComponent</span>(datetime) + <span class="hljs-string">'&amp;driver='</span>
+                  + <span class="hljs-built_in">encodeURIComponent</span>(driver), {
+                district : <span class="hljs-literal">null</span>,
+                date : <span class="hljs-literal">null</span>
+              });
+
+              <span class="hljs-keyword">var</span> response = resource.get({
+                district : boardData.boardLocation,
+                date : boardData.boardDate
+              }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span> </span>{
+                <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'success with DetachEquipment, got data: '</span>, data);
+                successFn(data);
+              }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span> </span>{
+                errorFn(error);
+              });
+            },
+
+            downEquipmentOnServer : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($resource, pieceOfEquipment, downData, boardData, successFn, errorFn)</span> </span>{
+              <span class="hljs-keyword">var</span> equipmentId = pieceOfEquipment.id;
+
+              <span class="hljs-built_in">console</span>.log(boardData.pathStart + <span class="hljs-string">'/DownEquipment/:district/:date/:equipmentId'</span>);
+
+              <span class="hljs-keyword">var</span> resource = $resource(boardData.pathStart + <span class="hljs-string">'/DownEquipment/:district/:date/:equipmentId'</span>, {
+                district : boardData.boardLocation,
+                date : boardData.boardDate,
+                equipmentId : equipmentId
+              }, {
+                save : {
+                  method : <span class="hljs-string">'POST'</span>,
+                  headers : {
+                    <span class="hljs-string">'Content-Type'</span> : <span class="hljs-string">'application/json'</span>
+                  }
+                }
+              });
+
+              <span class="hljs-keyword">var</span> datetime1 = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(downData.dt1.slice(<span class="hljs-number">6</span>, <span class="hljs-number">10</span>), downData.dt1.slice(<span class="hljs-number">0</span>, <span class="hljs-number">2</span>) - <span class="hljs-number">1</span>, downData.dt1
+                  .slice(<span class="hljs-number">3</span>, <span class="hljs-number">5</span>), downData.time1.slice(<span class="hljs-number">0</span>, <span class="hljs-number">2</span>), downData.time1.slice(<span class="hljs-number">3</span>, <span class="hljs-number">5</span>));
+
+              <span class="hljs-keyword">try</span> {
+                <span class="hljs-keyword">var</span> datetime2 = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(downData.dt2.slice(<span class="hljs-number">6</span>, <span class="hljs-number">10</span>), downData.dt2.slice(<span class="hljs-number">0</span>, <span class="hljs-number">2</span>) - <span class="hljs-number">1</span>, downData.dt2.slice(<span class="hljs-number">3</span>,
+                    <span class="hljs-number">5</span>), downData.time2.slice(<span class="hljs-number">0</span>, <span class="hljs-number">2</span>), downData.time2.slice(<span class="hljs-number">3</span>, <span class="hljs-number">5</span>));
+              } <span class="hljs-keyword">catch</span> (err) {
+                datetime2 = <span class="hljs-literal">null</span>;
+              }
+
+              <span class="hljs-keyword">try</span> {
+                <span class="hljs-keyword">var</span> datetime3 = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(downData.dt3.slice(<span class="hljs-number">6</span>, <span class="hljs-number">10</span>), downData.dt3.slice(<span class="hljs-number">0</span>, <span class="hljs-number">2</span>) - <span class="hljs-number">1</span>, downData.dt3.slice(<span class="hljs-number">3</span>,
+                    <span class="hljs-number">5</span>), downData.time3.slice(<span class="hljs-number">0</span>, <span class="hljs-number">2</span>), downData.time3.slice(<span class="hljs-number">3</span>, <span class="hljs-number">5</span>));
+
+              } <span class="hljs-keyword">catch</span> (err) {
+                datetime3 = <span class="hljs-literal">null</span>;
+              }
+
+              <span class="hljs-keyword">var</span> records = [ {
+                actualUser : downData.reporter1,
+                lastModifiedActual : datetime1,
+                comments : downData.remarks1,
+                downCode : downData.selectedDownCode1,
+                mechanic : downData.mechanic1,
+                repairLocation : downData.selectedRepairLocation1
+              }, {
+                actualUser : downData.reporter2,
+                lastModifiedActual : datetime2,
+                comments : downData.remarks2,
+                downCode : downData.selectedDownCode2,
+                mechanic : downData.mechanic2,
+                repairLocation : downData.selectedRepairLocation2
+              }, {
+                actualUser : downData.reporter3,
+                lastModifiedActual : datetime3,
+                comments : downData.remarks3,
+                downCode : downData.selectedDownCode3,
+                mechanic : downData.mechanic3,
+                repairLocation : downData.selectedRepairLocation3
+              } ];
+
+              <span class="hljs-keyword">var</span> response = resource.save(<span class="hljs-built_in">JSON</span>.stringify(records), <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span> </span>{
+                <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'success, got data: '</span>, data);
+                successFn(data);
+              }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span> </span>{
+                errorFn(error);
+              });
+            },
+
+            updateEquipmentLoadStatusOnServer : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($resource, pieceOfEquipment, loadData, boardData, successFn,
+                errorFn)</span> </span>{
+
+              <span class="hljs-keyword">var</span> equipmentId = pieceOfEquipment.id;
+
+              <span class="hljs-built_in">console</span>.log(boardData.pathStart + <span class="hljs-string">'/UpdateEquipmentLoad/:district/:date/:equipmentId'</span>);
+
+              <span class="hljs-keyword">var</span> resource = $resource(boardData.pathStart + <span class="hljs-string">'/UpdateEquipmentLoad/:district/:date/:equipmentId'</span>, {
+                district : boardData.boardLocation,
+                date : boardData.boardDate,
+                equipmentId : equipmentId
+              }, {
+                save : {
+                  method : <span class="hljs-string">'POST'</span>,
+                  headers : {
+                    <span class="hljs-string">'Content-Type'</span> : <span class="hljs-string">'application/json'</span>
+                  }
+                }
+              });
+
+              <span class="hljs-keyword">var</span> bin1Status, bin1Material, bin2Status, bin2Material;
+              <span class="hljs-keyword">var</span> records = [];
+
+              <span class="hljs-keyword">if</span> (loadData &amp;&amp; loadData.length &gt; <span class="hljs-number">0</span>) {
+                <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; loadData.length; i++) {
+                  <span class="hljs-keyword">var</span> bin = loadData[i];
+                  <span class="hljs-keyword">if</span> (bin.name === <span class="hljs-string">"BIN 1"</span>) {
+                    bin1Status = bin.status;
+                    bin1Material = <span class="hljs-built_in">Number</span>(bin.uniqueId);
+                    records.push({
+                      name : bin.name,
+                      status : bin1Status,
+                      materialId : bin1Material,
+                      lastModifiedActual : bin.lastModifiedActual,
+                      systemUser : pieceOfEquipment.bins[<span class="hljs-number">0</span>].systemUser
+                    });
+                  } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (bin.name === <span class="hljs-string">"BIN 2"</span>) {
+                    bin2Status = bin.status;
+                    bin2Material = <span class="hljs-built_in">Number</span>(bin.uniqueId);
+                    records.push({
+                      name : bin.name,
+                      status : bin2Status,
+                      materialId : bin2Material,
+                      lastModifiedActual : bin.lastModifiedActual,
+                      systemUser : pieceOfEquipment.bins[<span class="hljs-number">1</span>].systemUser
+                    });
+                  }
+                }
+              }
+
+              <span class="hljs-keyword">var</span> response = resource.save(<span class="hljs-built_in">JSON</span>.stringify(records), <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span> </span>{
+                <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'success, got data: '</span>, data);
+                successFn(data);
+              }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span> </span>{
+                errorFn(error);
+              });
+            },
+
+            updateSnowEquipmentOnServer : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($resource, pieceOfEquipment, snowData, boardData, successFn, errorFn)</span> </span>{
+              <span class="hljs-keyword">var</span> equipmentId = pieceOfEquipment.id;
+
+              <span class="hljs-built_in">console</span>.log(boardData.pathStart + <span class="hljs-string">'/UpdateEquipmentSnowReadiness/:district/:date/:equipmentId'</span>);
+
+              <span class="hljs-keyword">var</span> resource = $resource(boardData.pathStart
+                  + <span class="hljs-string">'/UpdateEquipmentSnowReadiness/:district/:date/:equipmentId'</span>, {
+                district : boardData.boardLocation,
+                date : boardData.boardDate,
+                equipmentId : equipmentId,
+
+              }, {
+                save : {
+                  method : <span class="hljs-string">'POST'</span>,
+                  headers : {
+                    <span class="hljs-string">'Content-Type'</span> : <span class="hljs-string">'application/json'</span>
+                  }
+                }
+              });
+
+              <span class="hljs-keyword">var</span> records = snowData;
+              <span class="hljs-keyword">var</span> response = resource.save(<span class="hljs-built_in">JSON</span>.stringify(records), <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span> </span>{
+                <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'success, got data: '</span>, data);
+                successFn(data);
+              }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span> </span>{
+                errorFn(error);
+              });
+
+            },
+
+            upEquipmentOnServer : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($resource, pieceOfEquipment, upData, boardData, successFn, errorFn)</span> </span>{
+
+              <span class="hljs-keyword">var</span> equipmentId = pieceOfEquipment.id;
+              <span class="hljs-keyword">var</span> datetime1 = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(upData.dt1.slice(<span class="hljs-number">0</span>, <span class="hljs-number">4</span>), upData.dt1.slice(<span class="hljs-number">4</span>, <span class="hljs-number">6</span>) - <span class="hljs-number">1</span>, upData.dt1.slice(<span class="hljs-number">6</span>, <span class="hljs-number">8</span>),
+                  upData.time1.slice(<span class="hljs-number">0</span>, <span class="hljs-number">2</span>), upData.time1.slice(<span class="hljs-number">3</span>, <span class="hljs-number">5</span>));
+
+              <span class="hljs-built_in">console</span>.log(boardData.pathStart + <span class="hljs-string">'/UpEquipment/:district/:date/:equipmentId?mechanic='</span> + upData.mechanic
+                  + <span class="hljs-string">'&amp;reporter='</span> + upData.reporter + <span class="hljs-string">'&amp;upDatetime='</span> + datetime1);
+
+              <span class="hljs-keyword">var</span> resource = $resource(boardData.pathStart + <span class="hljs-string">'/UpEquipment/:district/:date/:equipmentId?mechanic='</span>
+                  + <span class="hljs-built_in">encodeURIComponent</span>(upData.mechanic) + <span class="hljs-string">'&amp;reporter='</span> + <span class="hljs-built_in">encodeURIComponent</span>(upData.reporter)
+                  + <span class="hljs-string">'&amp;upDatetime='</span> + <span class="hljs-built_in">encodeURIComponent</span>(datetime1), {
+                district : boardData.boardLocation,
+                date : boardData.boardDate,
+                equipmentId : equipmentId
+              });
+
+              <span class="hljs-keyword">var</span> response = resource.get({
+                district : boardData.boardLocation,
+                date : boardData.boardDate,
+                equipmentId : equipmentId
+              }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(data)</span> </span>{
+                <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'success, got data: '</span>, data);
+                successFn(data);
+              }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(error)</span> </span>{
+                errorFn(error);
+              });
+            },</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Section - Perform synchronous operations on server - End </p></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Section - Handle Server Commands - Start </p></div></div><div class="code"><div class="wrapper">            processAddEquipmentCommand : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment, command, EquipmentModel)</span> </span>{
+              <span class="hljs-keyword">var</span> equipmentKey = command.commandContent.equipmentId;
+              equipment[equipmentKey] = command.commandContent.equipment;
+              angular.extend(equipment[equipmentKey], EquipmentModel);
+            },
+           
+            processEquipmentDetachmentCommand : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment, command)</span> </span>{
+              <span class="hljs-keyword">var</span> e = _processGeneralEquipmentCommand(equipment, command);
+              <span class="hljs-keyword">if</span> (e != <span class="hljs-literal">null</span>) {
+                e.currentLocation = command.commandContent.currentLocation;
+                <span class="hljs-keyword">var</span> record = {
+                  <span class="hljs-string">'comments'</span> : command.commandContent.comments,
+                  <span class="hljs-string">'driver'</span> : command.commandContent.driver,
+                  <span class="hljs-string">'from'</span> : command.commandContent.from,
+                  <span class="hljs-string">'status'</span> : command.commandContent.status,
+                  <span class="hljs-string">'to'</span> : command.commandContent.to,
+                  <span class="hljs-string">'actualUser'</span> : command.commandContent.reporter,
+                  <span class="hljs-string">'lastModifiedActual'</span> : <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(command.commandContent.date),
+                  <span class="hljs-string">'lastModifiedSystem'</span> : <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(command.commandContent.systemDateTime),
+                  <span class="hljs-string">'systemUser'</span> : command.commandContent.systemUser
+                }
+                e.detachmentHistory.push(record);
+                e.formattedDetachments = e.getFormattedDetachments();
+                e.equipmentDetachmentPaginationModel = e.formattedDetachments
+                    .slice(<span class="hljs-number">0</span>, <span class="hljs-number">10</span>);
+                e.personDetachCurrentPage = <span class="hljs-number">1</span>;
+              }
+            },
+
+            processRemoveEquipmentCommand : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment, command)</span> </span>{
+              <span class="hljs-keyword">var</span> equipmentKey = command.commandContent.equipmentId;
+              <span class="hljs-keyword">delete</span> equipment[equipmentKey];
+            },
+            
+            processUpdateSnowEquipmentCommand : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment, command)</span> </span>{
+              <span class="hljs-keyword">var</span> e = _processGeneralEquipmentCommand(equipment, command);
+              <span class="hljs-keyword">if</span> (e != <span class="hljs-literal">null</span>) {
+                e.snowReadiness = command.commandContent.snowReadiness;
+              }
+            },
+            
+            processUpdateEquipmentLoadCommand : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment, command, materials)</span> </span>{
+              <span class="hljs-keyword">var</span> e = _processGeneralEquipmentCommand(equipment, command);
+              <span class="hljs-keyword">if</span> (e != <span class="hljs-literal">null</span>) {
+                <span class="hljs-keyword">if</span> (e.bins &amp;&amp; e.bins[<span class="hljs-number">0</span>] &amp;&amp; command.commandContent.bin1) {
+                  e.bins[<span class="hljs-number">0</span>] = command.commandContent.bin1;
+                }
+                <span class="hljs-keyword">if</span> (e.bins &amp;&amp; e.bins[<span class="hljs-number">1</span>] &amp;&amp; command.commandContent.bin2) {
+                  e.bins[<span class="hljs-number">1</span>] = command.commandContent.bin2;
+                }
+                <span class="hljs-keyword">if</span> (e.bins &amp; command.commandContent.bin1) {
+                  e.formattedBins = e.getFormattedBins(materials);
+                }
+              }
+            },
+            
+            processUpDownEquipmentCommand : <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(equipment, command)</span> </span>{
+              <span class="hljs-keyword">var</span> e = _processGeneralEquipmentCommand(equipment, command);
+              <span class="hljs-keyword">if</span> (e != <span class="hljs-literal">null</span>) {
+                <span class="hljs-keyword">var</span> record = {
+                  <span class="hljs-string">"id"</span> : command.commandContent.upDownData.id,
+                  <span class="hljs-string">"down"</span> : command.commandContent.upDownData.down,
+                  <span class="hljs-string">"actualUser"</span> : command.commandContent.upDownData.actualUser,
+                  <span class="hljs-string">"systemUser"</span> : command.commandContent.upDownData.systemUser,
+                  <span class="hljs-string">"lastModifiedActual"</span> : command.commandContent.upDownData.lastModifiedActual,
+                  <span class="hljs-string">"lastModifiedSystem"</span> : command.commandContent.upDownData.lastModifiedSystem,
+                  <span class="hljs-string">"conditions"</span> : command.commandContent.upDownData.conditions
+                }
+                e.upDownHistory.push(record);
+                e.FormattedUpDownHistory = e.getFormattedUpDownHistory();
+                e.upDownPaginationModel = e.FormattedUpDownHistory.slice(<span class="hljs-number">0</span>, <span class="hljs-number">5</span>);
+                e.upDownCurrentPage = <span class="hljs-number">1</span>;
+              }
+            }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Section - Handle Server Commands - End </p></div></div><div class="code"><div class="wrapper">          }
+        })</div></div></div></div></body></html>

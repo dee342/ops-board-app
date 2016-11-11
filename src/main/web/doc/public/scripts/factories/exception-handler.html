@@ -1,0 +1,11 @@
+<!DOCTYPE html><html lang="en"><head><title>public\scripts\factories\exception-handler</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../../"><meta name="groc-document-path" content="public\scripts\factories\exception-handler"><meta name="groc-project-path" content="public\scripts\factories\exception-handler.js"><link rel="stylesheet" type="text/css" media="all" href="../../../assets/style.css"><script type="text/javascript" src="../../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">public\scripts\factories\exception-handler.js</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="hljs-pi">'use strict'</span>;
+
+angular
+  .module(<span class="hljs-string">'exceptionOverride'</span>)
+  .factory(<span class="hljs-string">'exceptionHandler'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(ClientSideError)</span> </span>{
+    <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(exception, cause)</span> </span>{
+      exception.message += <span class="hljs-string">' (caused by "'</span> + cause + <span class="hljs-string">'")'</span>;
+      <span class="hljs-comment">//alert(new Error(exception.message).stack) //have to wait for Dima. Once env var is set then will enable this for qa env</span>
+      <span class="hljs-keyword">throw</span> exception;
+    };
+  });</div></div></div></div></body></html>

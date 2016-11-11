@@ -1,0 +1,461 @@
+<!DOCTYPE html><html lang="en"><head><title>public\scripts\filters\ops-board-filters</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../../"><meta name="groc-document-path" content="public\scripts\filters\ops-board-filters"><meta name="groc-project-path" content="public\scripts\filters\ops-board-filters.js"><link rel="stylesheet" type="text/css" media="all" href="../../../assets/style.css"><script type="text/javascript" src="../../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">public\scripts\filters\ops-board-filters.js</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="hljs-pi">'use strict'</span>;
+
+angular.module(<span class="hljs-string">'OpsBoardFilters'</span>, [<span class="hljs-string">'personnelFilters'</span>])
+	.filter(<span class="hljs-string">'reverseArray'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+		<span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(items)</span> </span>{
+			<span class="hljs-keyword">return</span> items ? items.slice().reverse() : [];
+		}
+	})
+	.filter(<span class="hljs-string">'personDetailsName'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+		<span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(input, length)</span> </span>{
+			<span class="hljs-keyword">if</span> (input == <span class="hljs-literal">null</span> || <span class="hljs-keyword">typeof</span> input == <span class="hljs-literal">undefined</span> || input == <span class="hljs-string">''</span>)
+				<span class="hljs-keyword">return</span> <span class="hljs-string">''</span>;
+			<span class="hljs-keyword">var</span> nmArr = input.split(<span class="hljs-string">','</span>);
+			<span class="hljs-keyword">if</span> (nmArr.length &lt; <span class="hljs-number">2</span>) <span class="hljs-keyword">return</span> input;
+			<span class="hljs-keyword">var</span> lastName = nmArr[<span class="hljs-number">0</span>].trim(),
+			    fnmArr = nmArr[<span class="hljs-number">1</span>].trim().split(<span class="hljs-string">' '</span>),
+			    firstName = fnmArr[<span class="hljs-number">0</span>],
+			    middleInitial = fnmArr[<span class="hljs-number">1</span>] ? fnmArr[<span class="hljs-number">1</span>].substring(<span class="hljs-number">0</span>, <span class="hljs-number">1</span>).trim().toUpperCase() : <span class="hljs-string">''</span>;
+
+			<span class="hljs-keyword">var</span> formattedName = lastName + <span class="hljs-string">', '</span> + firstName;
+			<span class="hljs-keyword">if</span> (middleInitial) formattedName = formattedName + <span class="hljs-string">' '</span> + middleInitial + <span class="hljs-string">'.'</span>;
+			<span class="hljs-keyword">return</span>  formattedName;
+		};
+	})
+	.filter(<span class="hljs-string">'appendChartNumber'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+		<span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(chartName, chartNumber)</span> </span>{
+			<span class="hljs-keyword">if</span> (!chartName &amp;&amp; !chartNumber) <span class="hljs-keyword">return</span> <span class="hljs-string">''</span>;
+			<span class="hljs-keyword">if</span> (!chartNumber||chartNumber==<span class="hljs-string">" "</span>) <span class="hljs-keyword">return</span> chartName;
+			<span class="hljs-keyword">if</span> (!chartName) <span class="hljs-keyword">return</span> chartNumber;
+			<span class="hljs-keyword">return</span> chartName + <span class="hljs-string">' / '</span> + chartNumber;
+		};
+	})
+	.filter(<span class="hljs-string">'phone'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+		<span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(phone)</span> </span>{
+			<span class="hljs-keyword">if</span> (!phone) <span class="hljs-keyword">return</span> <span class="hljs-string">''</span>;
+			<span class="hljs-keyword">var</span> formattedPhone = phone.replace(<span class="hljs-regexp">/[\D]+/g</span>, <span class="hljs-string">''</span>)
+                                      .replace(<span class="hljs-regexp">/(\d{3})(\d{3})(\d{4})/</span>, <span class="hljs-string">'($1) $2-$3'</span>);
+			<span class="hljs-keyword">return</span> formattedPhone;
+		};
+	})
+	.filter(<span class="hljs-string">'payrollLocation'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+		<span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(payrollLocation, id)</span> </span>{
+			<span class="hljs-keyword">if</span> (!payrollLocation &amp;&amp; !id) <span class="hljs-keyword">return</span> <span class="hljs-string">''</span>;
+			<span class="hljs-keyword">if</span> (!id) <span class="hljs-keyword">return</span> payrollLocation;
+			<span class="hljs-keyword">if</span> (!payrollLocation) <span class="hljs-keyword">return</span> id;
+			<span class="hljs-keyword">return</span> payrollLocation + <span class="hljs-string">' / '</span> + id;
+		};
+	})
+	.filter(<span class="hljs-string">'qualification'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+		<span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(qualifications)</span> </span>{
+			<span class="hljs-keyword">if</span> (!qualifications)
+				<span class="hljs-keyword">return</span> <span class="hljs-string">''</span>;
+
+			<span class="hljs-keyword">if</span> (<span class="hljs-built_in">Object</span>.prototype.toString.call(qualifications) === <span class="hljs-string">'[object Array]'</span>)
+				<span class="hljs-keyword">return</span> qualifications;
+
+			<span class="hljs-keyword">return</span> qualifications.split(<span class="hljs-string">','</span>);
+		};
+	})
+	.filter(<span class="hljs-string">'formatDate'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+		<span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(date, format)</span> </span>{
+			<span class="hljs-keyword">if</span> (!date) <span class="hljs-keyword">return</span> <span class="hljs-string">''</span>;
+			<span class="hljs-keyword">if</span> (!format) <span class="hljs-keyword">return</span> date;
+			<span class="hljs-keyword">return</span> moment(date).format(format);
+		}
+	})
+	.filter(<span class="hljs-string">'toArray'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+		<span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(obj)</span> </span>{
+		    <span class="hljs-keyword">if</span> (!(obj <span class="hljs-keyword">instanceof</span> <span class="hljs-built_in">Object</span>)) <span class="hljs-keyword">return</span> obj;
+		    <span class="hljs-keyword">return</span> _.map(obj, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(val, key)</span> </span>{
+		        <span class="hljs-keyword">return</span> <span class="hljs-built_in">Object</span>.defineProperty(val, <span class="hljs-string">'$key'</span>, {__proto__: <span class="hljs-literal">null</span>, value: key});
+		    });
+	    }
+	})
+	.filter(<span class="hljs-string">'convertTypeToClass'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+		<span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(type)</span> </span>{
+		   <span class="hljs-keyword">if</span> (!type) <span class="hljs-keyword">return</span> <span class="hljs-string">''</span>
+		   <span class="hljs-keyword">return</span> type.toLowerCase().replace(<span class="hljs-regexp">/\s/g</span>, <span class="hljs-string">'-'</span>)
+	    }
+	}).filter(<span class="hljs-string">'judgeStatus'</span>,<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{
+		<span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(status)</span></span>{
+			<span class="hljs-keyword">if</span>(status)
+				<span class="hljs-keyword">return</span> <span class="hljs-string">'Down'</span>;
+			<span class="hljs-keyword">else</span>
+				<span class="hljs-keyword">return</span> <span class="hljs-string">'Up'</span>;
+		}
+
+	}).filter(<span class="hljs-string">'judgeAction'</span>,<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{
+		<span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(status)</span></span>{
+			<span class="hljs-keyword">if</span>(status)
+				<span class="hljs-keyword">return</span> <span class="hljs-string">'Set Down'</span>;
+			<span class="hljs-keyword">else</span>
+				<span class="hljs-keyword">return</span> <span class="hljs-string">'Set Up'</span>;
+		}
+
+	}).filter(<span class="hljs-string">'firstInitial'</span>,
+
+	<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+		<span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(input)</span> </span>{
+			<span class="hljs-keyword">if</span>(!input) {
+				<span class="hljs-keyword">return</span> <span class="hljs-string">''</span>;
+			}
+			<span class="hljs-keyword">var</span> initial = input.substring(<span class="hljs-number">0</span>, <span class="hljs-number">1</span>) + <span class="hljs-string">'.'</span>;
+
+			<span class="hljs-keyword">return</span> initial;
+		}
+	}).filter(<span class="hljs-string">'multiRouteGroup'</span>,
+
+	<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+		<span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(linkedTaskMap, groupId, tasks, sourcetask, durations)</span></span>{
+
+			<span class="hljs-keyword">var</span> linkedTasks = [];
+			<span class="hljs-keyword">var</span> linkedTask = {};
+			<span class="hljs-keyword">var</span> results = [];
+			<span class="hljs-keyword">var</span> locationObject = {};
+			<span class="hljs-keyword">var</span> shiftObject = {};
+			<span class="hljs-keyword">var</span> shiftCategoryObject = {};
+			<span class="hljs-keyword">var</span> subcategoryTaskObject = {};
+			<span class="hljs-keyword">var</span> taskObject = {};
+			<span class="hljs-keyword">var</span> sectionObject = {};
+			<span class="hljs-keyword">var</span> duration = <span class="hljs-string">''</span>;
+
+			angular.forEach(linkedTaskMap, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(value, key)</span> </span>{
+				<span class="hljs-keyword">if</span> (value.groupId === groupId) {
+					linkedTasks.push(value);
+				}
+			});
+
+			<span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i&lt;linkedTasks.length; i++) {
+				linkedTask = linkedTasks[i];
+				<span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> location <span class="hljs-keyword">in</span> tasks.locations) {
+					locationObject = tasks.locations[location];
+					<span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> shift <span class="hljs-keyword">in</span> locationObject.locationShifts) {
+						shiftObject = locationObject.locationShifts[shift];
+						<span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> shiftCategory <span class="hljs-keyword">in</span> shiftObject.shiftCategories) {
+							shiftCategoryObject = shiftObject.shiftCategories[shiftCategory];
+							<span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> subcategoryTask <span class="hljs-keyword">in</span> shiftCategoryObject.subcategoryTasks) {
+								subcategoryTaskObject = shiftCategoryObject.subcategoryTasks[subcategoryTask];
+								<span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> task <span class="hljs-keyword">in</span> subcategoryTaskObject.tasks) {
+									taskObject = subcategoryTaskObject.tasks[task];
+									<span class="hljs-keyword">if</span>(taskObject.id === linkedTask.taskId ) {
+
+										<span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> j = <span class="hljs-number">0</span>; j &lt; durations.length; j++) {
+											<span class="hljs-keyword">if</span> (durations[j].duration == taskObject.hours) {
+												duration = durations[j].label;
+												<span class="hljs-keyword">break</span>;
+											}
+										}
+
+										<span class="hljs-keyword">if</span>(taskObject.partialTaskSequence === sourcetask.partialTaskSequence) {
+											taskObject.highlight = <span class="hljs-literal">true</span>;
+										} <span class="hljs-keyword">else</span> {
+											taskObject.highlight = <span class="hljs-literal">false</span>;
+										}
+
+										taskObject.number = i + <span class="hljs-number">1</span>;
+										taskObject.sequence = linkedTask.sequence;
+										taskObject.category = shiftCategoryObject.category;
+										taskObject.subcategory = subcategoryTaskObject.subcategory;
+										taskObject.duration = duration;
+										results.push(taskObject);
+									}
+								}
+
+								<span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> section <span class="hljs-keyword">in</span> subcategoryTaskObject.sections) {
+									sectionObject = subcategoryTaskObject.sections[section];
+									<span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> task <span class="hljs-keyword">in</span> sectionObject.tasks) {
+										taskObject = sectionObject.tasks[task];
+										<span class="hljs-keyword">if</span>(taskObject.id === linkedTask.taskId ) {
+											<span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> j = <span class="hljs-number">0</span>; j &lt; durations.length; j++) {
+												<span class="hljs-keyword">if</span> (durations[j].duration == taskObject.hours) {
+													duration = durations[j].label;
+													<span class="hljs-keyword">break</span>;
+												}
+											}
+
+											<span class="hljs-keyword">if</span>(taskObject.partialTaskSequence === sourcetask.partialTaskSequence) {
+												taskObject.highlight = <span class="hljs-literal">true</span>;
+											} <span class="hljs-keyword">else</span> {
+												taskObject.highlight = <span class="hljs-literal">false</span>;
+											}
+
+											taskObject.number = i + <span class="hljs-number">1</span>;
+											taskObject.sequence = linkedTask.sequence;
+											taskObject.category = shiftCategoryObject.category;
+											taskObject.subcategory = subcategoryTaskObject.subcategory;
+											taskObject.section = sectionObject;
+											taskObject.duration = duration;
+											results.push(taskObject);
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			};
+
+			<span class="hljs-keyword">return</span> results;
+		}
+	}).filter(<span class="hljs-string">'orderByShiftId'</span>,
+
+	<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+		<span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(items, reverse)</span> </span>{
+
+			<span class="hljs-keyword">var</span> filtered = [];
+
+			angular.forEach(items, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(item)</span> </span>{
+				filtered.push(item);
+			});
+
+			filtered.sort(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(a, b)</span> </span>{
+				<span class="hljs-keyword">return</span> (a.shift.id &gt; b.shift.id ? <span class="hljs-number">1</span> : -<span class="hljs-number">1</span>);
+			});
+
+			<span class="hljs-keyword">if</span>(reverse) filtered.reverse();
+
+
+			<span class="hljs-keyword">return</span> filtered;
+		};
+	}).filter(<span class="hljs-string">'orderByCategoryId'</span>,
+
+	<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+		<span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(items, reverse)</span> </span>{
+
+			<span class="hljs-keyword">var</span> filtered = [];
+
+			angular.forEach(items, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(item)</span> </span>{
+				filtered.push(item);
+			});
+
+			filtered.sort(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(a, b)</span> </span>{
+
+				<span class="hljs-keyword">return</span> (a.category.sequence &gt; b.category.sequence ? <span class="hljs-number">1</span> : -<span class="hljs-number">1</span>);
+			});
+
+			<span class="hljs-keyword">if</span>(reverse) filtered.reverse();
+
+
+			<span class="hljs-keyword">return</span> filtered;
+		};
+	}).filter(<span class="hljs-string">'orderBySubcategorySequence'</span>,
+
+	<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+		<span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(items, reverse)</span> </span>{
+
+			<span class="hljs-keyword">var</span> filtered = [];
+
+			angular.forEach(items, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(item)</span> </span>{
+				filtered.push(item);
+			});
+
+			filtered.sort(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(a, b)</span> </span>{
+				<span class="hljs-keyword">return</span> (a.subcategory.sequence &gt; b.subcategory.sequence ? <span class="hljs-number">1</span> : -<span class="hljs-number">1</span>);
+			});
+
+			<span class="hljs-keyword">if</span>(reverse) filtered.reverse();
+
+
+			<span class="hljs-keyword">return</span> filtered;
+		};
+	}).filter(<span class="hljs-string">'orderBySection'</span>,
+
+	<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+		<span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(items, reverse)</span> </span>{
+
+			<span class="hljs-keyword">var</span> filtered = [];
+
+			angular.forEach(items, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(item)</span> </span>{
+				filtered.push(item);
+			});
+
+			filtered.sort(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(a, b)</span> </span>{
+
+				<span class="hljs-keyword">return</span> (a.sectionName &gt; b.sectionName ? <span class="hljs-number">1</span> : -<span class="hljs-number">1</span>);
+			});
+
+			<span class="hljs-keyword">if</span>(reverse) filtered.reverse();
+
+
+			<span class="hljs-keyword">return</span> filtered;
+		};
+	}).filter(<span class="hljs-string">'orderByTaskId'</span>,
+
+	<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+		<span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(items, reverse)</span> </span>{
+
+			<span class="hljs-keyword">var</span> filtered = [];
+
+			angular.forEach(items, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(item)</span> </span>{
+				filtered.push(item);
+			});
+
+			filtered.sort(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(a, b)</span> </span>{
+				<span class="hljs-keyword">return</span> (a.sequence &gt; b.sequence ? <span class="hljs-number">1</span> : -<span class="hljs-number">1</span>);
+			});
+
+			<span class="hljs-keyword">if</span>(reverse) filtered.reverse();
+
+
+			<span class="hljs-keyword">return</span> filtered;
+		};
+	}).filter(<span class="hljs-string">'orderByLocation'</span>,
+
+	<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+		<span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(items, reverse)</span> </span>{
+
+			<span class="hljs-keyword">var</span> filtered = [];
+
+			angular.forEach(items, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(item)</span> </span>{
+				filtered.push(item);
+			});
+
+			filtered.sort(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(a, b)</span> </span>{
+				<span class="hljs-keyword">return</span> (a.location.code &gt; b.location.code ? <span class="hljs-number">1</span> : -<span class="hljs-number">1</span>);
+			});
+
+			<span class="hljs-keyword">if</span>(reverse) filtered.reverse();
+
+
+			<span class="hljs-keyword">return</span> filtered;
+		};
+	}).filter(<span class="hljs-string">'orderDistrict'</span>,
+
+	<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+		<span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(items)</span> </span>{
+			<span class="hljs-keyword">var</span> filtered = [];
+			<span class="hljs-keyword">var</span> filteredBroom = [];
+
+			angular.forEach(items, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(item)</span> </span>{
+				<span class="hljs-keyword">if</span>(!item.locationId.match(<span class="hljs-regexp">/[0-9]$/</span>)) {
+					filteredBroom.push(item);
+				} <span class="hljs-keyword">else</span> {
+					filtered.push(item);
+
+				}
+
+			});
+
+			filtered.sort(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(a, b)</span> </span>{
+				<span class="hljs-keyword">return</span> (a.locationId &gt; b.locationId ? <span class="hljs-number">1</span> : -<span class="hljs-number">1</span>);
+			});
+
+			filteredBroom.sort(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(a, b)</span> </span>{
+				<span class="hljs-keyword">return</span> (a.locationId &gt; b.locationId ? <span class="hljs-number">1</span> : -<span class="hljs-number">1</span>);
+			});
+
+			<span class="hljs-comment">/*filtered.sort(function (a, b) {
+				return (a.locationId &gt; b.locationId ? 1 : -1);
+			});
+*/</span>
+			filtered = filtered.concat(filteredBroom);
+
+			<span class="hljs-keyword">return</span> filtered;
+		};
+	}).filter(<span class="hljs-string">'orderBySequence'</span>,
+
+	<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+		<span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(items)</span> </span>{
+
+			<span class="hljs-keyword">var</span> filtered = [];
+
+			angular.forEach(items, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(item)</span> </span>{
+				filtered.push(item);
+			});
+
+			filtered.sort(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(a, b)</span> </span>{
+				<span class="hljs-keyword">return</span> (a.partialTaskSequence &gt; b.partialTaskSequence ? <span class="hljs-number">1</span> : -<span class="hljs-number">1</span>);
+			});
+
+
+			<span class="hljs-keyword">return</span> filtered;
+		};
+	}).filter(<span class="hljs-string">'formattedName'</span>,
+
+	<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+		<span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(person)</span> </span>{
+
+			<span class="hljs-keyword">var</span> lastName = person.lastName,
+				firstName = person.firstName ? person.firstName.substring(<span class="hljs-number">0</span>, <span class="hljs-number">1</span>).toUpperCase() : <span class="hljs-string">''</span>;
+
+			<span class="hljs-keyword">var</span> name = firstName ? firstName + <span class="hljs-string">'. '</span> + lastName : lastName;
+			<span class="hljs-keyword">var</span> context = canvas.getContext(<span class="hljs-string">"2d"</span>);
+			context.font = <span class="hljs-string">"400 12px 'Open Sans', sans-serif"</span>;
+			<span class="hljs-keyword">var</span> metrics = context.measureText(name)
+			<span class="hljs-keyword">if</span> (metrics &amp;&amp; metrics.width &gt; <span class="hljs-number">80</span>) <span class="hljs-keyword">return</span> person.lastName.substring(<span class="hljs-number">0</span>,<span class="hljs-number">12</span>);
+			<span class="hljs-keyword">return</span> name;
+		}
+	}).filter(<span class="hljs-string">'filterDistrictObjects'</span>,
+
+	<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+		<span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(districtdata)</span> </span>{
+			<span class="hljs-keyword">var</span> shiftObject = {};
+			<span class="hljs-keyword">var</span> shiftCategoryObject = {};
+			<span class="hljs-keyword">var</span> shiftCategories = {};
+			<span class="hljs-keyword">var</span> subcategoryTaskObject = {};
+			<span class="hljs-keyword">var</span> taskObject = {};
+			<span class="hljs-keyword">var</span> districtPersonnel = [];
+			<span class="hljs-keyword">var</span> districtEquipment = [];
+			<span class="hljs-keyword">var</span> districtData = {};
+
+			<span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> shift <span class="hljs-keyword">in</span> districtdata.locationShifts) {
+				shiftObject = districtdata.locationShifts[shift];
+				<span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> shiftCategory <span class="hljs-keyword">in</span> shiftObject.shiftCategories) {
+					shiftCategoryObject = shiftObject.shiftCategories[shiftCategory];
+					<span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> subcategoryTask <span class="hljs-keyword">in</span> shiftCategoryObject.subcategoryTasks) {
+						subcategoryTaskObject = shiftCategoryObject.subcategoryTasks[subcategoryTask];
+						<span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> task <span class="hljs-keyword">in</span> subcategoryTaskObject.tasks) {
+							taskObject = subcategoryTaskObject.tasks[task];
+
+							<span class="hljs-keyword">if</span>(taskObject.assignedPerson1.person) {
+								<span class="hljs-keyword">if</span> (districtPersonnel.indexOf(taskObject.assignedPerson1.person.id) &lt; <span class="hljs-number">0</span>) {
+									districtPersonnel.push(taskObject.assignedPerson1.person.id);
+								}
+							}
+
+							<span class="hljs-keyword">if</span>(taskObject.assignedEquipment.equipment) {
+								<span class="hljs-keyword">if</span>(districtEquipment.indexOf(taskObject.assignedEquipment.equipment.id) &lt; <span class="hljs-number">0</span>) {
+									districtEquipment.push(taskObject.assignedEquipment.equipment.id);
+								}
+							}
+						}
+					}
+				}
+			}
+
+			districtData.personnel = districtPersonnel;
+			districtData.equipment = districtEquipment;
+
+			<span class="hljs-keyword">return</span> districtData;
+		}
+	}).filter(<span class="hljs-string">'getFormattedName'</span>,
+	<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+		<span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(person)</span> </span>{
+			<span class="hljs-keyword">var</span> lastName = person.lastName,
+					firstName = person.firstName ? person.firstName.substring(<span class="hljs-number">0</span>, <span class="hljs-number">1</span>).toUpperCase() : <span class="hljs-string">''</span>;
+
+			<span class="hljs-keyword">var</span> name = firstName ? firstName + <span class="hljs-string">'. '</span> + lastName : lastName;
+			<span class="hljs-keyword">return</span> name;
+		}
+	}).filter(<span class="hljs-string">'mdaFilter'</span>,
+	<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($filter)</span> </span>{
+		<span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(persons, filterType)</span> </span>{
+			<span class="hljs-keyword">var</span> results = {};
+			<span class="hljs-keyword">var</span> unavailablePersonnelSorted = $filter(<span class="hljs-string">'unavailableFilter'</span>)(persons, filterType);
+			<span class="hljs-keyword">var</span> resultsMDA = [];
+
+			<span class="hljs-keyword">if</span> (unavailablePersonnelSorted &amp;&amp; unavailablePersonnelSorted.length &gt; <span class="hljs-number">0</span>) {
+				angular.forEach(unavailablePersonnelSorted, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(valuePersonnel, keyPersonnel)</span> </span>{
+					<span class="hljs-keyword">if</span> (valuePersonnel.unavailabilityHistory.length === <span class="hljs-number">0</span> &amp;&amp; valuePersonnel.detachmentHistory.length === <span class="hljs-number">0</span> &amp;&amp; valuePersonnel.mdaStatusHistory.length &gt; <span class="hljs-number">0</span>) {
+						resultsMDA.push(valuePersonnel);
+					}
+				});
+			}
+
+			results.resultsMDA = resultsMDA;
+			results.mdatotal = resultsMDA.length;
+
+			<span class="hljs-keyword">return</span> results;
+		}
+	});</div></div></div></div></body></html>

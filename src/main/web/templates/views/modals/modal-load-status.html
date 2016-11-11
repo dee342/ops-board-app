@@ -1,0 +1,122 @@
+<!--/* Modal window view for updating a piece of equipment's bin load status. */-->
+
+<form id="modal" name="modal" class="form-horizontal container-fluid" novalidate="true" centered-modal="true">
+  <div th:include="views/modals/fragments/modal-header :: header" th:remove="tag"></div>
+  <div class="modal-body" ng-show="showContent">
+    <div class="row">
+      <label class="col-md-2 text-right">Type:</label>
+      <div class="col-md-4 text-left">{{::opData.equipmentType}}</div>
+      <label class="col-md-2 col-md-offset-2 text-right">Condition:</label>
+      <div class="col-md-2 text-left">{{::opData.condition}}</div>
+    </div>
+   
+       <div class="bin" ng-show="opData.bins.length == 1">
+      <fieldset>
+        <legend>Bin 1</legend>
+        <div class="row">
+          <label class="col-md-4 text-right">Status:</label>
+          <div class="col-md-6 text-left">{{::opData.bin1Status}}</div>
+        </div>
+        <div class="row">
+          <label class="col-md-4 text-right">Material:</label>
+          <div class="col-md-6 text-left">{{::opData.bin1MaterialType}}</div>
+        </div>
+        <div class="row">
+          <label class="col-md-4 text-right">New Status<i class="fa fa-asterisk"></i>:</label>
+          <div class="col-md-6 text-left">
+            <select ui-select2="loadStatusSelect2Options" id="loadStatus1" class="load form-control" ng-class="{'submitted' : isRequired('selectedBin1Status')}" ng-required="true"
+              ng-model="opData.selectedBin1Status" ng-change="checkMaterial('loadStatus1')" down-equipment-focus="">
+              <option value=""></option>
+              <option ng-repeat="status in opData.loadStatuses" value="{{::status}}">{{::status}}</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <label class="col-md-4 text-right">Material<i class="fa fa-asterisk"></i>:</label>
+          <div class="col-md-6 text-left">
+            <select ui-select2="materialSelect2Options" id="material1" class="load form-control" ng-class="{'submitted' : isRequired('selectedBin1MaterialType')}" ng-required="true"
+              ng-model="opData.selectedBin1MaterialType" ng-disabled="opData.selectedBin1Status === 'Empty'">
+              <option value=""></option>
+              <option ng-repeat="material in opData.materials | orderBy: 'materialType'" value="{{::material.materialType}}"><span>{{::material.materialType}} - {{::material.descr}}</span></option>
+            </select>
+          </div>
+        </div>
+      </fieldset>
+    </div> 
+    <div class="bin1" ng-show="opData.bins.length &gt; 1">
+      <fieldset>
+        <legend>Large Side</legend>
+        <div class="row">
+          <label class="col-md-4 text-right">Status<i class="fa fa-asterisk"></i>:</label>
+          <div class="col-md-6 text-left">{{::opData.bin1Status}}</div>
+        </div>
+        <div class="row">
+          <label class="col-md-4 text-right">Material<i class="fa fa-asterisk"></i>:</label>
+          <div class="col-md-6 text-left">{{::opData.bin1MaterialType}}</div>
+        </div>
+        <div class="row">
+          <label class="col-md-4 text-right">New Status<i class="fa fa-asterisk"></i>:</label>
+          <div class="col-md-6 text-left">
+            <select ui-select2="loadStatusSelect2Options" id="loadStatus1" class="load form-control" ng-class="{'submitted' : isRequired('selectedBin1Status')}" ng-required="true"
+              ng-model="opData.selectedBin1Status" ng-change="checkMaterial('loadStatus1')" down-equipment-focus="">
+              <option value=""></option>
+              <option ng-repeat="status in opData.loadStatuses" value="{{::status}}">{{::status}}</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <label class="col-md-4 text-right">Material<i class="fa fa-asterisk"></i>:</label>
+          <div class="col-md-6 text-left">
+            <select ui-select2="materialSelect2Options" id="material1" class="load form-control" ng-class="{'submitted' : isRequired('selectedBin1MaterialType')}" ng-required="true"
+              ng-model="opData.selectedBin1MaterialType" ng-disabled="opData.selectedBin1Status === 'Empty'">
+              <option value=""></option>
+              <option ng-repeat="material in opData.materials | orderBy: 'materialType'" value="{{::material.materialType}}"><span>{{::material.materialType}} - {{::material.descr}}</span></option>
+            </select>
+          </div>
+        </div>
+      </fieldset>
+    </div>
+    <div class="bin2" ng-show="opData.bins.length &gt; 1">
+    	<fieldset>
+        <legend>Small Side</legend>
+	      <div class="row">
+	        <label class="col-md-4 text-right">Status:</label>
+	        <div class="col-md-6 text-left">{{::opData.bin2Status}}</div>
+	      </div>
+	      <div class="row">
+	        <label class="col-md-4 text-right">Material:</label>
+	        <div class="col-md-6 text-left">{{::opData.bin2MaterialType}}</div>
+	      </div>
+	      <div class="row">
+	        <label class="col-md-4 text-right">New Status<i class="fa fa-asterisk"></i>:</label>
+	        <div class="col-md-6 text-left">
+	          <select ui-select2="loadStatusSelect2Options" id="loadStatus2" class="load form-control" ng-class="{'submitted' : isRequired('selectedBin2Status')}" ng-required="true"
+	            ng-model="opData.selectedBin2Status" ng-change="checkMaterial('loadStatus2')">
+	            <option value=""></option>
+	            <option ng-repeat="status in opData.loadStatuses" value="{{::status}}">{{::status}}</option>
+	          </select>
+	        </div>
+	      </div>
+	      <div class="row">
+	        <label class="col-md-4 text-right">Material<i class="fa fa-asterisk"></i>:</label>
+	        <div class="col-md-6 text-left">
+	          <select ui-select2="materialSelect2Options" id="material2" class="load form-control" ng-class="{'submitted' : isRequired('selectedBin2MaterialType')}" ng-required="true"
+	            ng-model="opData.selectedBin2MaterialType" ng-disabled="opData.selectedBin2Status === 'Empty'">
+	            <option value=""></option>
+	            <option ng-repeat="material in opData.materials | orderBy: 'materialType'" value="{{::material.materialType}}"><span>{{::material.materialType}} - {{::material.descr}}</span></option>
+	          </select>
+	        </div>
+	      </div>
+	    </fieldset>
+    </div>
+    <div class="row">
+      <div th:include="views/modals/fragments/modal-client-errors :: client-errors" th:remove="tag"></div>
+    </div>
+     <div class="row">
+      		<div th:include="views/modals/fragments/modal-server-errors :: server-errors" th:remove="tag"></div>
+     </div>
+  </div>
+  <div th:include="views/modals/fragments/modal-footer :: footer" th:remove="tag"></div>
+   <div th:include="views/modals/fragments/modal-exceptions :: exceptions" th:remove="tag"></div>
+  <div th:include="views/modals/fragments/modal-processing :: processing" th:remove="tag"></div>
+</form>

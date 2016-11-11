@@ -1,0 +1,214 @@
+<!--
+- HTML file to construct the Operations Board as an Angular Single Page Application (SPA).
+-
+- This file defines a single Angular with dependencies, routes and constants application.  It also defines It also links all the CSS,
+- Font, Image and JavaScript dependencies.
+-->
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>SMART Operations Display Board</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/images/favicon.png')}}" />
+    <link rel="shortcut icon" type="image/x-icon" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/images/favicon.ico')}}" />
+
+
+    <link rel="stylesheet" type="text/css" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/bootstrap-3.1.1.min.css')}}"></link>
+    <link rel="stylesheet" type="text/css"  th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/bootstrap-glyphicons-3.1.1.css')}}" />
+    <link rel="stylesheet" type="text/css"  th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/font-awesome.min.css')}}" />
+    <link rel="stylesheet/less" type="text/css" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/loader/loading-bar.css')}}"/>
+    <link rel="stylesheet/less" type="text/css" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/less/constants.less')}}" />
+    <link rel="stylesheet/less" type="text/css" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/less/fonts.less')}}" />
+    <link rel="stylesheet/less" type="text/css" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/less/displayboard.less')}}" />
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/less-1.7.0.min.js')}}"></script>
+</head>
+<body ng-app="OpsBoard" ng-controller="DisplayBoardCtrl" ng-class="{bodyerror: bodyerror}" style="margin: 0px; padding: 0px;">
+
+    <div id="board" ng-style="{width: boardWidth}">
+        <div ng-repeat="col in cols track by $index" id="col{{$index + 1}}" class="col wideCol{{innerWidthClss}} modCol{{ $index%3 }}" ng-style="{height: maxColHeight}">
+            <div ng-repeat="block in col track by $index" class="block">
+                <div ng-bind-html="to_trusted(block.html)"></div>
+                <div class="clearboth"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Libraries -->
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/jquery-2.1.0.min.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/moment-2.7.0.min.js')}}"></script>
+
+    <!--  Modules -->
+
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/displayboard/display-board-module.js')}}"></script>
+
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/angular-1.3.3.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/underscore-1.6.0.min.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/sockjs-0.3.4.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/stomp.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/loader/loading-bar.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/angular-resource-1.3.3.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/angular-cookies-1.3.3.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/angular-sanitize-1.3.3.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/angular-route-1.3.3.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/ui-bootstrap-tpls-0.11.0.js')}}"></script>
+
+    <!--  Modules -->
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/modules/ng-order-object-by.js')}}"></script>
+
+    <!--  Filter functions -->
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/displayboard/display-board-sorting.js')}}"></script>
+
+    <!--  Filters -->
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/displayboard/display-board-filters.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/filters/personnel-filters.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/filters/location-filters.js')}}"></script>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+
+        // Global variable for paths relative to application path
+        var appPathStart =   window.location.pathname.split('/displayboard')[0];    // Angular application module
+
+        angular.module('personnelFiltersUtils', []);
+
+        angular
+        	.module('OpsBoard', [
+            'ngCookies',
+            'ngResource',
+            'ngSanitize',
+            'ngRoute',
+            'ui.bootstrap',
+            'angular-loading-bar',
+            'ngOrderObjectBy',
+            'displayBoardFilters',
+            'personnelFilters',
+            'ngSanitize',
+        ])
+                .constant('titles', {
+                    'gsI' : 'GS I',
+                    'gsII' : 'GS II',
+                    'gsIII' : 'GS III',
+                    'sup' : 'SUP',
+                    'sw' : 'SW',
+                    'civilian' : 'Civilian'
+                })
+                .constant('groups', {
+			        equipment : {
+			                      rearLoader: 'Rear Loaders',
+			                      dualBins: 'Dual Bins',
+			                      alleyTruck: 'Alley Trucks',
+			                      hoistFittedChassis: 'Hoist-Fitted Chassis',
+			                      mechanicalBrooms: 'Mechanical Brooms',
+			                      roRo: 'RO-ROs',
+			                      ezPacks: 'E-Z Packs',
+			                      miscellaneous: 'Miscellaneous',
+			                      snow: 'Snow'
+			        },
+			        personnel : {
+			        	  commissioners: ['COMM','DYCOMM'],
+			              chiefs : ['GS V', 'GS IV', 'GS III', 'GS II'],
+			              superintendents : 'GS I',
+			              supervisors : 'SUP',
+			              sanitationWorkers : 'SW',
+			              civilians : 'Civilian'
+			      }
+			    })
+                .constant('titleHierarchy', ['GS V', 'GS IV', 'GS III','GS II', 'GS I', 'SUP', 'SW', 'Civilian'])
+                .constant('boardtypes', {
+			    	 district: 'D',
+			    	 boro: 'B',
+			    	 broomDepot: 'M',
+			    	 lotCleaning: 'L',
+			    	 splinter: 'S',
+			    	 hybrid: 'H'
+			     })
+                .constant('states', {
+                    equipment : {
+                        assigned: 'Assigned',
+                        available: 'Available',
+                        down: 'Down',
+                        hidden: 'Hidden',
+                        pendingDetach: 'Pending Detach',
+                        pendingAttach: 'Pending Attach',
+                        detached: 'Detached',
+                        onLocation: ['Available', 'Down', 'Assigned']
+                    },
+                    personnel : {
+                        assigned: 'Assigned',
+                        available: 'Available',
+                        detached: 'Detached',
+                        hidden: 'Hidden',
+                        partiallyAvailable: 'PartiallyAvailable',
+                        unavailable: 'Unavailable',
+                    }
+                }).config(function ($routeProvider) {
+                    $routeProvider
+                            .when('/', {
+                                templateUrl: /*[[@{/views/main-displayboard}]]*/,
+                                controller: 'OpsBoardCtrl',
+                                resolve: {
+                                    // Wait till board is loaded from server before instantiating the controller
+                                    displayBoard: function(OpsBoardRepository) {
+                                        return OpsBoardRepository;
+                                    }
+                                }
+                            }
+                    )
+                            .otherwise({
+                                redirectTo: '/'
+                            });
+                }).constant('durations', [{
+                    duration: 1,
+                    label: '1/8'
+                }, {
+                    duration: 2,
+                    label: '1/4'
+                }, {
+                    duration: 3,
+                    label: '3/8'
+                }, {
+                    duration: 4,
+                    label: '1/2'
+                }, {
+                    duration: 5,
+                    label: '5/8'
+                }, {
+                    duration: 6,
+                    label: '3/4'
+                }, {
+                    duration: 7,
+                    label: '7/8'
+                }]
+        );
+
+        /*]]>*/
+    </script>
+
+    <!--  Services -->
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/common/web-socket-service.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/common/reference-data-service.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/cache/shift-data-service.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/cache/category-data-service.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/cache/down-codes-service.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/cache/material-service.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/cache/personnel-status-service.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/cache/repair-location-service.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/cache/special-position-service.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/cache/unavailability-code-service.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/board/board-data-service.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/board/board-value-service.js')}}"></script>
+
+
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/displayboard/display-board-helper-formatting.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/displayboard/display-board-helper-formatting-large.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/displayboard/display-board-helper-common.js')}}"></script>
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/displayboard/display-board-helper-service.js')}}"></script>
+    <!--  Controllers -->
+    <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/displayboard/display-board-controller.js')}}"></script>
+   
+
+</body>
+</html>

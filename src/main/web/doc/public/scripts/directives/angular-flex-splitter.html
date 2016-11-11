@@ -1,0 +1,64 @@
+<!DOCTYPE html><html lang="en"><head><title>public\scripts\directives\angular-flex-splitter</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../../"><meta name="groc-document-path" content="public\scripts\directives\angular-flex-splitter"><meta name="groc-project-path" content="public\scripts\directives\angular-flex-splitter.js"><link rel="stylesheet" type="text/css" media="all" href="../../../assets/style.css"><script type="text/javascript" src="../../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">public\scripts\directives\angular-flex-splitter.js</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="hljs-pi">'use strict'</span>;
+angular.module(<span class="hljs-string">"angular-flex-splitter"</span>, []).directive(<span class="hljs-string">"splitter"</span>, [<span class="hljs-string">'$window'</span>, <span class="hljs-string">'$timeout'</span>,
+  <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($window, $timeout)</span> </span>{
+    <span class="hljs-keyword">return</span> {
+      restrict: <span class="hljs-string">'AC'</span>,
+      template: <span class="hljs-string">'&lt;div class="ghost"&gt;&lt;div class="expander"&gt;&lt;i class="fa fa-angle-left"&gt;&lt;/i&gt;&lt;i class="fa fa-angle-right"&gt;&lt;/i&gt;&lt;/div&gt;&lt;/div&gt;'</span>,
+      link: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(scope, iElement, iAttr)</span> </span>{
+        <span class="hljs-keyword">if</span> (iAttr.fixed === <span class="hljs-string">'fixed'</span>) <span class="hljs-keyword">return</span>;
+        <span class="hljs-keyword">var</span> isActive = <span class="hljs-literal">false</span>;
+        <span class="hljs-keyword">var</span> isPerv = <span class="hljs-regexp">/^(up|left)$/</span>.test(iAttr.splitter);
+        <span class="hljs-keyword">var</span> target = isPerv ? iElement.prev() : iElement.next();
+        <span class="hljs-keyword">var</span> style = <span class="hljs-regexp">/^(up|down)$/</span>.test(iAttr.splitter) ? <span class="hljs-string">'height'</span> : <span class="hljs-string">'width'</span>;
+        <span class="hljs-keyword">var</span> ghostStyle = <span class="hljs-regexp">/^(up|down)$/</span>.test(iAttr.splitter) ? <span class="hljs-string">'top'</span> : <span class="hljs-string">'left'</span>;
+        <span class="hljs-keyword">var</span> eventType = <span class="hljs-regexp">/^(up|down)$/</span>.test(iAttr.splitter) ? <span class="hljs-string">'clientY'</span> : <span class="hljs-string">'clientX'</span>;
+        <span class="hljs-keyword">var</span> sourceSize, targetSize;
+        <span class="hljs-keyword">var</span> body = angular.element(<span class="hljs-string">'body'</span>);
+        <span class="hljs-keyword">var</span> content = iElement.parents(<span class="hljs-string">".flexbox-content"</span>);
+
+        <span class="hljs-keyword">var</span> ghost = iElement.children(<span class="hljs-string">".ghost"</span>);
+        <span class="hljs-keyword">var</span> lastSize = <span class="hljs-number">0</span>;
+        ghost.on(<span class="hljs-string">'mousedown'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(ev)</span> </span>{
+          ev.preventDefault()
+          isActive = <span class="hljs-literal">true</span>;
+          targetSize = <span class="hljs-built_in">parseInt</span>(target.css(style));
+          body.addClass(<span class="hljs-string">"flexbox-active"</span>);
+          ghost.addClass(<span class="hljs-string">"active"</span>);
+        }).parent().parent().on(<span class="hljs-string">'mousemove'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(ev)</span> </span>{
+          <span class="hljs-keyword">if</span> (!isActive) <span class="hljs-keyword">return</span>;
+          lastSize = (ev[eventType] - sourceSize);
+          ghost.css(ghostStyle, (ev[eventType] - sourceSize));
+        }).on(<span class="hljs-string">'mousedown'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(ev)</span> </span>{
+          sourceSize = ev[eventType];
+        }).on(<span class="hljs-string">'mouseup'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(ev)</span> </span>{
+          isActive = <span class="hljs-literal">false</span>;
+          body.removeClass(<span class="hljs-string">"flexbox-active"</span>);
+          ghost.removeClass(<span class="hljs-string">"active"</span>);
+          ghost.css(ghostStyle, <span class="hljs-number">0</span>);
+          <span class="hljs-keyword">if</span> (isPerv) {
+            target.css(style, targetSize + lastSize);
+          } <span class="hljs-keyword">else</span> {
+            target.css(style, targetSize - lastSize);
+          }
+        });
+
+        <span class="hljs-keyword">var</span> wEl = angular.element($<span class="hljs-built_in">window</span>);
+        <span class="hljs-keyword">var</span> pWidth = <span class="hljs-number">0</span>;
+
+        <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">resize</span><span class="hljs-params">()</span> </span>{
+          <span class="hljs-keyword">if</span> (pWidth != content.parent().width()) {
+            pWidth = content.parent().width();
+            content.width(pWidth);
+            <span class="hljs-comment">//fix animation delay</span>
+            $timeout(resize, <span class="hljs-number">50</span>);
+          }
+        }
+        resize();
+        <span class="hljs-comment">//fix parent full width issue</span>
+        wEl.off(<span class="hljs-string">'resize.splitter'</span>).on(<span class="hljs-string">'resize.splitter'</span>, resize);
+        <span class="hljs-keyword">var</span> newScope = scope.$<span class="hljs-keyword">new</span>();
+        newScope.$on(<span class="hljs-string">"resize"</span>, resize);
+      }
+    };
+  }
+]);</div></div></div></div></body></html>

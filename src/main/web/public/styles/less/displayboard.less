@@ -1,0 +1,1394 @@
+// Display Board Constants
+
+@font-face {
+  font-family: 'OpenSansCondBold';
+  src: url('../../fonts/OpenSansCondBold.eot');
+  src: url('../../fonts/OpenSansCondBold.eot') format('embedded-opentype'),
+  url('../../fonts/OpenSansCondBold.woff2') format('woff2'),
+  url('../../fonts/OpenSansCondBold.woff') format('woff'),
+  url('../../fonts/OpenSansCondBold.ttf') format('truetype'),
+  url('../../fonts/OpenSansCondBold.svg#OpenSansCondBold') format('svg');
+}
+
+@font-face {
+  font-family: 'OpenSansCondLight';
+  src: url('../../fonts/OpenSansCondLight.eot');
+  src: url('../../fonts/OpenSansCondLight.eot') format('embedded-opentype'),
+  url('../../fonts/OpenSansCondLight.woff2') format('woff2'),
+  url('../../fonts/OpenSansCondLight.woff') format('woff'),
+  url('../../fonts/OpenSansCondLight.ttf') format('truetype'),
+  url('../../fonts/OpenSansCondLight.svg#OpenSansCondLight') format('svg');
+}
+
+@black-color: #000000;
+@white-color: #FFFFFF;
+@pink-color: #FF0A9B;
+@yellow-orange-color: #FF9900;
+@brown-color: #AF5F32;
+@light-green-color: #99FF00;
+@light-blue-color: #33CCFF;
+@green-color: #00AF01;
+@red-color: #FF0C00;
+@light-yellow-color: #FFFF99;
+@magenta-color: #AD128A;
+@light-grey-color: #999999;
+@tan-color: #CC9966;
+@teal-color: #33CC99;
+
+@grey-color: #848484;
+@olive-color: #999933;
+@blue-violet-color: #8792DE;
+@leaf-green-color: #519472;
+@rose-color: #CE4E48;
+@lavender-color: #E88EFF;
+
+@orange-color: #E15A00;
+@yellow-color: #FFFF00;
+@bright-blue-color: #0F75FF;
+
+@purple-color: #7F00FF;
+@salmon-color: #FF897F;
+
+@detached-color:#CCCCCC;
+
+@box-borders: #616063;
+@grey-text-color: #616063;
+
+@boro-board: @purple-color;
+@supervisor: @purple-color;
+
+@district1: @pink-color;
+@district2: @yellow-orange-color;
+@district3: @brown-color;
+@district4: @light-green-color;
+@district5: @light-blue-color;
+@district6: @green-color;
+@district7: @red-color;
+@district8: @light-yellow-color;
+@district9: @magenta-color;
+@district10: @light-grey-color;
+@district11: @tan-color;
+@district12: @teal-color;
+@district13: @grey-color;
+@district14: @olive-color;
+@district15: @blue-violet-color;
+@district16: @leaf-green-color;
+@district17: @rose-color;
+@district18: @lavender-color;
+
+@dayshift-color: #74c40d;
+@nightshift-color: #0dddff;
+
+
+@group1_color: #E88EFF;
+@group2_color: #CE4E48;
+@group3_color: #519472;
+@group4_color: #8792DE;
+@group5_color: #999933;
+@group6_color: #848484;
+@group7_color: #33CC99;
+@group8_color: #CC9966;
+@group9_color: #999999;
+@group10_color: #AD12BA;
+@group11_color: #FFFF99;
+@group12_color: #FF0C00;
+@group13_color: #00AF01;
+@group14_color: #33CCFF;
+@group15_color: #99FF00;
+@group16_color: #AF5F32;
+@group17_color: #FF9900;
+@group18_color: #FF0A9B;
+@group-not-start-truck-background: #848484;
+@group-not-start-truck-color: #ffffff;
+@dual-bin-bg-color: #99ff00;
+
+// Display Board CSS
+
+.classShift1 {
+  color: @dayshift-color;
+}
+
+.classShift2 {
+  color: @nightshift-color;
+
+}
+
+html, body {
+  height: 100%;
+  background-color: #000;
+  font-size: 31px;
+  letter-spacing: -1px;
+  padding: 25px 0px 0px 0px;
+}
+
+body {
+  font-family: OpenSansCondBold, sans-serif;
+  font-weight: 300;
+  padding: 25px 0px;
+}
+
+.bodyerror {
+  border-top: 20px solid @red-color;
+}
+
+/* ---- .item ---- */
+
+.col {
+  width: 632px;
+  margin: 0px;
+  padding-right: 25px;
+  float: left;
+    &.modCol0 {
+      width: 657px;
+      padding-left: 25px;
+    }
+}
+
+.block {
+  float: left;
+  width: 100%;
+  color: @white-color;
+  border-color: hsla(0, 0%, 0%, 0.7);
+  margin:0px;
+  padding: 0px 0px 6px;
+}
+
+.chartlabel {
+  float: left;
+  width: 78px;
+}
+
+.chartnamewide {
+  float: left;
+  width: 300px;
+}
+
+.chartname {
+  float: left;
+  width: 158px;
+  overflow: hidden;
+  margin-left: 10px;
+}
+
+.marker {
+  float:left;
+  width: 26px;
+}
+
+.code {
+  float:left;
+  width: 74px;
+}
+
+.equipment {
+  float:left;
+  width: 125px;
+}
+
+.newstext {
+  font-size: 52px;
+}
+
+.mda {
+  font-weight: 800;
+  float: left;
+  margin-top: 10px;
+  font-size: 18px;
+  padding: 0px 5px;
+  background-color: @red-color;
+  color: @white-color;
+  border-radius: 5px;
+  border: 1px solid @white-color;
+  z-index: 50000;
+  margin-right: 2px;
+  min-width: 24px;
+ }
+
+.workingVacation, .offChart, .offVacation, .offXwp, .offXwop {
+  font-weight: 800;
+  float: left;
+  margin-top: 10px;
+  font-size: 18px;
+  padding: 0px 5px;
+  background-color: #216C2A;
+  color: @white-color;
+  border-radius: 5px;
+  border: 1px solid @white-color;
+  z-index: 50000;
+  margin-right: 2px;
+  min-width: 24px;
+}
+
+.flip {
+  -ms-transform: rotate(180deg); /* IE 9 */
+  -webkit-transform: rotate(180deg); /* Chrome, Safari, Opera */
+  transform: rotate(180deg);
+}
+
+.workingChart {
+  font-weight: 800;
+  float: left;
+  margin-top: 10px;
+  font-size: 18px;
+  padding: 0px 5px;
+  background-color: #216C2A;
+  color: @white-color;
+  border-radius: 13px;
+  border: 1px solid @white-color;
+  z-index: 50000;
+  margin-right: 2px;
+  min-width: 24px;
+}
+
+.unavailableName {
+  width:190px;
+  float:left;
+  overflow: hidden;
+  
+  text-align: center;
+  &.unavailableTitle {
+    text-align: left;
+  }
+  & .namemask {
+    width:176px;
+    overflow: hidden;
+    float: left;
+    text-align: center;
+
+    & .namespan {
+      text-align: center;
+      width: 300px;
+    }
+  }
+}
+
+.unavailableFooter {
+  border-top: 2px solid @detached-color;
+  margin: 6px 0px 0px;
+}
+
+.detachedFooter {
+  border-top: 2px solid @detached-color;
+  margin: 0px;
+}
+
+
+.name1 {
+
+  border-radius: 6px;
+  margin-bottom: 0px;
+  float:left;
+  width: 165px;
+  overflow: hidden;
+  margin-right: 5px;
+  &.twocol {
+    border-radius: 6px;
+    width: 328px;
+    }
+  }
+
+.name2 {
+
+  margin-bottom: 0px;
+  border-radius: 6px;
+  float:left;
+  width: 165px;
+  overflow: hidden;
+}
+
+.namefull {
+  left: 0px;
+  width: 300px;
+  float: left;
+  text-align: center;
+
+
+}
+
+.namemarker {
+  //margin: 11px 5px 0px 0px;
+  float: left;
+  /*width: 18px;
+  height: 18px;*/
+  //border: 2px solid @box-borders;
+  background-color: @white-color;
+  border-radius: 6px;
+  padding: 0px 5px 2px;
+  min-width: 165px;
+  text-align: center;
+
+  &.D {
+    background-color: @supervisor;
+  }
+
+  &.GS, &.Supervision, &.SUP {
+    background-color: @supervisor;
+  }
+
+  &.GS-I {
+    background-color: @light-blue-color;
+    color: @black-color;
+  }
+  &.GS-II {
+    background-color: #00AF01;
+    color: @black-color;
+  }
+
+  &.GS-III {
+    background-color: @yellow-color;
+    color: @black-color;
+  }
+
+  &.DSOA, &.DET {
+    background-color: @detached-color;
+    color: @black-color;
+  }
+
+  &.GG, &.Support {
+    background-color: @white-color;
+    color: @black-color;
+  }
+
+  &.baskets, &.MLP, &.Cleaning {
+    background-color: @yellow-color;
+    color: @black-color;
+  }
+
+  &.UA, &.COMM {
+    background-color: @red-color;
+    color: @black-color;
+  }
+
+  &.M, &.SW {
+    background-color: @white-color;
+    color: @black-color;
+  }
+
+
+  &.COL, &.Collection {
+    background-color: @bright-blue-color;
+  }
+
+  &.garage, &.G {
+    background-color: @white-color;
+    color: @black-color;
+    &.SUP {
+    	background-color: @supervisor;
+    	color: @white-color;
+    }
+  }
+
+  &.Snow, &.Civilian {
+    background-color: @orange-color;
+    color: @black-color;
+    &.SUP {
+    	background-color: @supervisor;
+    	color: @white-color;
+    }    
+  }
+
+
+
+  &.section1, &.S1 {
+    background-color: @pink-color;
+    &.SUP {
+    	background-color: @supervisor;
+    	color: @white-color;
+    }    
+  }
+
+  &.section2, &.S2 {
+    background-color: @yellow-orange-color;
+    color: @black-color;
+    &.SUP {
+    	background-color: @supervisor;
+    	color: @white-color;
+    }    
+  }
+
+  &.section3, &.S3 {
+    background-color: @brown-color;
+    &.SUP {
+    	background-color: @supervisor;
+    	color: @white-color;
+    }    
+  }
+
+  &.section4, &.S4 {
+    background-color: @light-green-color;
+    color: @black-color;
+    &.SUP {
+    	background-color: @supervisor;
+    	color: @white-color;
+    }    
+  }
+
+  &.section5, &.S5 {
+    background-color: @light-blue-color;
+    color: @black-color;
+    &.SUP {
+    	background-color: @supervisor;
+    	color: @white-color;
+    }    
+  }
+
+  &.section6, &.S6 {
+    background-color: @green-color;
+    &.SUP {
+    	background-color: @supervisor;
+    	color: @white-color;
+    }    
+  }
+
+  &.section7, &.S7 {
+    background-color: @red-color;
+    &.SUP {
+    	background-color: @supervisor;
+    	color: @white-color;
+    }    
+  }
+
+  &.section8, &.S8 {
+    background-color: @light-yellow-color;
+    color: @black-color;
+    &.SUP {
+    	background-color: @supervisor;
+    	color: @white-color;
+    }    
+  }
+  &.section9, &.S9 {
+    background-color: @magenta-color;
+    &.SUP {
+    	background-color: @supervisor;
+    	color: @white-color;
+    }    
+  }
+
+  &.section10, &.S10 {
+    background-color: @light-grey-color;
+    &.SUP {
+    	background-color: @supervisor;
+    	color: @white-color;
+    }    
+  }
+
+  &.section11, &.S11 {
+    background-color: @tan-color;
+    &.SUP {
+    	background-color: @supervisor;
+    	color: @white-color;
+    }    
+  }
+
+  &.section12, &.S12 {
+    background-color: @teal-color;
+    color: @black-color;
+    &.SUP {
+    	background-color: @supervisor;
+    	color: @white-color;
+    }    
+  }
+
+  &.section13, &.S13 {
+    background-color: @grey-color;
+    &.SUP {
+    	background-color: @supervisor;
+    	color: @white-color;
+    }    
+  }
+
+  &.section14, &.S14 {
+    background-color: @olive-color;
+    &.SUP {
+    	background-color: @supervisor;
+    	color: @white-color;
+    }    
+  }
+
+  &.section15, &.S15 {
+    background-color: @blue-violet-color;
+    &.SUP {
+    	background-color: @supervisor;
+    	color: @white-color;
+    }    
+  }
+
+  &.section16, &.S16 {
+    background-color: @leaf-green-color;
+    &.SUP {
+    	background-color: @supervisor;
+    	color: @white-color;
+    }    
+  }
+
+  &.section17, &.S17 {
+    background-color: @rose-color;
+    &.SUP {
+    	background-color: @supervisor;
+    	color: @white-color;
+    }    
+  }
+
+  &.section18, &.S18 {
+    background-color: @lavender-color;
+    color: @black-color;
+    &.SUP {
+    	background-color: @supervisor;
+    	color: @white-color;
+    }    
+  }
+  &.detachedsw, &.detachedsup, &.detachedospayroll {
+    background-color: @salmon-color;
+    color: @black-color;
+  }
+  &.attachedToPayrollLoc {
+  	background-color: @white-color;
+    color: @black-color;
+  }
+  &.personhidden {
+  	display: none;
+  }
+}
+
+.tab {
+  margin: 0px;
+  border-bottom: 4px solid;
+  font-size: 24px;
+  &.tab1 {
+    border-color: @pink-color;
+  }
+
+  &.tab2 {
+    border-color: @yellow-orange-color;
+  }
+
+  &.tab3 {
+    border-color: @brown-color;
+  }
+
+  &.tab4 {
+    border-color: @light-green-color;
+  }
+
+  &.tab5 {
+    border-color: @light-blue-color;
+  }
+
+  &.tab6 {
+    border-color: @green-color;
+  }
+
+  &.tab7 {
+    border-color: @red-color;
+  }
+
+  &.tab8 {
+    border-color: @light-yellow-color;
+  }
+  &.tab9 {
+    border-color: @magenta-color;
+  }
+
+  &.tab10 {
+    border-color: @light-grey-color;
+  }
+
+  &.tab11 {
+    border-color: @tan-color;
+  }
+
+  &.tab12 {
+    border-color: @teal-color;
+  }
+
+  &.tab13 {
+    border-color: @grey-color;
+  }
+
+  &.tab14 {
+    border-color: @olive-color;
+  }
+
+  &.tab15 {
+    border-color: @blue-violet-color;
+  }
+
+  &.tab16 {
+    border-color: @leaf-green-color;
+  }
+
+  &.tab17 {
+    border-color: @rose-color;
+  }
+
+  &.tab18 {
+    border-color: @lavender-color;
+
+  }
+}
+
+.squaremarker {
+  margin: 11px 5px 0px 0px;
+  float: left;
+  width: 18px;
+  height: 18px;
+  border: 2px solid @box-borders;
+  border-radius: 3px;
+}
+
+
+.routemarker {
+  color: @yellow-orange-color;
+}
+
+.startothermarker {
+  background-color: @grey-text-color;
+}
+
+.startother {
+  color: @grey-text-color;
+}
+.clear {
+  clear: both;
+}
+
+.header {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 700;
+  padding: 3px 15px;
+  background-color: #434248;
+  border: 2px solid #56545A;
+  border-radius: 8px;
+  font-size: 32px;
+  margin-top: 5px;
+
+
+}
+
+.firstheader {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 700;
+  padding: 3px 15px;
+  background-color: #434248;
+  border: 2px solid #56545A;
+  border-radius: 16px;
+  font-size: 44px;
+  margin-bottom: 0px;
+  text-align: center;
+  letter-spacing: -2px;
+  line-height: 64px;
+
+  &.shift1 {
+    color: @black-color;
+    background-color: @dayshift-color;
+    border: 0px solid @dayshift-color;
+  }
+
+  &.shift2 {
+    color: @black-color;
+    background-color: @nightshift-color;
+    border: 0px solid @nightshift-color;
+  }
+
+  &.unavailable {
+    color: @white-color;
+    background-color: @red-color;
+    border: 0px solid @red-color;
+  }
+
+  &.greyback {
+    color: @black-color;
+    background-color: @detached-color;
+    border: 0px solid @detached-color;
+  }
+
+}
+
+.logo {
+  margin: 10px;
+  width: 150px;
+}
+
+.dateTime {
+  background-color: @box-borders;
+  color: @white-color;
+  text-align: center;
+  font-family: 'Open Sans', sans-serif;
+  border-radius: 16px;
+  font-weight: 700;
+  padding: 0px;
+  font-size: 42px;
+  text-align: center;
+  width: 100%;
+  line-height: 42px;
+
+  letter-spacing: -2px;
+}
+
+.footerBlock {
+  font-size: 18px;
+  background-color: @box-borders;
+  color: @white-color;
+  text-align: center;
+  font-family: 'Open Sans', sans-serif;
+  border-radius: 16px;
+  font-weight: 700;
+  padding: 22px;
+  text-align: center;
+  width: 100%;
+  letter-spacing: 0px;
+}
+
+.logoText {
+  float: left;
+  width:  390px;
+  text-align: center;
+}
+
+.logoday {
+  margin-top: 40px;
+  font-size: 58px;
+  letter-spacing: -3px;
+
+}
+
+.logodate {
+}
+
+.headerlogo {
+
+  width: 100%;
+
+
+  > .logo {
+    text-align: center;
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 700;
+    padding: 4px 15px 3px;
+    width: 234px;
+    float: left;
+    font-size: 38px;
+  }
+
+  > .logomulti {
+    text-align: center;
+    font-family: 'Open Sans', sans-serif;
+    //border: 2px solid @box-borders;
+    border-radius: 16px;
+
+    font-weight: 700;
+    padding: 0px;
+    font-size: 54px;
+    text-align: center;
+    width: 100%;
+    line-height: 74px;
+    letter-spacing: -2px;
+
+  }
+
+
+}
+
+.footer {
+  text-align: center;padding: 5px 0px;
+}
+
+.month {
+  margin: 0px;
+  font-size: 36px;
+  padding: 0px;
+}
+
+.date {
+  margin: 2px 0px;
+  font-size: 16px;
+  padding: 0px;
+  line-height: 16px;
+}
+
+.selectmonitors {
+  text-align: center;
+  > .group {
+    margin: 24px 0px;
+    text-align: center;
+    border: 2px solid #616063;
+    border-radius: 3px;
+    padding-bottom: 20px;
+  }
+
+
+}
+
+.monitor {
+  width:140px;
+  padding: 40px 15px 0px;
+}
+
+.detatt {
+  float:left;
+  margin-bottom: 0px;
+}
+
+
+.detattloc {
+  width:190px;
+  float:left;
+}
+
+.detattsec {
+  width:195px;
+  float:left;
+}
+
+.detattcat {
+  width:195px;
+  float:left;
+}
+
+> .routemarker {
+  float: left;
+}
+
+> .multiroute {
+
+  float:left;
+
+
+  html body div#displayboard.isotope div.item span.marker i.fa.fa-map-marker.routemarker
+
+  > span.marker i.fa.fa-map-marker.routemarker {
+    float: left;
+  }
+
+}
+
+.multimarker {
+  width: 22px;
+  float: left;
+}
+
+
+.multisection {
+  width: 80px;
+  float: left;
+}
+
+.task {
+  width: 90px;
+  float: left;
+}
+
+.time {
+  width: 32px;
+  float: left;
+}
+
+.type {
+  width: 50px;
+  text-align: center;
+  float: left;
+}
+
+
+
+.headerlogo {
+
+  > .BKS06 {
+    color: @black-color;
+    background-color:  @white-color;
+  }
+
+  // MANHATTAN
+
+  > .BX01, .BKN01, .MN01, .QW01, .SI01 {
+    color: @white-color;
+    background-color: @district1;
+  }
+
+  > .BX02, .BKN02, .MN02, .QW02, .SI02 {
+    color: @black-color;
+    background-color:  @district2;
+  }
+
+  > .BX03A, .BX03, .BKN03, .MN03A, .MN03, .QW03, .SI03 {
+    color: @white-color;
+    background-color:  @district3;
+  }
+
+  > .BX04, .BKN04, .MN04A, .MN04, .QW04 {
+    color: @black-color;
+    background-color:  @district4;
+  }
+
+  > .BX05, .BKN05, .MN05, .QW05A, .QW05 {
+    color: @black-color;
+    background-color: @district5;
+  }
+
+  > .BX06A, .BX06, .BKS06A, .MN06, .QW06 {
+    color: @white-color;
+    background-color: @district6;
+  }
+
+   > .BX07, .BKS07, .MN07, .QE07, .QNA, .QE07A {
+    color: @white-color;
+    background-color: @district7;
+  }
+
+  > .BX08, .BKN08, .MN08, .QE08 {
+    color: @black-color;
+    background-color: @district8;
+  }
+
+  > .BX09, .BKN09, .MN09, .QW09 {
+    color: @white-color;
+    background-color: @district9;
+  }
+
+  > .BX10, .BKS10, .MN10, .QE10 {
+    color: @white-color;
+    background-color: @district10;
+  }
+
+  > .BX11, .BKS11, .MN11A, .MN11, .QE11, .QE11A {
+    color: @white-color;
+    background-color: @district11;
+  }
+
+  > .BKS12, .BX12, .MN12, .QE12A, .BX12 {
+    color: @white-color;
+    background-color: @district12;
+  }
+
+  > .BKS13, .QE13, .QE13W {
+    color: @white-color;
+    background-color: @district13;
+  }
+
+  > .BKS14, .QE14 {
+    color: @white-color;
+    background-color: @district14;
+  }
+
+  > .BKS15 {
+    color: @white-color;
+    background-color: @district15;
+  }
+
+  > .BKS16 {
+    color: @white-color;
+    background-color: @district16;
+  }
+
+  > .BKS17 {
+    color: @white-color;
+    background-color: @district17;
+  }
+
+  > .BKS18 {
+    color: @black-color;
+    background-color: @district18;
+  }
+}
+
+.categoriesline {
+
+  font-weight: 300;
+  color: @black-color;
+  margin: 0px;
+  text-align: left;
+  border-bottom: 4px solid;
+
+  &.Snow {
+    border-color: @orange-color;
+  }
+
+  &.baskets, &.MLP, &.Cleaning {
+    border-color: @yellow-color;
+  }
+
+  &.GS, &.Supervision {
+    border-color: @supervisor;
+  }
+
+  &.DSOA, &.DET
+  {
+    border-color: @detached-color;
+  }
+
+  &.GG, &.Support, &.MDA, &.Training {
+    border-color: @white-color;
+  }
+
+  &.UA {
+    border-color: @red-color;
+  }
+
+  &.M, &.ERD {
+    border-color: @white-color;
+  }
+
+  &.COL, &.Collection, &.Recycling {
+    border-color: @bright-blue-color;
+  }
+
+  &.Surplus {
+    border-color: @grey-text-color;
+  }
+}
+
+.categories {
+  padding: 0px 20px 5px;
+  border-radius: 6px 6px 0px 0px;
+  &.Snow {
+    background-color: @orange-color;
+  }
+
+  &.baskets, &.MLP, &.Cleaning {
+    background-color: @yellow-color;
+  }
+
+  &.GS, &.Supervision {
+    background-color: @supervisor;
+    color: @white-color;
+  }
+
+  &.DSOA, &.DET {
+    color: @black-color;
+    background-color: @detached-color;
+   }
+
+  &.GG, &.Support, &.MDA, &.Training {
+    background-color: @white-color;
+  }
+
+  &.UA {
+    background-color: @red-color;
+  }
+
+  &.M, &.ERD {
+    background-color: @white-color;
+  }
+
+  &.COL, &.Collection, &.Recycling {
+    background-color: @bright-blue-color;
+  }
+
+  &.Surplus {
+    background-color: @grey-text-color;
+    color: @white-color;
+  }
+
+  &.divider {
+    color: @black-color;
+    background-color: @detached-color;
+    margin: 5px 0px 10px;
+    &.unavailable {
+      background-color: @red-color;
+      color: @white-color;
+    }
+  }
+
+}
+
+.equipment {
+  border-radius: 6px;
+  padding: 0px 5px 2px;
+  min-width: 144px;
+  text-align: center;
+  margin-right:5px;
+
+  &.baskets, &.MLP, &.Cleaning {
+    background-color: @yellow-color;
+    color: @black-color;
+  }
+
+  &.COL, &.Collection, &.Recycling {
+    background-color: @bright-blue-color;
+    color: @black-color;
+    &.Dual-Bin {
+      background-color: @dual-bin-bg-color;
+    }
+
+    &.Snow {
+      color: @black-color;
+      background-color: @orange-color;
+
+    }
+
+  }
+
+  &.Snow {
+    color: @black-color;
+    background-color: @orange-color;
+
+  }
+
+  &.Miscellaneous {
+    color: @black-color;
+    background-color: @white-color;
+  }
+
+}
+
+
+
+.garage {
+  background-color: @white-color;
+}
+
+.D {
+  background-color: @supervisor;
+}
+
+.name {
+  color: @black-color;
+  padding: 2px 20px;
+  border-radius: 6px 6px 0px 0px;
+  margin-bottom: 0px;
+}
+
+.background {
+  float: left;
+  &.background1 {
+    background-color: @pink-color;
+  }
+
+  &.background2 {
+    background-color: @yellow-orange-color;
+  }
+
+  &.background3 {
+    background-color: @brown-color;
+  }
+
+  &.background4 {
+    background-color: @light-green-color;
+  }
+
+  &.background5 {
+    background-color: @light-blue-color;
+  }
+
+  &.background6 {
+    background-color: @green-color;
+  }
+
+  &.background7 {
+    background-color: @red-color;
+  }
+
+  &.background8 {
+    background-color: @light-yellow-color;
+  }
+
+  &.background9 {
+    background-color: @magenta-color;
+  }
+
+  &.background10 {
+    background-color: @light-grey-color;
+  }
+
+  &.background11 {
+    background-color: @tan-color;
+  }
+
+  &.background12 {
+    background-color: @teal-color;
+  }
+
+  &.background13 {
+    background-color: @grey-color;
+  }
+
+  &.background14 {
+    background-color: @olive-color;
+  }
+
+  &.background15 {
+    background-color: @blue-violet-color;
+  }
+
+  &.background16 {
+    background-color: @leaf-green-color;
+  }
+
+  &.background17 {
+    background-color: @rose-color;
+  }
+
+  &.background18 {
+    background-color: @lavender-color;
+  }
+}
+
+
+.section1, .S1 {
+  background-color: @pink-color;
+
+}
+
+.section2, .S2 {
+  background-color: @yellow-orange-color;
+}
+
+.section3, .S3 {
+  background-color: @brown-color;
+}
+
+.section4, .S4 {
+  background-color: @light-green-color;
+}
+
+.section5, .S5 {
+  background-color: @light-blue-color;
+}
+
+.section6, .S6 {
+  background-color: @green-color;
+}
+
+.section7, .S7 {
+  background-color: @red-color;
+}
+
+.section8, .S8 {
+  background-color: @light-yellow-color;
+}
+.section9, .S9 {
+  background-color: @magenta-color;
+}
+
+.section10, .S10 {
+  background-color: @light-grey-color;
+}
+
+.section11, .S11 {
+  background-color: @tan-color;
+}
+
+.section12, .S12 {
+  background-color: @teal-color;
+}
+
+.section13, .S13 {
+  background-color: @grey-color;
+}
+
+.section14, .S14 {
+  background-color: @olive-color;
+}
+
+.section15, .S15 {
+  background-color: @blue-violet-color;
+}
+
+.section16, .S16 {
+  background-color: @leaf-green-color;
+}
+
+.section17, .S17 {
+  background-color: @rose-color;
+}
+
+.section18, .S18 {
+  background-color: @lavender-color;
+}
+
+
+
+
+
+.group1, .group19, .group37 {
+  color: @group1_color;
+}
+.group2, .group20, .group38 {
+  color: @group2_color;
+}
+.group3, .group21, .group39 {
+  color: @group3_color;
+}
+.group4, .group22, .group40 {
+  color: @group4_color;
+}
+.group5, .group23, .group41 {
+  color: @group5_color;
+}
+.group6, .group24, .group42 {
+  color: @group6_color;
+}
+.group7, .group25, .group43 {
+  color: @group7_color;
+}
+.group8, .group26, .group44 {
+  color: @group8_color;
+}
+.group9, .group27, .group45 {
+  color: @group9_color;
+}
+.group10, .group28, .group46 {
+  color: @group10_color;
+}
+.group11, .group29, .group47 {
+  color: @group11_color;
+}
+.group12, .group30, .group48 {
+  color: @group12_color;
+}
+.group13, .group31, .group49 {
+  color: @group13_color;
+}
+.group14, .group32, .group50 {
+  color: @group14_color;
+}
+.group15, .group33, .group51 {
+  color: @group15_color;
+}
+.group16, .group34, .group52 {
+  color: @group16_color;
+}
+.group17, .group35, .group53 {
+  color: @group17_color;
+}
+.group18, .group36, .group54 {
+  color: @group18_color;
+}
+
+
+.childclass {
+  color: @grey-text-color;
+}
+
+.childmarkerclass {
+  background-color: #444249;
+}
+
+.multirouteroute {
+  float: left;
+
+  & .segment {
+    width: 290px;
+    float: left;
+
+    & .routemarker {
+      float: left;
+      width: 36px;
+    }
+
+    & .segmenttitle {
+      float: left;
+      width: 188px;
+    }
+
+    & .to {
+      float: left;
+      width: 55px;
+    }
+  }
+
+}
+
+.clearboth {
+  clear: both;
+}

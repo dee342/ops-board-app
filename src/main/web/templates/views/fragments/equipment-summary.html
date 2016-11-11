@@ -1,0 +1,47 @@
+<div th:fragment="equipment-summary">
+	<div class="summary-container ng-hide" ng-show="EquipmentSummary.active">
+		<table class="table table-condensed">
+		  <tr>
+		    <td>
+		      <table class="table-bordered" ng-repeat="display in equipmentSummaryDisplay">
+				<thead>
+					<tr>
+						<th class="locationheader" colspan="6">{{display.equipmentLocation}}</th>
+					</tr>
+					<tr>
+						<th>Equipment Subgroup</th>
+						<th>Available</th>
+						<th>Quota</th>
+						<th>Quota +/-</th>
+						<th>Plan</th>
+						<th>Plan +/-</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr ng-repeat="type in display.equipmentCountTypes">
+						<td>
+							{{type.type}}
+						</td>
+						<td>
+							{{type.availablecount}}
+						</td>
+						<td>
+							{{type.quota}}
+						</td>
+						<td class="delta-{{type.quotadeltaflag}}">
+							{{type.quotadelta}}
+						</td>
+						<td>
+							{{type.actual}}
+						</td>
+						<td class="delta-{{type.actualdeltaflag}}">
+							{{type.actualdelta}}
+						</td>
+					</tr>
+				</tbody>
+			  </table>
+			 </td>
+		   </tr>
+		</table>
+	</div>
+</div>

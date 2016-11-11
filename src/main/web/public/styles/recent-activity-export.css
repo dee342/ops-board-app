@@ -1,0 +1,47 @@
+.recent-activity-export * {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+.recent-activity-export {
+	background: #fff;
+	font: 100%/120% sans-serif;
+	color: #333;
+	padding: 20px;
+}
+.recent-activity-export .log-entry {
+	margin-bottom: 20px;
+	padding-bottom: 20px;
+	border-bottom: 1px dotted #eee;
+	overflow: hidden;
+}
+.recent-activity-export .log-entry .day,
+.recent-activity-export .log-entry .time {
+	font-size: 70%;
+	color: #999;
+	float: left;
+}
+.recent-activity-export .log-entry .time {
+	font-size: 90%;
+}
+.recent-activity-export .log-entry .message > span {
+	display: inline-block;
+	margin-right: 5px;
+}
+.recent-activity-export .log-entry .message .user {
+	color: #a0a;
+	font-weight: 700;
+	font-size: 90%;
+	vertical-align: top;
+	margin-left: 10px;
+}
+.recent-activity-export .log-entry .chunk:nth-child(2) {
+	font-weight: 700;
+}
+.recent-activity-export .log-entry .message .punctuation {
+	margin-left: -4px;
+}
+.recent-activity-export .client-info {
+	width: 50%;
+	margin-top: 40px;
+}

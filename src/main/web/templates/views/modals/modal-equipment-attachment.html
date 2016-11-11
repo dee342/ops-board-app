@@ -1,0 +1,59 @@
+<!--/* Modal window view for accepting a detached piece of equipment. */-->
+
+<form id="modal" name="modal" class="container-fluid" novalidate="true" centered-modal="true">
+	<!-- novalidate disables HTML5 native validation -->
+	<div th:include="views/modals/fragments/modal-header :: header" th:remove="tag"></div>
+	<div class="modal-body" ng-show="showContent">
+		<div class="row">
+			<label class="col-md-4 text-right">From:</label>
+			<div class="col-md-6 text-left">{{::opData.from}}</div>
+		</div>
+		<div class="row">
+			<label class="col-md-4 text-right">Type:</label>
+			<div class="col-md-6 text-left">{{::opData.equipmentType}}</div>
+		</div>
+		<div class="row">
+			<label class="col-md-4 text-right">Detach Date:</label>
+			<div class="col-md-6 text-left">{{::opData.detachDate}}</div>
+		</div>
+		<div class="row">
+			<label class="col-md-4 text-right">Detach Time:</label>
+			<div class="col-md-6 text-left">{{::opData.detachTime}}</div>
+		</div>
+		<div class="row">
+			<label class="col-md-4 text-right">Delivered By:</label>
+			<div class="col-md-6 text-left">{{::opData.deliveredBy}}</div>
+		</div>
+		<div class="row">
+			<label class="col-md-4 text-right">Received By<i class="fa fa-asterisk"></i>:</label>
+			<div class="col-md-6 text-left">
+				<input type="text" id="receivedBy" name="receivedBy" class="form-control" ng-class="{'submitted' : submitted}" ng-model="opData.receivedBy" ng-required="true" input-focus="" />
+			</div>
+		</div>
+		<div class="row">
+			<label class="col-md-4 text-right">Received Date:</label>
+			<div class="col-md-6 text-left">{{::opData.receivedDate}}</div>
+		</div>
+		<div class="row">
+			<label class="col-md-4 text-right">Received Time<i class="fa fa-asterisk"></i>:</label>
+			<div class="col-md-6 text-left">
+				<timepicker class="timepicker" ng-model="opData.receivedTime" show-meridian="false"></timepicker>
+			</div>
+		</div>
+		<div class="row">
+			<label class="col-md-4 text-right">Remarks:</label>
+			<div class="col-md-6 text-left">
+				<input type="text" id="remarks" name="receivedRemarks" class="form-control" ng-class="{'submitted' : submitted}" ng-model="opData.receivedRemarks" />
+			</div>
+		</div>
+		<div class="row">
+			<div th:include="views/modals/fragments/modal-client-errors :: client-errors" th:remove="tag"></div>
+		</div>
+		  <div class="row">
+      		<div th:include="views/modals/fragments/modal-server-errors :: server-errors" th:remove="tag"></div>
+      	</div>
+	</div>
+	<div th:include="views/modals/fragments/modal-footer :: footer" th:remove="tag"></div>
+	 <div th:include="views/modals/fragments/modal-exceptions :: exceptions" th:remove="tag"></div>
+	<div th:include="views/modals/fragments/modal-processing :: processing" th:remove="tag"></div>
+</form>

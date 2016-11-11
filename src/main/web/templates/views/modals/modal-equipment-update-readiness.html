@@ -1,0 +1,73 @@
+<!--/* Modal window view for updating snow for a piece of equipment. */-->
+
+<form id="modal" name="modal" class="container-fluid" novalidate="true" centered-modal="true">
+	<!-- novalidate disables HTML5 native validation -->
+	<div th:include="views/modals/fragments/modal-header :: header" th:remove="tag"></div>
+	<div class="modal-body" ng-show="showContent">
+
+		<div class="row">
+			<label class="col-md-5 text-right">Plow Type:</label>
+			<div class="col-md-3 text-left">
+				<select ui-select2="snowSelect2Options" class="form-control" ng-class="{'submitted' : submitted}" ng-model="opData.plowType" ng-disabled="!canHavePlow" ng-change="changePlowType()" down-equipment-focus="">
+					<option value=""></option>
+					<option ng-repeat="plowType in opData.plowTypeOptions" value="{{::plowType}}">{{::plowTypes[plowType]}}</option>
+				</select>
+			</div>
+		</div>
+		<div class="row">
+			<label class="col-md-5 text-right">Plow Direction:</label>
+			<div class="col-md-4 text-left">
+				<select ui-select2="snowSelect2Options"  class="form-control" ng-disabled="opData.plowType != 'REGULAR_PLOW'"  ng-class="{'submitted' : submitted}" ng-model="opData.plowDirection">
+					<option value=""></option>
+					<option ng-repeat="direction in opData.plowDirectionOptions" value="{{::direction}}">{{::direction}}</option>
+				</select>
+			</div>
+		</div>
+		<div class="row">
+			<label class="col-md-5 text-right">Chain:</label>
+			<div class="col-md-4 text-left">
+				<select ui-select2="snowSelect2Options" class="form-control" ng-class="{'submitted' : submitted}" ng-disabled="!canBeChained" ng-model="opData.chains">
+					<option value=""></option>
+					<option ng-repeat="chain in opData.chainsOptions" value="{{::chain}}">{{::chain}}</option>
+				</select>
+			</div>
+		</div>
+		<div class="row">
+			<label class="col-md-5 text-right">Load:</label>
+			<div class="col-md-4 text-left">
+				<select ui-select2="snowSelect2Options" class="form-control" ng-class="{'submitted' : submitted}" ng-disabled="!canHaveLoad" ng-model="opData.loads" ng-change="changePlowOrLoad()">
+					<option value=""></option>
+					<option ng-repeat="load in opData.loadsOptions" value="{{::load}}">{{::loads[load]}}</option>
+				</select>
+			</div>
+		</div>
+		
+		<div class="row">
+			<label class="col-md-5 text-right">Working Down:</label>
+			<div class="col-md-3 text-left">
+				<select ui-select2="snowSelect2Options" class="form-control" ng-class="{'submitted' : submitted}" ng-disabled="!opData.workingDownEnabled" ng-model="opData.workingDown" ng-change="changeSnowAssignmentByWorkingDown(opData.workingDown)" >
+					<option value=""></option>
+					<option ng-repeat="wDown in opData.workingDownOptions" value="{{::wDown}}">{{::wDown}}</option>
+				</select>
+			</div>
+		</div>
+		<div class="row">
+			<label class="col-md-5 text-right">Snow Assignment:</label>
+			<div class="col-md-3 text-left">
+				<select ui-select2="snowSelect2Options" class="form-control" ng-class="{'submitted' : submitted}" ng-disabled="!opData.snowAssignmentEnabled" ng-model="opData.snowAssignment" ng-change="changeSnowAssignment(opData.snowAssignment)">
+					<option value=""></option>
+					<option ng-repeat="sAssign in opData.snowAssignmentOptions" value="{{::sAssign}}">{{::sAssign}}</option>
+				</select>
+			</div>
+		</div>
+		    <div class="row">
+        	<div th:include="views/modals/fragments/modal-client-errors :: client-errors" th:remove="tag"></div>
+        </div>
+        <div class="row">
+      		<div th:include="views/modals/fragments/modal-server-errors :: server-errors" th:remove="tag"></div>
+      	</div>
+	</div>
+	<div th:include="views/modals/fragments/modal-footer :: footer" th:remove="tag"></div>
+	 <div th:include="views/modals/fragments/modal-exceptions :: exceptions" th:remove="tag"></div>
+	<div th:include="views/modals/fragments/modal-processing :: processing" th:remove="tag"></div>
+</form>

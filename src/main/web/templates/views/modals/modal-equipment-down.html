@@ -1,0 +1,187 @@
+<!--/* Modal window view for downing a piece of equipment. */-->
+
+<form id="modal" name="modal" class="form-horizontal container-fluid" novalidate="true" centered-modal="true">
+  <div th:include="views/modals/fragments/modal-header :: header" th:remove="tag"></div>
+  <div class="modal-body" ng-show="showContent">
+
+    <div class="row text-font-md">
+      <label class="col-md-3 text-right">Type:</label> 
+      <div class="col-md-3">{{::opData.equipmentType}}</div>
+      <label class="col-md-3 text-right">Owner:</label> 
+      <div class="col-md-3">{{::opData.owner}}</div>
+    </div>
+    <div class="row text-font-md">
+      <label class="col-md-3 text-right">Current Location:</label> 
+      <div class="col-md-3">{{::opData.currentLocation}}</div>
+      <label class="col-md-3 text-right">License:</label>
+      <div class="col-md-3">{{::opData.license}}</div>
+    </div>
+
+    <fieldset>
+      <legend>Code 1</legend>
+      <div class="row modal-time-row">
+        <div class="col-md-4">
+          <select ui-select2="downCodeSelect2Options" id="downCode1" class="down form-control" data-placeholder="Down Code *" ng-class="{'submitted' : isRequired('selectedDownCode1')}" ng-required="true"
+            ng-model="opData.selectedDownCode1" down-equipment-focus="">
+            <option value=""></option>
+            <option ng-repeat="downCode in opData.downCodeOptions track by $index" value="{{downCode.code}}">{{downCode.label}}</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <input type="text" class="down form-control" ui-select2="repairLocationSelect2Options" data-placeholder="Repair Location *" id="repairLocation1"
+            ng-class="{'submitted' : isRequired('selectedRepairLocation1')}" ng-required="true" ng-model="opData.selectedRepairLocation1" />
+        </div>
+        <div class="modal-date-down-equipment col-md-2 text-left">
+          <input type="text" class="input form-control" name="date" ng-model="opData.dt1" id="dt1" ng-readonly="true" value="{{::opData.dt1}}" />
+        </div>
+        <div class="col-md-3 modal-time-down-equipment">
+          <timepicker class="timepicker down" ng-model="opData.time1" show-meridian="false"></timepicker>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-4">
+          <input
+            class="form-control"
+            type="text"
+            value=""
+            placeholder="Reporter *"
+            ng-class="{'submitted' : isRequired('reporter1')}"
+            ng-required="true"
+            ng-model="opData.reporter1"
+          />
+        </div>
+        <div class="col-md-3">
+          <input
+            class="form-control"
+            type="text"
+            value=""
+            placeholder="Mechanic *"
+            ng-required="true"
+            ng-class="{'submitted' : isRequired('mechanic1')}"
+            ng-model="opData.mechanic1"
+          />
+        </div>
+       <div class="col-md-5">
+          <input 
+            type="text"
+            ng-model="opData.remarks1"
+            placeholder="Remarks"
+            class="modal-remark-down-equipment input form-control" />
+        </div>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Code 2</legend>
+      <div class="row modal-time-row">
+        <div class="col-md-4">
+          <select ui-select2="downCodeSelect2Options" id="downCode2" class="down form-control" data-placeholder="Down Code" ng-class="{'submitted' : isRequired('selectedDownCode2')}" ng-required="true"
+            ng-model="opData.selectedDownCode2">
+            <option value=""></option>
+            <option ng-repeat="downCode in opData.downCodeOptions track by $index" value="{{downCode.code}}">{{downCode.label}}</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <input type="text" class="down form-control" ui-select2="repairLocationSelect2Options" data-placeholder="Repair Location" id="repairLocation2"
+            ng-class="{'submitted' : isRequired('selectedRepairLocation2')}" ng-required="true" ng-model="opData.selectedRepairLocation2" />
+        </div>
+        <div class="modal-date-down-equipment col-md-2 text-left">
+          <input type="text" class="input form-control" name="date" ng-model="opData.dt2" id="dt2" ng-readonly="true" value="{{::opData.dt2}}" />
+        </div>
+        <div class="col-md-3 modal-time-down-equipment">
+          <timepicker class="timepicker down" ng-model="opData.time2" show-meridian="false"></timepicker>
+        </div>
+      </div>
+      <div class="row-fluid">
+        <div class="col-md-4">
+          <input
+            class="down form-control"
+            type="text"
+            placeholder="Reporter"
+            id="reporter2"
+            ng-class="{'submitted' : isRequired('reporter2')}"
+            ng-required="true"
+            ng-model="opData.reporter2"
+          />
+        </div>
+        <div class="col-md-3">
+          <input
+            class="down form-control"
+            type="text"
+            placeholder="Mechanic"
+            ng-class="{'submitted' : isRequired('mechanic2')}"
+            ng-required="true"
+            ng-model="opData.mechanic2"
+          />
+        </div>
+        <div class="col-md-5">
+          <input
+            type="text"
+            ng-model="opData.remarks2"
+            placeholder="Remarks"
+            id="remarks2"
+            class="modal-remark-down-equipment input form-control" />
+        </div>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Code 3</legend>
+      <div class="row modal-time-row">
+        <div class="col-md-4">
+          <select ui-select2="downCodeSelect2Options" id="downCode3" class="down form-control" data-placeholder="Down Code" ng-class="{'submitted' : isRequired('selectedDownCode3')}" ng-required="true"
+            ng-model="opData.selectedDownCode3">
+            <option value=""></option>
+            <option ng-repeat="downCode in opData.downCodeOptions track by $index" value="{{downCode.code}}">{{downCode.label}}</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <input type="text" class="down form-control" ui-select2="repairLocationSelect2Options" data-placeholder="Repair Location" id="repairLocation3"
+            ng-class="{'submitted' : isRequired('selectedRepairLocation3')}" ng-required="true" ng-model="opData.selectedRepairLocation3" />
+        </div>
+        <div class="modal-date-down-equipment col-md-2 text-left">
+          <input type="text" class="input form-control" name="date" ng-model="opData.dt3" id="dt3" ng-readonly="true" value="{{::opData.dt3}}" />
+        </div>
+        <div class="col-md-3 modal-time-down-equipment">
+          <timepicker class="timepicker down" ng-model="opData.time3" show-meridian="false"></timepicker>
+        </div>
+      </div>
+      <div class="row-fluid">
+        <div class="col-md-4">
+          <input
+            class="down form-control"
+            type="text"
+            placeholder="Reporter"
+            ng-class="{'submitted' : isRequired('reporter3')}"
+            ng-required="true"
+            ng-model="opData.reporter3"
+          />
+        </div>
+        <div class="col-md-3">
+          <input
+            class="down form-control"
+            type="text"
+            placeholder="Mechanic"
+            ng-class="{'submitted' : isRequired('mechanic3')}"
+            ng-required="true"
+            ng-model="opData.mechanic3"
+          />
+        </div>
+      <div class="col-md-5">
+          <input 
+            type="text"
+            placeholder="Remarks"
+            ng-model="opData.remarks3"
+            class="modal-remark-down-equipment input form-control" />
+        </div>
+      </div>
+    </fieldset>
+    <div class="row">
+      <div th:include="views/modals/fragments/modal-client-errors :: client-errors" th:remove="tag"></div>
+    </div>
+      <div class="row">
+          <div th:include="views/modals/fragments/modal-server-errors :: server-errors" th:remove="tag"></div>
+      </div>
+  </div>
+  <div th:include="views/modals/fragments/modal-footer :: footer" th:remove="tag"></div>
+  <div th:include="views/modals/fragments/modal-exceptions :: exceptions" th:remove="tag"></div>
+  <div th:include="views/modals/fragments/modal-processing :: processing" th:remove="tag"></div>
+</form>

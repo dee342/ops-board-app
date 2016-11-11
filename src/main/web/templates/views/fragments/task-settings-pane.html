@@ -1,0 +1,166 @@
+<!--/* Thymeleaf fragment to display the Task Settings Pane. */-->
+
+<div th:fragment="task-settings-pane">
+  <div ng-controller="TasksSettingsCtrl" id="tasksSettings" class="pane noSelect" ng-show="layout.screen1.visible &amp;&amp; panes.taskSettings.active">
+
+    <div class="header ">
+      <div class="row" style="margin:0px;">
+        <div class="col-md-12" style="text-align: center; padding: 0px;">
+          <span style="float: left; padding: 5px 0px 3px 10px;" class="paneTitle task-settings-pane-selenium">Task Settings</span>
+        <span class="action">
+          <button class="btn btn-default btn-sm add-multi-routes" ng-click="addMultiRoutes()">
+            <i class="fa fa-plus-circle add"></i>
+            <span class="button-text">Add Partial Tasks</span>
+            <span class="caret"></span>
+          </button>
+
+          <span style="border-left: 1px solid #000; width: 38px; float:right; padding: 9px 12px;">
+              <i class="fa fa-times fa-lg" ng-click="toggleTaskSettingsPane()"></i>
+          </span>
+        </span>
+          <div style="clear: both;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div th:include="views/fragments/multi-routes :: multi-routes" th:remove="tag"></div>
+
+    <perfect-scrollbar class="scroller" ng-style="{height: layout.scrollpanel.height }" ng-mouseenter="updateScroll()" min-scrollbar-length="10" max-scrollbar-length="10"  wide-scrollbar="true" use-both-wheel-axes="true" >
+
+      <div class="actions settings-actions">
+        <button type="button" class="btn btn-sm btn-main" ng-click="addShift()">
+          <i class="fa fa-plus-circle"></i>
+          Add Shift
+        </button>
+      </div>
+
+      <div class="task-settings-container">
+        <tabset>
+          <tab ng-repeat="location in taskSettingsLocations track by ($index + location.locationCode)" heading="{{location.locationCode}}" active="location.active" ng-click="setActiveLocation(location.locationCode)"></tab>
+        </tabset>
+
+        <button  ng-repeat="shift in taskSettingsShifts | orderBy: 'shift.sequence' track by shift.sequence" class="btn btn-default btn-task-settings shifts" ng-class="{selected: shift.id === activeShift}" ng-click="setActiveShift(shift.id)">{{shift.shift.name}}</button>
+
+        <div class="spinner" ng-show="spinnerSelect">Select a shift to edit tasks.</div>
+        <div class="spinner" ng-show="spinner">Loading Shift...</div>
+
+        <accordion class="tasks" close-others="false" ng-repeat="location in taskSettingsPanel track by ($index + location.locationCode)" heading="{{location.locationCode}}">
+          <accordion-group ng-class="{ open: isOpen }" ng-repeat="(locationShiftId, ls) in location.locationShifts | orderObjectBy: 'shift.sequence':false:'id' track by ls.id" is-open="isOpen" >
+
+            <div class="shift-header">
+              <div class="col-md-5 panel-heading-label">
+                <span class="{{ls.shift.name}}-{{ls.shift.sequence}}-{{$index}} shiftName">
+                  Edit Shift: &nbsp;{{ls.shift.name}}
+                </span>
+              </div>
+              <div class="actions shift-actions right">
+                <button type="button" class="btn btn-default btn-sm btn-main addCategory" ng-click="$event.preventDefault();$event.stopPropagation(); addCategory(ls, location.locationCode, ls.id); toggleShiftPanel();">
+                  <i class="fa fa-plus-circle"></i>
+                  Add Category
+                </button>
+              </div>
+              <div style="clear:both;"></div>
+            </div>
+
+            <div style="clear:both;"></div>
+
+            <div ng-repeat="(shiftCategoryId, category) in ls.shiftCategories | orderObjectBy: 'category.sequence':false:'id' track by category.id" class="category">
+              <form novalidate="true">
+                <accordion-group is-open="true" ng-class="{'settings-row': true}">
+                  <accordion-heading>
+                    <i class="fa fa-chevron-circle-{{$parent.isOpen ? 'down' : 'right'}}" title="{{$parent.isOpen ? 'Collapse' : 'Expand'}} Category" ng-class="{right: !$parent.isOpen}"></i>
+                  </accordion-heading>
+                  <div class="form-group accordion-heading-group">
+                    <div class="col-md-4">
+                      <select
+                        id="cat-{{category.category.id}}"
+                        class="form-control header-category-task"
+                        ng-model ="category.category.id"
+                        ng-model-options="{ debounce: 250 }"
+						ng-disabled="category.canNotBeDeleted"
+                        ng-click="updateCategoryModalPopUp(location.locationCode,category,ls.shift.id)"
+                        ng-change="updateCategory(location.locationCode, ls.id, category.id, ls.shift.id, category, category.category.id);"
+                        >
+                        <option value="{{cat.id}}" ng-repeat="cat in category.refCats" ng-selected="{{cat.id == category.category.id}}">{{cat.name}}</option>
+                      </select>
+                      <span class="caret"></span>
+                    </div>
+                    <div class="col-md-7 select-col">
+                      <div
+                        multi-select=""
+                        max-height="300px"
+                        use-scrollbar="true"
+                        input-model="category.allsubcategoryTasks"
+                        default-label="Select sub-categories"
+                        button-label="icon name"
+                        item-label="icon name maker"
+                        tick-property="selected"
+						disable-property="disabled"
+                        is-disabled="category.disableDir"
+                        on-item-click="$event.preventDefault(); $event.stopPropagation(); updateSubCategory(data, location.locationCode, ls.id, category.id, category.category.id, ls.shift.id)">
+                      </div>
+                    </div>
+                  </div>
+
+                  <div ng-repeat="(subcategoryTaskId, subcategory) in category.subcategoryTasks | orderObjectBy: 'subcategory.sequence':false:'id' track by subcategory.id" class="subCategory">
+                    <div class="form-group">
+                      <div class="col-md-3">
+                        <label class="group-header">{{subcategory.subcategory.name}}</label>
+                      </div>
+                      <div class="col-md-9">
+
+                        <div class="sections">
+                          <div class="col-md-3" ng-repeat="section in subcategory.allSections track by section.id + $index" ng-show="subcategory.subcategory.containsSections == true">
+                            <div class="checkbox col-md-7">
+                              <label class="checkbox">
+                                Section {{section.name}}
+                              </label>
+                            </div>
+                            <div class="col-md-5 control-column">
+                                <select
+                                  ui-select3="sectionSelect2Options"
+                                  class="counter form-control"
+                                  ng-model="section.numOfTasks"
+                                  ng-model-options="{ debounce: 250 }"
+                                  ng-change="updateTasks(section.numOfTasks, subcategory, location.locationCode, ls.id, category.id, subcategory.id, category.category.id, ls.shift.id, subcategory.subcategory.id, section)"
+                                  ng-options="d as d for d in counter"
+                                  data-automation="{loc: '{{ location.locationCode }}', shift: '{{ls.shift.name}}', cat: '{{category.category.name}}', sub: '{{subcategory.subcategory.name}}', sec: '{{section.id}}', tasks: '{{section.numOfTasks}}'}">
+                                </select>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="sections" ng-show="subcategory.subcategory.containsSections == false">
+                          <div class="col-md-3">
+                            <div class="checkbox col-md-7">
+                              <label class="checkbox">
+                                Tasks
+                              </label>
+                            </div>
+                            <div class="col-md-5 control-column">
+                                <select
+                                  ui-select3="sectionSelect2Options"
+                                  class="counter form-control"
+                                  ng-model="subcategory.numOfTasks"
+                                  ng-model-options="{ debounce: 250 }"
+                                  ng-change="updateTasks(subcategory.numOfTasks, subcategory, location.locationCode, ls.id, category.id, subcategory.id, category.category.id, ls.shift.id, subcategory.subcategory.id, null)"
+                                  ng-options="d as d for d in counter"
+                                  data-automation="{loc: '{{ location.locationCode }}', shift: '{{ls.shift.name}}', cat: '{{category.category.name}}', sub: '{{subcategory.subcategory.name}}', tasks: '{{subcategory.numOfTasks}}'}">
+                                </select>
+                            </div>
+                          </div>
+                        </div>
+
+                      </div>
+                    </div>
+                  </div>
+                </accordion-group>
+              </form>
+            </div>
+          </accordion-group>
+        </accordion>
+      </div>
+      <div style="height: 376px; margin-bottom: 10px;"></div>
+    </perfect-scrollbar>
+  </div>
+</div>

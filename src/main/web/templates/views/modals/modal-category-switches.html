@@ -1,0 +1,11 @@
+<!--/* Modal window view for switching category. */-->
+
+<form id="modal" name="modal" class="container-fluid" novalidate="true" centered-modal="true">
+	<div th:include="views/modals/fragments/modal-header :: header" th:remove="tag"></div>
+	<div class="modal-footer" ng-show="true">
+		<div class="row">
+			<label class="alert-warning-yellow">Changing Category will result in losing all configured tasks for the selected category. Do you want to continue?</label>
+		</div>
+	</div>
+	<div th:include="views/modals/fragments/modal-footer-cancel :: footer" th:remove="tag"></div>
+</form>

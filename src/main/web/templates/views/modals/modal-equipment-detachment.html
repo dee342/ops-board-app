@@ -1,0 +1,64 @@
+<!--/* Modal window view for detaching a piece of equipment. */-->
+<form id="modal" name="modal" class="form-horizontal container-fluid" novalidate="true" centered-modal="true">
+	<div th:include="views/modals/fragments/modal-header :: header" th:remove="tag"></div>
+	<div class="modal-body" ng-show="showContent">
+		<div class="row form-group">
+			<label class="col-md-4 control-label">From:</label>
+			<div class="col-md-6">
+				<span class="form-control empty">{{::opData.from}}</span>
+			</div>
+		</div>
+		<div class="row form-group">
+			<label class="col-md-4 control-label">To<i class="fa fa-asterisk"></i>:</label>
+			<div class="col-md-6">
+				<select ui-select2="detachSelect2Options" name="to" class="form-control" ng-class="{'submitted' : submitted}" ng-model="opData.to" data-placeholder="Select a location..." ng-required="true" down-equipment-focus="">
+					<option value=""></option>
+					<option ng-repeat="location in opData.locations" value="{{::location}}">{{::location}}</option>
+				</select>
+			</div>
+		</div>
+		<div class="row form-group">
+			<label class="col-md-4 control-label">Type:</label>
+			<div class="col-md-6">
+				<span class="form-control empty">{{::opData.equipmentType}}</span>
+			</div>
+		</div>
+		<div class="row form-group">
+			<label class="col-md-4 control-label">Detach Date:</label>
+			<div class="col-md-6">
+				<span class="form-control empty">{{::opData.detachDate}}</span>
+			</div>
+		</div>
+		<div class="row form-group timepicker">
+			<label class="col-md-4 control-label">Detach Time<i class="fa fa-asterisk"></i>:</label>
+			<div class="col-md-6">
+				<timepicker class="timepicker" ng-model="opData.time" show-meridian="false"></timepicker>
+			</div>
+		</div>
+		<div class="row form-group">
+			<label class="col-md-4 control-label">
+				Driver<i class="fa fa-asterisk"></i>:
+			</label>
+			<div class="col-md-6">
+				<input
+					class="form-control"
+					type="text"
+					id="driver"
+					name="drive"
+					ng-class="{'submitted' : submitted}"
+					ng-required="true"
+					ng-model="opData.driver"
+				/>
+			</div>
+		</div>
+		<div class="row">
+			<div th:include="views/modals/fragments/modal-client-errors :: client-errors" th:remove="tag"></div>
+		</div>
+		<div class="row">
+      		<div th:include="views/modals/fragments/modal-server-errors :: server-errors" th:remove="tag"></div>
+      	</div>
+	</div>
+	<div th:include="views/modals/fragments/modal-footer :: footer" th:remove="tag"></div>
+	 <div th:include="views/modals/fragments/modal-exceptions :: exceptions" th:remove="tag"></div>
+	<div th:include="views/modals/fragments/modal-processing :: processing" th:remove="tag"></div>
+</form>

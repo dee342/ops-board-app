@@ -1,0 +1,149 @@
+<div class="shift {{item.shift.shift.type}} heading" ng-if="item.type === 'shift'">
+    {{item.shift.shift.name}}
+    <div class="clear"></div>
+</div>
+
+<div class="category {{item.categorynamelowercase}} heading" ng-if="item.type === 'subcategory'">
+    <span class="title">{{item.category.category.name}}-{{item.subcategory.subcategory.name}}</span>
+    <span class="triangle">&nbsp;</span>
+    <span lvl-drop-target="true" 
+    	on-drop="assignToTask(item.subcategory, 'supervisor-subcategory', 1, item.shift.shiftId, elementId, item.locationId, item.context, taskIndicator)" 
+    	ng-class="{empty: item.supervisorTitle === 'S'}" 
+    	class="subcategory-sm-subcategory supervisor person  assigned {{item.supObject.departmentType | lowercase}} {{item.titlemapSup}}" 
+    	ng-click="showPersonDetails($event, item.supObject.id)" 
+    	context-menu="{{item.canRemoveSubcategorySupervisor}}" 
+    	data-target="task-context-menu-{{item.subcategory.id}}" 
+    	ng-hide="item.hideSupervisorAssignment">
+        {{item.supervisorTitle}}
+
+        <div id="task-context-menu-{{item.subcategory.id}}" class="context-menu">
+            <ul class="dropdown-menu" ng-if="!item.task.isLocked">
+              <li><a class="menu-item" tabindex="-1" ng-click="unassignSupervisor(item.subcategory, null, null, item.locationId)">Remove</a></li>
+            </ul>
+        </div>
+    </span>
+    <div class="clear"></div>
+</div>
+
+<div class="section heading {{item.categorynamelowercase}}" ng-if="item.type === 'section'">
+    <span class="sectiontitle section{{item.section.sectionId}}">
+        <i class="fa fa-square fa-xs"></i>
+        <span ng-show="item.section.sectionName &gt; 0">Section </span>
+        {{item.section.sectionName}}
+    </span>
+
+    <span lvl-drop-target="true" on-drop="assignToTask(item.section, 'supervisor-section', 1, item.shift.shiftId, elementId, item.locationId, item.context, taskIndicator)" ng-class="{empty: item.supervisorTitle === 'S'}" class="section-sm-section supervisor person  assigned {{item.supObject.departmentType | lowercase}} {{item.titlemapSup}}" ng-click="showPersonDetails($event, item.supObject.id)" context-menu="{{item.canRemoveSectionSupervisor}}" data-target="task-context-menu-{{item.section.id}}" ng-hide="item.category.category.id === 1">
+        {{item.supervisorTitle}}
+
+        <div id="task-context-menu-{{item.section.id}}" class="context-menu">
+            <ul class="dropdown-menu" ng-if="!item.task.isLocked">
+              <li><a class="menu-item" tabindex="-1" ng-click="unassignSupervisor(null, item.section, null, item.locationId)">Remove</a></li>
+            </ul>
+        </div>
+    </span>
+    <div class="clear"></div>
+</div>
+
+<div class="task {{item.task.categorynamelowercase}}" ng-if="item.type === 'task'" data-automation="{loc: '{{ location.locationId }}', shift: '{{item.shift.shift.name}}', cat: '{{item.category.category.name}}', sub: '{{item.subcategory.subcategory.name}}', sec: {{item.tasksection}}, taskno: {{item.tasksequence }}}">
+    <span class="task-marker-col">
+        <span class="group{{item.task.groupId}} multi" modal-edit-partial-tasks="true" groupid="item.task.groupId">
+            <i class="fa fa-map-marker partial" ng-show="item.task.groupId" ng-class="{taskOpen: layout.screen1.visible &amp;&amp; panes.taskSettings.active}"></i>
+            <div class="group{{item.task.groupId}} start" ng-show="item.task.partialTaskSequence === 1 &amp;&amp; item.task.groupId">
+                start
+            </div>
+        </span>
+    </span>
+
+    <span class="task-name task-name-col" ng-hide="item.task.editMode" ng-click="addToGroup(item.task, item.subcategory, item.category, item.shift, item.location, item.locationId, item.section)">
+        <span ng-click="editTask(item.task, item.subcategory, item.category, item.shift, item.location, item.locationId, item.section)" ng-class="{partialTaskLabel: item.task.groupId, taskOpen: layout.screen1.visible &amp;&amp; panes.taskSettings.active}" class="pointer">
+            {{item.task.taskName.slice(0,5)}}
+        </span>
+    </span>
+
+        <span
+            lvl-draggable="true"
+            lvl-drop-target="true"
+            on-drop="assignToTask(item.task, 'equipment', 0, item.shift.shiftId, elementId, item.locationId, context, null, taskId, fromPosition)"
+            ng-class="{pushed: recentlyPushedId === item.task.assignedEquipment.equipmentId, notPushed: recentlyPushedId !== item.task.assignedEquipment.equipmentId, group: item.task.groupId &amp;&amp; item.task.assignedEquipment.equipmentId, notHead: item.task.partialTaskSequence !== 1 &amp;&amp; item.task.assignedEquipment.equipmentId &amp;&amp; !item.task.catHead, dualbins : item.task.EquipObj.bins.length > 1,loadupdate  :item.task.binLoadUpdated =='G',snowupdate:item.task.binLoadUpdated=='S', empty: !item.task.assignedEquipment.equipmentId, assigned: item.task.assignedEquipment.equipmentId}"
+            class="task-md-col equipment {{item.task.EquipObj.group | lowercase}} {{item.task.EquipObj.type | lowercase}} {{item.task.EquipObj.subType | convertTypeToClass}}"
+            ng-click="showEquipmentDetails($event, item.task.EquipObj.id); $event.preventDefault();"
+            context-menu="{{item.task.canRemove[0]}}"
+            data-target="task-context-menu-{{item.task.assignedEquipment.equipmentId}}-{{item.task.id}}-e">
+
+       {{item.task.EquipObj.name}}
+
+
+         <div id="task-context-menu-{{item.task.assignedEquipment.equipmentId}}-{{item.task.id}}-e" class="context-menu">
+             <ul class="dropdown-menu" ng-if="!item.task.isEquipLocked">
+                 <li><a class="menu-item" tabindex="-1" ng-click="unassignEquipment(equipment, item.task, item.locationId)">Remove</a></li>
+             </ul>
+         </div>
+
+    </span>
+
+    <span
+        lvl-drop-target="true"
+        lvl-draggable="true"
+        on-drop="assignToTask(item.task, 'personnel', 1, item.shift.shiftId, elementId, item.locationId, context, item.subcategory.subcategory.taskIndicator, taskId, fromPosition)"
+        pos="1"
+        task-indicator="{{item.subcategory.subcategory.taskIndicator}}"
+        context="{{item.categorycontext}}"
+        ng-class="{pushed: recentlyPushedId === item.task.assignedPerson1.personId, notPushed: recentlyPushedId !== item.task.assignedPerson1.personId, group: item.task.groupId &amp;&amp; item.task.assignedPerson1.personId, notHead: item.task.partialTaskSequence !== 1 &amp;&amp; item.task.assignedPerson1.personId, noDrag: item.category.category.id !== 1,detached:item.alreadyDetached1, empty:!item.task.assignedPerson1.personId, 'detachedsw': item.task.PersonnelObj1.detachedSW, 'detachedsup': item.task.PersonnelObj1.detachedSup, 'attachedtopayrolllocation': item.task.PersonnelObj1.attachedToPayrollLocation, 'detachedoutsidepayroll':item.task.PersonnelObj1.detachedOutSidePayroll}"
+        class="task-md-col person first assigned {{item.task.PersonnelObj1.departmentType | lowercase}} {{item.task.titlemap1 }} {{item.task.completedPersonAssignment1}}"
+        ng-click="showPersonDetails($event, item.task.PersonnelObj1.id)"
+        context-menu="{{item.task.canRemove[1]}}"
+        data-target="task-context-menu-{{item.task.assignedPerson1.personId}}-{{item.task.id}}-p1">
+
+        {{item.task.PersonnelObj1.formattedName}}
+
+        <div id="task-context-menu-{{item.task.assignedPerson1.personId}}-{{item.task.id}}-p1" class="context-menu">
+            <ul class="dropdown-menu" ng-if="!item.task.isLocked">
+                <li><a class="menu-item" tabindex="-1" ng-click="unassignPerson(personnel, item.task, 1, item.locationId)">Remove</a></li>
+            </ul>
+        </div>
+    </span>
+
+    <span
+        lvl-drop-target="true"
+        lvl-draggable="true"
+        on-drop="assignToTask(item.task, 'personnel', 2, item.shift.shiftId, elementId, item.locationId, context, item.subcategory.subcategory.taskIndicator, taskId, fromPosition)"
+        pos="2"
+        task-indicator="{{item.subcategory.subcategory.taskIndicator}}"
+        context="{{item.categorycontext}}"
+        ng-class="{pushed: recentlyPushedId === item.task.assignedPerson2.personId, notPushed: recentlyPushedId !== item.task.assignedPerson2.personId, group: item.task.groupId &amp;&amp; item.task.assignedPerson2.personId, notHead: item.task.partialTaskSequence !== 1 &amp;&amp; item.task.assignedPerson2.personId, noDrag: item.category.category.id !== 1,detached:item.alreadyDetached2, empty:!item.task.assignedPerson2.personId, 'detachedsw': item.task.PersonnelObj2.detachedSW, 'detachedsup': item.task.PersonnelObj2.detachedSup, 'attachedtopayrolllocation': item.task.PersonnelObj2.attachedToPayrollLocation, 'detachedoutsidepayroll':item.task.PersonnelObj2.detachedOutSidePayroll}"
+        class="task-md-col person second assigned {{item.task.PersonnelObj2.departmentType | lowercase}} {{item.task.titlemap2}} {{item.task.completedPersonAssignment2}}" ng-show="item.subcategory.subcategory.peoplePerTask &gt; 1" ng-click="showPersonDetails($event, item.task.PersonnelObj2.id)"
+        context-menu="{{item.task.canRemove[2]}}" data-target="task-context-menu-{{item.task.assignedPerson2.personId}}-{{item.task.id}}-p2">
+        {{item.task.PersonnelObj2.formattedName}}
+        <div id="task-context-menu-{{item.task.assignedPerson2.personId}}-{{item.task.id}}-p2" class="context-menu">
+            <ul class="dropdown-menu" ng-if="!item.task.isLocked">
+                <li><a class="menu-item" tabindex="-1" ng-click="unassignPerson(personnel, item.task, 2, item.locationId)">Remove</a></li>
+            </ul>
+        </div>
+    </span>
+
+    <span
+        lvl-drop-target="true"
+        on-drop="assignToTask(item.task, 'supervisor-task', 2, item.shift.shiftId, elementId, item.locationId, 'supervisor-assignment', taskIndicator, null, null)" class="task-sm-col person supervisor assigned {{item.task.supObject.departmentType | lowercase}} {{item.task.titlemapSup }}" ng-click="showPersonDetails($event, item.task.supObject.id)" context-menu="{{item.task.canRemove[3]}}" data-target="task-context-menu-{{item.task.supervisorAssignments[0].personId}}-{{item.task.id}}" ng-hide="item.category.category.id === 1" ng-class="{empty: item.task.supervisorTitle === 'S'}">
+
+       {{item.task.supervisorTitle}}
+
+        <div id="task-context-menu-{{item.task.supervisorAssignments[0].personId}}-{{item.task.id}}" class="context-menu">
+            <ul class="dropdown-menu" ng-if="!item.task.isLocked">
+                <li><a class="menu-item" tabindex="-1" ng-click="unassignSupervisor(item.subcategory, item.section, item.task, item.locationId)">Remove</a></li>
+            </ul>
+        </div>
+    </span>
+    <div class="clear"></div>
+    <div class="taskdivider"></div>
+</div>
+
+<div class="errorcol">
+    <i class="fa fa-times-circle fa-sm delete" ng-click="removeShift(item.locationId, item.shift.id, item.shift.shift.id)" ng-if="layout.screen1.visible &amp;&amp; panes.taskSettings.active &amp;&amp; item.type === 'shift'"></i>
+    <i class="fa fa-times-circle fa-sm delete" ng-class="{disabled: item.canNotBeDeleted}" ng-attr-title="{{ item.subcategory.partialTaskCount === item.subcategory.numOfTasks ? 'Contains Partial Tasks' : '' }}" ng-click="!item.canNotBeDeleted &amp;&amp; deleteSubcategory(item.subcategory, item.category, item.shift, item.location, item.locationId)" ng-if="layout.screen1.visible &amp;&amp; panes.taskSettings.active &amp;&amp; item.type === 'subcategory'"></i>
+    <i class="fa fa-times-circle fa-sm delete" ng-class="{disabled: item.canNotBeDeleted}" ng-click="!item.canNotBeDeleted &amp;&amp; deleteSection(item.section, item.subcategory, item.category, item.shift, item.location, item.locationId)" ng-if="layout.screen1.visible &amp;&amp; panes.taskSettings.active  &amp;&amp; item.type === 'section'"></i>
+    <i class="fa fa-times-circle fa-sm deletetask" ng-class="{disabled: item.task.groupId}" ng-click="!item.task.groupId &amp;&amp; deleteTaskFromSection(item.task, item.section, item.subcategory, item.category, item.shift, item.location, item.locationId)" ng-if="layout.screen1.visible &amp;&amp; panes.taskSettings.active &amp;&amp; item.type === 'task' &amp;&amp; item.section"></i>
+    <i class="fa fa-times-circle fa-sm delete has-section" ng-class="{disabled: item.task.groupId}" ng-click="!item.task.groupId &amp;&amp; deleteTaskFromSubCategory(item.task, item.subcategory, item.category, item.shift, item.location, item.locationId)" ng-if="layout.screen1.visible &amp;&amp; panes.taskSettings.active &amp;&amp;  item.type === 'task' &amp;&amp; !item.section"></i>
+</div>
+
+<div class="lasttask" ng-if="item.type === 'lasttask'" style="height: 9px;">&nbsp;</div>
+<div class="clear"></div>

@@ -1,0 +1,254 @@
+<!DOCTYPE html><html lang="en"><head><title>public\scripts\controllers\person-details</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../../"><meta name="groc-document-path" content="public\scripts\controllers\person-details"><meta name="groc-project-path" content="public\scripts\controllers\person-details.js"><link rel="stylesheet" type="text/css" media="all" href="../../../assets/style.css"><script type="text/javascript" src="../../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">public\scripts\controllers\person-details.js</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="hljs-pi">'use strict'</span>;
+
+angular.module(<span class="hljs-string">'OpsBoard'</span>).controller(
+  <span class="hljs-string">'PersonDetailsCtrl'</span>,
+  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">($scope, $filter, groups, OpsBoardRepository)</span> </span>{
+
+    $scope.dateFormat = <span class="hljs-string">'MM/dd/yyyy'</span>;
+    $scope.person.showingActiveUnavailableRecords = <span class="hljs-literal">false</span>;
+    $scope.person.showingActiveSpecialPositions = <span class="hljs-literal">false</span>;
+
+    $scope.grounded = {
+      show: <span class="hljs-literal">true</span>
+    };
+
+    $scope.employeeInfo = {
+      open: <span class="hljs-literal">true</span>,
+      show: <span class="hljs-literal">true</span>
+    };
+
+    $scope.contactInfo = {
+      open: <span class="hljs-literal">true</span>,
+      show: <span class="hljs-literal">true</span>
+    };
+
+    $scope.unavailableHistory = {
+      open: <span class="hljs-literal">true</span>,
+      show: <span class="hljs-literal">true</span>
+    };
+    
+    $scope.mdaHistory = {
+       open: <span class="hljs-literal">true</span>,
+       show: <span class="hljs-literal">true</span>
+    };
+    
+    $scope.specialPositionHistory = {
+       open: <span class="hljs-literal">true</span>,
+       show: <span class="hljs-literal">true</span>
+    };    
+
+    $scope.detachmentHistory = {
+      open: <span class="hljs-literal">true</span>,
+      show: <span class="hljs-literal">true</span>
+    };
+
+    $scope.close = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+        $scope.closePersonDetailsPane();
+    };
+    
+    $scope.pageChanged = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+      <span class="hljs-built_in">console</span>.log($scope.unavailabilityPaginationModel);
+    };
+
+    $scope.groundedPageChanged = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(page)</span> </span>{
+      <span class="hljs-keyword">var</span> begin = ((page - <span class="hljs-number">1</span>) * $scope.groundingHistoryItemsPerPage),
+        end = begin + $scope.groundingHistoryItemsPerPage;
+      $scope.person.groundingHistoryPaginationModel = $scope.person.formattedGroundingHistory.slice(begin, end);
+    };
+
+    $scope.unAvailPageChanged = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(unavailabilityCurrentPage)</span> </span>{
+      <span class="hljs-keyword">var</span> begin = ((unavailabilityCurrentPage - <span class="hljs-number">1</span>) * $scope.unavailabilityItemsPerPage),
+        end = begin + $scope.unavailabilityItemsPerPage;
+      
+      <span class="hljs-keyword">if</span>(!$scope.person.showingActiveUnavailableRecords){
+        $scope.person.unavailabilityPaginationModel = $scope.person.formattedUnavailableReasons.slice(begin, end);
+      }<span class="hljs-keyword">else</span>{
+        $scope.person.unavailabilityPaginationModel = $scope.person.formattedActiveUnavailableReasons.slice(begin, end);
+      }
+     
+     };
+     
+     $scope.showAllUnavailableCodes = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(unavailabilityPaginationModel, unavailabilityCurrentPage)</span></span>{
+       $scope.person.showingActiveUnavailableRecords = <span class="hljs-literal">false</span>;
+       $scope.person.totalUnavailableItems = $scope.person.formattedUnavailableReasons.length;
+       $scope.person.unavailabilityPaginationModel = $scope.person.formattedUnavailableReasons.slice(<span class="hljs-number">0</span>, <span class="hljs-number">5</span>);
+       $scope.person.unavailabilityCurrentPage = <span class="hljs-number">1</span>;
+     };
+     
+     $scope.showActiveUnavailableCodes = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(unavailabilityPaginationModel, unavailabilityCurrentPage)</span></span>{
+       $scope.person.showingActiveUnavailableRecords = <span class="hljs-literal">true</span>;
+       <span class="hljs-keyword">var</span> activeUnavailableCodes = [];
+      <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; $scope.person.formattedUnavailableReasons.length; i++) {
+        <span class="hljs-keyword">if</span>($scope.person.formattedUnavailableReasons[i].dispStatus == <span class="hljs-string">'Active'</span>)
+          activeUnavailableCodes.push($scope.person.formattedUnavailableReasons[i]);
+      }
+      $scope.person.formattedActiveUnavailableReasons = activeUnavailableCodes;
+      $scope.person.unavailabilityPaginationModel = $scope.person.formattedActiveUnavailableReasons.slice(<span class="hljs-number">0</span>, <span class="hljs-number">5</span>);
+      $scope.person.totalUnavailableItems = $scope.person.formattedActiveUnavailableReasons.length;
+      $scope.person.unavailabilityCurrentPage = <span class="hljs-number">1</span>;
+      };
+      
+     $scope.hasActiveRecords = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(collection)</span></span>{
+       <span class="hljs-keyword">if</span>(collection)
+       <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; collection.length; i++) {
+          <span class="hljs-keyword">if</span>(collection[i].dispStatus == <span class="hljs-string">'Active'</span>)
+            <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+        }
+       <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+     };
+     
+     $scope.hasNonActiveRecords = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(collection)</span></span>{
+       <span class="hljs-keyword">if</span>(collection)
+       <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; collection.length; i++) {
+          <span class="hljs-keyword">if</span>(collection[i].dispStatus != <span class="hljs-string">'Active'</span>)
+            <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+        }
+       <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+     };
+      
+      $scope.showAllSpecialPositions = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(specialPositionsPaginationModel)</span></span>{
+        $scope.person.showingActiveSpecialPositions = <span class="hljs-literal">false</span>;
+        $scope.person.totalSpecialPositions = $scope.person.formattedSpecialPositions.length;
+        $scope.person.specialPositionsPaginationModel = $scope.person.formattedSpecialPositions.slice(<span class="hljs-number">0</span>, <span class="hljs-number">5</span>);
+        $scope.person.specialPositionsCurrentPage = <span class="hljs-number">1</span>;
+      };
+      
+      $scope.showActiveSpecialPositions = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(specialPositionsPaginationModel, specialPositionsCurrentPage)</span></span>{
+        $scope.person.showingActiveSpecialPositions = <span class="hljs-literal">true</span>;
+        <span class="hljs-keyword">var</span> activeSpecialPositions = [];
+        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; $scope.person.formattedSpecialPositions.length; i++) {
+          <span class="hljs-keyword">if</span>($scope.person.formattedSpecialPositions[i].dispStatus == <span class="hljs-string">'Active'</span>)
+            activeSpecialPositions.push($scope.person.formattedSpecialPositions[i]);
+        }
+        $scope.person.formattedActiveSpecialPositions = activeSpecialPositions;
+        $scope.person.specialPositionsPaginationModel = $scope.person.formattedActiveSpecialPositions.slice(<span class="hljs-number">0</span>, <span class="hljs-number">5</span>);
+        $scope.person.totalSpecialPositions = $scope.person.formattedActiveSpecialPositions.length;
+      $scope.person.specialPositionsCurrentPage = <span class="hljs-number">1</span>;
+       };
+       
+  <span class="hljs-comment">/*$scope.mdaPageChanged = function(mdaCurrentPage) {
+      var begin = ((mdaCurrentPage - 1) * $scope.mdaItemsPerPage),
+         end = begin + $scope.mdaItemsPerPage;
+
+      $scope.mdaPaginationModel = $scope.person.formattedMdaStatus.slice(begin, end);
+     
+     };
+       
+    $scope.detachPageChanged = function(detachCurrentPage) {
+      var begin = ((detachCurrentPage - 1) * $scope.detachItemsPerPage),
+         end = begin + $scope.detachItemsPerPage;
+
+      $scope.detachPaginationModel = $scope.person.formattedDetachments.slice(begin, end);
+     
+     };*/</span>
+     
+     $scope.specialPositionsPageChanged = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(specialPositionsCurrentPage)</span> </span>{
+         <span class="hljs-keyword">var</span> begin = ((specialPositionsCurrentPage - <span class="hljs-number">1</span>) * $scope.specialPositionsItemsPerPage),
+            end = begin + $scope.specialPositionsItemsPerPage;
+         
+         <span class="hljs-keyword">if</span>(!$scope.person.showingActiveSpecialPositions)
+           $scope.person.specialPositionsPaginationModel = $scope.person.formattedSpecialPositions.slice(begin, end);
+         <span class="hljs-keyword">else</span>
+           $scope.person.specialPositionsPaginationModel = $scope.person.formattedActiveSpecialPositions.slice(begin, end);
+        
+        };
+
+    
+    
+    <span class="hljs-comment">//controll for pagination for detachment history and MDA</span>
+    
+    
+    $scope.personDetachmentChanged = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(personDetachCurrentPage)</span> </span>{
+          <span class="hljs-keyword">var</span> begin = ((personDetachCurrentPage - <span class="hljs-number">1</span>) * $scope.personDetachItemsPerPage),
+             end = begin + $scope.personDetachItemsPerPage;
+
+          $scope.person.personDetachPaginationModel = $scope.person.formattedDetachments.slice(begin, end);
+          
+         
+         };
+         
+     $scope.personMDAPageChanged = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(personMDACurrentPage)</span> </span>{
+          <span class="hljs-keyword">var</span> begin = ((personMDACurrentPage - <span class="hljs-number">1</span>) * $scope.personMDAItemsPerPage),
+             end = begin + $scope.personMDAItemsPerPage;
+
+          $scope.person.personMDAPaginationModel = $scope.person.formattedMdaStatus.slice(begin, end);
+
+         };
+         
+         
+         
+         
+         
+         <span class="hljs-comment">//for person detachment history "Show All" and "Show Active"</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p> $scope.showAllDetachmentCodes = function(personDetachPaginationModel){
+      $scope.person.personDetachPaginationModel = $scope.person.formattedDetachments.slice(0, 5);
+  };</p>
+<p>  $scope.showActiveDetachmentCodes = function(personDetachPaginationModel){
+       var activeDetachmentCodes = [];
+      for (var i = 0; i &lt; personDetachPaginationModel.length; i++) {
+          if(personDetachPaginationModel[i].status == &#39;Active&#39;)
+            activeDetachmentCodes.push(personDetachPaginationModel[i]);
+      }
+      $scope.person.formattedActiveDetachments = activeDetachmentCodes;
+      $scope.person.personDetachPaginationModel = $scope.person.formattedActiveDetachments.slice(0, 5);
+   };</p></div></div><div class="code"><div class="wrapper">         
+         
+        <span class="hljs-comment">//for person MDA history "Show All" and "Show Active"</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>  $scope.showAllMDACodes = function(personMDAPaginationModel){
+      $scope.person.personMDAPaginationModel = $scope.person.formattedMdaStatus.slice(0, 5);
+  };</p>
+<p>  $scope.showActiveMDACodes = function(personMDAPaginationModel){
+       var activeMDACodes = [];
+      for (var i = 0; i &lt; personMDAPaginationModel.length; i++) {
+          if(personMDAPaginationModel[i].statusTime == &#39;Active&#39;)
+           activeMDACodes.push(personMDAPaginationModel[i]);
+      }
+      $scope.person.formattedActiveMDA = activeMDACodes;
+      $scope.person.personMDAPaginationModel = $scope.person.formattedActiveMDA.slice(0, 5);
+   };</p></div></div><div class="code"><div class="wrapper">            
+    $scope.actionTaken = <span class="hljs-literal">true</span>;
+    
+    
+    $scope.isActive = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(startDate, endDate)</span> </span>{
+      <span class="hljs-keyword">var</span> now = moment();
+      <span class="hljs-keyword">var</span> start = moment(startDate);
+      <span class="hljs-keyword">var</span> end = moment(endDate);
+      
+      <span class="hljs-keyword">if</span> (now.isSame(start) || now.isAfter(start)) {
+        <span class="hljs-keyword">if</span> (now.isSame(end) || now.isBefore(end)) {
+          <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>
+        }
+      }
+      
+      <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+    }
+    
+    $scope.isComplete = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(endDate)</span> </span>{
+      <span class="hljs-keyword">var</span> now = moment();
+      <span class="hljs-keyword">var</span> end = moment(endDate);
+      
+      <span class="hljs-keyword">if</span> (now.isAfter(end)) {
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>
+      }
+      
+      <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+    }
+    
+    $scope.isFuture = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(startDate)</span> </span>{
+      <span class="hljs-keyword">var</span> now = moment();
+      <span class="hljs-keyword">var</span> start = moment(start);
+      
+      <span class="hljs-keyword">if</span> (now.isBefore(start)) {
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>
+      }
+      
+      <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+    }
+      
+      $scope.isRemoved = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(removeFlag)</span> </span>{
+      <span class="hljs-keyword">if</span> (removeFlag) {
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>
+      }
+      
+      <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+    }      
+
+  });</div></div></div></div></body></html>

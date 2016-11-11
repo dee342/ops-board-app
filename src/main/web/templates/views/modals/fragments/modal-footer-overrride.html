@@ -1,0 +1,8 @@
+<!--/* Thymeleaf fragment to display a footer with a cancel button and submit button. */-->
+
+<div th:fragment="footer override">
+    <div class="modal-footer" ng-show="showContent">
+        <button type="button" class="btn btn-modal" ng-click="cancel()">{{::opData.cancelButtonText}}</button>
+        <button type="submit" class="btn btn-primary btn-primary-modal" ng-click="ok()">{{::opData.submitButtonText}}</button>
+    </div>
+</div>

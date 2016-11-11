@@ -1,0 +1,117 @@
+<!DOCTYPE html><html lang="en"><head><title>public\scripts\directives\lvl-drag-drop</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../../"><meta name="groc-document-path" content="public\scripts\directives\lvl-drag-drop"><meta name="groc-project-path" content="public\scripts\directives\lvl-drag-drop.js"><link rel="stylesheet" type="text/css" media="all" href="../../../assets/style.css"><script type="text/javascript" src="../../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">public\scripts\directives\lvl-drag-drop.js</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="hljs-pi">'use strict'</span>;
+
+<span class="hljs-keyword">var</span> dndModule = angular.module(<span class="hljs-string">'lvl.directives.dragdrop'</span>, [<span class="hljs-string">'lvl.services'</span>]);
+
+dndModule.directive(<span class="hljs-string">'lvlDraggable'</span>, [<span class="hljs-string">'$rootScope'</span>, <span class="hljs-string">'uuid'</span>,
+  <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($rootScope, uuid)</span> </span>{
+    <span class="hljs-keyword">return</span> {
+      restrict: <span class="hljs-string">'A'</span>,
+      link: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(scope, el, attrs)</span> </span>{
+        angular.element(el)
+          .attr(<span class="hljs-string">'draggable'</span>, <span class="hljs-string">'true'</span>);
+
+        <span class="hljs-keyword">var</span> id = angular.element(el).attr(<span class="hljs-string">'id'</span>),
+          pos = attrs.pos,
+          elementId = scope.pieceOfEquipment ? scope.pieceOfEquipment.id : scope.person ? scope.person.id : <span class="hljs-string">''</span>;
+
+        <span class="hljs-keyword">if</span> (!id) {
+          id = uuid.new();
+          angular.element(el)
+            .attr(<span class="hljs-string">'id'</span>, id);
+        }
+
+        el.bind(<span class="hljs-string">'dragstart'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(e)</span> </span>{
+          <span class="hljs-keyword">if</span> (pos) {
+            elementId = scope.item.task[<span class="hljs-string">"assignedPerson"</span> + pos].person.id;
+          }
+          e.dataTransfer.setData(<span class="hljs-string">'text'</span>, id);
+          e.dataTransfer.setData(<span class="hljs-string">'context'</span>, attrs.context);
+          e.dataTransfer.setData(<span class="hljs-string">'taskIndicator'</span>, attrs.taskIndicator);
+          e.dataTransfer.setData(<span class="hljs-string">'elementId'</span>, elementId);
+          $rootScope.$emit(<span class="hljs-string">'LVL-DRAG-START'</span>);
+        });
+
+        el.bind(<span class="hljs-string">'dragend'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(e)</span> </span>{
+          <span class="hljs-keyword">var</span> el = $(e.target).find(<span class="hljs-string">'.coverup'</span>);
+          $(el).html(<span class="hljs-string">''</span>);
+          $(el).css(<span class="hljs-string">'top'</span>, <span class="hljs-string">'auto'</span>);
+          $rootScope.$emit(<span class="hljs-string">'LVL-DRAG-END'</span>);
+        });
+      }
+    };
+  }]);
+
+dndModule.directive(<span class="hljs-string">'lvlDropTarget'</span>, [<span class="hljs-string">'$rootScope'</span>, <span class="hljs-string">'uuid'</span>,
+  <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($rootScope, uuid)</span> </span>{
+    <span class="hljs-keyword">return</span> {
+      restrict: <span class="hljs-string">'A'</span>,
+      scope: {
+        onDrop: <span class="hljs-string">'&amp;'</span>
+      },
+      link: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(scope, el)</span> </span>{
+        <span class="hljs-keyword">var</span> id = angular.element(el)
+          .attr(<span class="hljs-string">'id'</span>);
+        <span class="hljs-keyword">if</span> (!id) {
+          id = uuid.new();
+          angular.element(el)
+            .attr(<span class="hljs-string">'id'</span>, id);
+        }
+
+        el.bind(<span class="hljs-string">'dragover'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(e)</span> </span>{
+          <span class="hljs-keyword">if</span> (e.preventDefault) {
+            e.preventDefault(); <span class="hljs-comment">// Necessary. Allows us to drop.</span>
+          }
+
+          e.dataTransfer.dropEffect = <span class="hljs-string">'move'</span>; <span class="hljs-comment">// See the section on the DataTransfer object.</span>
+          <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+        });
+
+        el.bind(<span class="hljs-string">'dragenter'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(e)</span> </span>{</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>this / e.target is the current hover target.</p></div></div><div class="code"><div class="wrapper">          angular.element(e.target)
+            .addClass(<span class="hljs-string">'dnd-over'</span>);
+        });
+
+        el.bind(<span class="hljs-string">'dragleave'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(e)</span> </span>{
+          angular.element(e.target)
+            .removeClass(<span class="hljs-string">'dnd-over'</span>); <span class="hljs-comment">// this / e.target is previous target element.</span>
+        });
+
+        el.bind(<span class="hljs-string">'drop'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(e)</span> </span>{
+          <span class="hljs-keyword">if</span> (e.preventDefault) {
+            e.preventDefault(); <span class="hljs-comment">// Necessary. Allows us to drop.</span>
+          }
+
+          <span class="hljs-keyword">if</span> (e.stopPropogation) {
+            e.stopPropogation(); <span class="hljs-comment">// Necessary. Allows us to drop.</span>
+          }
+
+          <span class="hljs-keyword">var</span> elementId = e.dataTransfer.getData(<span class="hljs-string">'elementId'</span>),
+            context = e.dataTransfer.getData(<span class="hljs-string">'context'</span>),
+            taskIndicator = e.dataTransfer.getData(<span class="hljs-string">'taskIndicator'</span>);
+
+          scope.onDrop({
+            elementId: elementId,
+            context: context,
+            taskIndicator: taskIndicator
+          });
+
+          angular.element(e.target)
+            .removeClass(<span class="hljs-string">'dnd-over'</span>);
+        });
+
+        $rootScope.$on(<span class="hljs-string">'LVL-DRAG-START'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+          <span class="hljs-keyword">var</span> el = <span class="hljs-built_in">document</span>.getElementById(id);
+          angular.element(el)
+            .addClass(<span class="hljs-string">'dnd-target'</span>);
+        });
+
+        $rootScope.$on(<span class="hljs-string">'LVL-DRAG-END'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+          <span class="hljs-keyword">var</span> el = <span class="hljs-built_in">document</span>.getElementById(id);
+          angular.element(el)
+            .removeClass(<span class="hljs-string">'dnd-target'</span>);
+          angular.element(el)
+            .removeClass(<span class="hljs-string">'dnd-over'</span>);
+        });
+      }
+    };
+  }
+]);</div></div></div></div></body></html>

@@ -1,0 +1,739 @@
+<!DOCTYPE html><html lang="en"><head><title>public\scripts\models\person-model</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../../"><meta name="groc-document-path" content="public\scripts\models\person-model"><meta name="groc-project-path" content="public\scripts\models\person-model.js"><link rel="stylesheet" type="text/css" media="all" href="../../../assets/style.css"><script type="text/javascript" src="../../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">public\scripts\models\person-model.js</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="hljs-pi">'use strict'</span>;
+
+angular.module(<span class="hljs-string">'OpsBoard'</span>)
+    .factory(<span class="hljs-string">'PersonModel'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(states, groups)</span> </span>{
+        <span class="hljs-keyword">var</span> canvas = <span class="hljs-built_in">document</span>.createElement(<span class="hljs-string">"canvas"</span>);
+        <span class="hljs-keyword">return</span> {
+            getFormattedName: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+                <span class="hljs-keyword">var</span> lastName = <span class="hljs-keyword">this</span>.lastName,
+                    firstName = <span class="hljs-keyword">this</span>.firstName ? <span class="hljs-keyword">this</span>.firstName.substring(<span class="hljs-number">0</span>, <span class="hljs-number">1</span>).toUpperCase() : <span class="hljs-string">''</span>;
+
+                <span class="hljs-keyword">var</span> name = firstName ? firstName + <span class="hljs-string">'. '</span> + lastName : lastName;
+                <span class="hljs-keyword">var</span> context = canvas.getContext(<span class="hljs-string">"2d"</span>);
+                context.font = <span class="hljs-string">"400 12px 'Open Sans', sans-serif"</span>;
+                <span class="hljs-keyword">var</span> metrics = context.measureText(name)
+                <span class="hljs-keyword">if</span> (metrics &amp;&amp; metrics.width &gt; <span class="hljs-number">80</span>) <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.lastName.substring(<span class="hljs-number">0</span>,<span class="hljs-number">12</span>);
+                <span class="hljs-keyword">return</span> name;
+            },
+
+            getIndicatorText: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+                <span class="hljs-keyword">if</span> (!<span class="hljs-keyword">this</span>.isActiveMDA() &amp;&amp; <span class="hljs-keyword">this</span>.activeMdaCodes &amp;&amp; <span class="hljs-keyword">this</span>.activeMdaCodes.length &gt; <span class="hljs-number">0</span>)
+                    <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.activeMdaCodes[<span class="hljs-number">0</span>].subType;
+
+                <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.activeSpecialPositions &amp;&amp; <span class="hljs-keyword">this</span>.activeSpecialPositions.length &gt; <span class="hljs-number">0</span>)
+                    <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.activeSpecialPositions[<span class="hljs-number">0</span>].code;
+
+                <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.activeGroundedStatus &amp;&amp; <span class="hljs-keyword">this</span>.activeGroundedStatus.length &gt; <span class="hljs-number">0</span>)
+                    <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.activeGroundedStatus[<span class="hljs-number">0</span>].status;
+
+                <span class="hljs-keyword">return</span> <span class="hljs-string">''</span>;
+            },
+
+            getIndicatorBox: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+
+                <span class="hljs-keyword">var</span> suspended = <span class="hljs-literal">false</span>;
+
+                <span class="hljs-keyword">if</span> ((!<span class="hljs-keyword">this</span>.activeMdaCodes || <span class="hljs-keyword">this</span>.activeMdaCodes.length === <span class="hljs-number">0</span>)
+                     &amp;&amp; (!<span class="hljs-keyword">this</span>.activeSpecialPositions || <span class="hljs-keyword">this</span>.activeSpecialPositions.length === <span class="hljs-number">0</span>) 
+                     &amp;&amp; (!<span class="hljs-keyword">this</span>.activeGroundedStatus || <span class="hljs-keyword">this</span>.activeGroundedStatus.length === <span class="hljs-number">0</span>)) {
+                  <span class="hljs-keyword">return</span> <span class="hljs-string">'nobox'</span>;
+                }
+
+                <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.activeSpecialPositions &amp;&amp; <span class="hljs-keyword">this</span>.activeSpecialPositions.length &gt; <span class="hljs-number">0</span>) {
+                    angular.forEach(<span class="hljs-keyword">this</span>.activeUnavailabilityReasons, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(reason)</span> </span>{
+                      <span class="hljs-keyword">if</span> (reason.code === <span class="hljs-string">'SUSPENDED'</span>) {
+                        suspended = <span class="hljs-literal">true</span>;
+                      }
+                    });
+
+                    <span class="hljs-keyword">if</span> (!<span class="hljs-keyword">this</span>.activeGroundedStatus || <span class="hljs-keyword">this</span>.activeGroundedStatus.length === <span class="hljs-number">0</span> &amp;&amp; suspended === <span class="hljs-literal">false</span>) {
+                      <span class="hljs-keyword">return</span> <span class="hljs-string">'box'</span>;
+                    } <span class="hljs-keyword">else</span> {
+                      <span class="hljs-keyword">return</span> <span class="hljs-string">'redbox'</span>;
+                    }
+                } <span class="hljs-keyword">else</span> {
+                    <span class="hljs-keyword">if</span> (!<span class="hljs-keyword">this</span>.activeGroundedStatus || <span class="hljs-keyword">this</span>.activeGroundedStatus.length === <span class="hljs-number">0</span>) {
+                        <span class="hljs-keyword">if</span> (!<span class="hljs-keyword">this</span>.activeMdaCodes || <span class="hljs-keyword">this</span>.activeMdaCodes.length === <span class="hljs-number">0</span>) {
+                          <span class="hljs-keyword">return</span> <span class="hljs-string">'nobox same'</span>;
+                        } <span class="hljs-keyword">else</span> {
+                          <span class="hljs-keyword">return</span> <span class="hljs-string">'nobox same mda'</span>;
+                        }
+
+                    } <span class="hljs-keyword">else</span> {
+                        <span class="hljs-keyword">if</span> (!<span class="hljs-keyword">this</span>.activeMdaCodes || <span class="hljs-keyword">this</span>.activeMdaCodes.length === <span class="hljs-number">0</span>) {
+                          <span class="hljs-keyword">return</span> <span class="hljs-string">'nobox red'</span>;
+                        } <span class="hljs-keyword">else</span> {
+                          <span class="hljs-keyword">return</span> <span class="hljs-string">'nobox red mda'</span>;
+                        }
+                    }
+
+                    <span class="hljs-keyword">return</span> <span class="hljs-string">'nobox'</span>;
+                }
+            },
+
+            getFormattedUnavailableReasons: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+                <span class="hljs-keyword">var</span> reasons = [];
+                <span class="hljs-keyword">var</span> action = <span class="hljs-string">""</span>;
+                <span class="hljs-keyword">var</span> now = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>();
+                <span class="hljs-keyword">var</span> pathElements = <span class="hljs-built_in">window</span>.location.pathname.split(<span class="hljs-string">'/'</span>);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><pre><code>           pathElements = pathElements[1].split(&#39;/&#39;);</code></pre></div></div><div class="code"><div class="wrapper">                <span class="hljs-keyword">var</span> boardDate = pathElements[<span class="hljs-number">2</span>];
+                
+                <span class="hljs-keyword">var</span> year = boardDate.substring(<span class="hljs-number">0</span>,<span class="hljs-number">4</span>);
+                <span class="hljs-keyword">var</span> month = boardDate.substring(<span class="hljs-number">4</span>,<span class="hljs-number">6</span>);
+                <span class="hljs-keyword">var</span> date = boardDate.substring(<span class="hljs-number">6</span>,<span class="hljs-number">8</span>);
+                <span class="hljs-keyword">var</span> boardDateDt = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(year, month-<span class="hljs-number">1</span>, date, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>);
+                
+                <span class="hljs-keyword">if</span> (!<span class="hljs-keyword">this</span>.unavailabilityHistory || <span class="hljs-keyword">this</span>.unavailabilityHistory.length &lt;= <span class="hljs-number">0</span>)
+                    <span class="hljs-keyword">return</span> reasons;
+                <span class="hljs-keyword">var</span> unavailableReasons = <span class="hljs-keyword">this</span>.getSortedUnavailabilityHistory();
+                <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; unavailableReasons.length; i++) {
+                    <span class="hljs-keyword">var</span> canceleditable=<span class="hljs-literal">false</span>;
+                    <span class="hljs-keyword">var</span> undocanceleditable = <span class="hljs-literal">false</span>;
+                    <span class="hljs-keyword">var</span> sdt = unavailableReasons[i].start,
+                        edt = unavailableReasons[i].end,
+                        sd = <span class="hljs-string">''</span>,
+                        st = <span class="hljs-string">''</span>,
+                        ed = <span class="hljs-string">''</span>,
+                        et = <span class="hljs-string">''</span>;
+                    <span class="hljs-keyword">if</span> (sdt &amp;&amp; moment(sdt).isValid()) {
+                        sd = moment(sdt).format(<span class="hljs-string">'MM/DD/YYYY'</span>);
+                        st = moment(sdt).format(<span class="hljs-string">'HH:mm'</span>);
+                    }
+                    <span class="hljs-keyword">if</span> (edt &amp;&amp; moment(edt).isValid()) {
+                        ed = moment(edt).format(<span class="hljs-string">'MM/DD/YYYY'</span>);
+                        et = moment(edt).format(<span class="hljs-string">'HH:mm'</span>);
+                    }
+                    <span class="hljs-keyword">var</span> displayStatus = <span class="hljs-string">""</span>;
+                    <span class="hljs-keyword">var</span> isActive = <span class="hljs-literal">false</span>;                
+                    <span class="hljs-keyword">var</span> startDate = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(sdt);
+                    <span class="hljs-keyword">var</span> endDate = <span class="hljs-literal">null</span>;
+                    <span class="hljs-keyword">if</span>(edt != <span class="hljs-literal">null</span>)
+                        endDate = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(edt);
+                    
+                    <span class="hljs-keyword">var</span> start = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+                    <span class="hljs-keyword">var</span> end = <span class="hljs-literal">null</span>;
+                    <span class="hljs-keyword">var</span> editable=<span class="hljs-literal">true</span>;
+                    <span class="hljs-keyword">if</span>(endDate != <span class="hljs-literal">null</span>)
+                        end = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+                    
+                    <span class="hljs-keyword">if</span> (unavailableReasons[i].status == <span class="hljs-string">'R'</span>) {
+                         action = <span class="hljs-string">"Removed"</span>;
+                    } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (unavailableReasons[i].replaces) {
+                        <span class="hljs-keyword">if</span> (unavailableReasons[i].action == <span class="hljs-string">'C'</span>) {
+                            action = <span class="hljs-string">'Cancelled'</span>;
+                        } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (unavailableReasons[i].action == <span class="hljs-string">'R'</span>) {
+                            action=<span class="hljs-string">'Reinstated'</span>;
+                        } <span class="hljs-keyword">else</span> {
+                            action = <span class="hljs-string">"Updated"</span>;
+                        }
+                    } <span class="hljs-keyword">else</span> {
+                        action = <span class="hljs-string">"Added"</span>;
+                    }
+                    
+                    <span class="hljs-keyword">var</span> displayStatus = <span class="hljs-string">""</span>;
+                    <span class="hljs-comment">//if (unavailableReasons[i].replacedBy) {</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><pre><code>displayStatus = &quot;&quot;; </code></pre></div></div><div class="code"><div class="wrapper">                    <span class="hljs-keyword">if</span> (unavailableReasons[i].status == <span class="hljs-string">'I'</span>) {
+                        displayStatus=<span class="hljs-string">''</span>;
+                    } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (unavailableReasons[i].status == <span class="hljs-string">'R'</span>) {
+                        displayStatus = <span class="hljs-string">"Deleted"</span>;
+                    } <span class="hljs-keyword">else</span> {
+                        <span class="hljs-keyword">if</span> (start.getTime() &gt; boardDateDt.getTime()) {
+                            displayStatus = <span class="hljs-string">'Future'</span>;
+                        } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (endDate != <span class="hljs-literal">null</span> &amp;&amp; boardDateDt.getTime() &gt; end.getTime()) {
+                            displayStatus = <span class="hljs-string">'Completed'</span>;
+                        } <span class="hljs-keyword">else</span>  {
+                            displayStatus = <span class="hljs-string">'Active'</span>;
+                        }   
+                    }
+                    </div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>editable=true;</p></div></div><div class="code"><div class="wrapper">                    <span class="hljs-keyword">if</span>(displayStatus!=<span class="hljs-string">'Active'</span>)
+                        editable=<span class="hljs-literal">false</span>;
+                    <span class="hljs-keyword">if</span>(displayStatus==<span class="hljs-string">'Future'</span>)
+                        editable=<span class="hljs-literal">true</span>;
+                    <span class="hljs-keyword">if</span>(action!=<span class="hljs-string">'Added'</span>&amp;&amp; action!=<span class="hljs-string">'Updated'</span>){
+                            editable=<span class="hljs-literal">false</span>;               
+                    }
+                    <span class="hljs-keyword">if</span>(editable &amp;&amp; <span class="hljs-keyword">this</span>.isTypeValidForCancelButton(unavailableReasons[i].code))
+                        canceleditable=<span class="hljs-literal">true</span>;
+                    
+                    <span class="hljs-keyword">if</span> (action == <span class="hljs-string">'Cancelled'</span> &amp;&amp; (displayStatus == <span class="hljs-string">'Active'</span> || displayStatus == <span class="hljs-string">'Future'</span>) )
+                        undocanceleditable = <span class="hljs-literal">true</span>;</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><pre><code> if(unavailableReasons[i].status!=&#39;A&#39;|| displayStatus==&#39;Completed&#39;)
+      editable=false;
+
+  if(unavailableReasons[i].status==&#39;A&#39;|| displayStatus==&#39;Active&#39;){
+      if(isCancelled){
+          displayStatus=&#39;Active&#39;;
+          canceleditable= true;
+          editable=false;
+      }else{
+          editable=true;
+      }
+  }</code></pre></div></div><div class="code"><div class="wrapper">                    
+                    
+                    
+                    reasons.push({
+                        code: unavailableReasons[i].code,
+                        startDate: sd,
+                        startTime: st,
+                        endDate: ed,
+                        endTime: et,
+                        <span class="hljs-comment">//changed from sorid to id</span>
+                        id: unavailableReasons[i].id,
+                        status: unavailableReasons[i].status,
+                        dispStatus: displayStatus,
+                        action: action,
+                        isActive: isActive,
+                        comments: unavailableReasons[i].comments,
+                        reasonForChange : unavailableReasons[i].reasonForChange,
+                        editable:editable,
+                        canceleditable:canceleditable,
+                        undocanceleditable:undocanceleditable
+                    })
+                }
+
+                <span class="hljs-keyword">return</span> reasons;
+            },
+            
+            isTypeValidForCancelButton:<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(code)</span></span>{
+                <span class="hljs-keyword">if</span>(code ==<span class="hljs-string">'CHART'</span> || code ==<span class="hljs-string">'VACATION'</span> || code ==<span class="hljs-string">'JURY DUTY'</span>){
+                    <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+                }<span class="hljs-keyword">else</span>{
+                    <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+                }
+            },
+            
+            getFormattedSpecialPositions: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+                <span class="hljs-keyword">var</span> formattedSpecialPositions = [];
+                <span class="hljs-keyword">var</span> action = <span class="hljs-string">""</span>;
+                <span class="hljs-keyword">var</span> now = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>();                
+                <span class="hljs-keyword">var</span> pathElements = <span class="hljs-built_in">window</span>.location.pathname.split(<span class="hljs-string">'/'</span>);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><pre><code>           pathElements = pathElements[1].split(&#39;/&#39;);</code></pre></div></div><div class="code"><div class="wrapper">                <span class="hljs-keyword">var</span> boardDate = pathElements[<span class="hljs-number">2</span>];
+                <span class="hljs-keyword">var</span> year = boardDate.substring(<span class="hljs-number">0</span>,<span class="hljs-number">4</span>);
+                <span class="hljs-keyword">var</span> month = boardDate.substring(<span class="hljs-number">4</span>,<span class="hljs-number">6</span>);
+                <span class="hljs-keyword">var</span> date = boardDate.substring(<span class="hljs-number">6</span>,<span class="hljs-number">8</span>);
+                <span class="hljs-keyword">var</span> boardDateDt = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(year, month-<span class="hljs-number">1</span>, date, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>);
+                
+                <span class="hljs-keyword">if</span> (!<span class="hljs-keyword">this</span>.specialPositionsHistory || <span class="hljs-keyword">this</span>.specialPositionsHistory.length &lt;= <span class="hljs-number">0</span>)
+                    <span class="hljs-keyword">return</span> formattedSpecialPositions;
+                <span class="hljs-keyword">var</span> specialPositions = <span class="hljs-keyword">this</span>.getSortedSpecialPositionsHistory();
+                <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; specialPositions.length; i++) {
+                    <span class="hljs-keyword">var</span> sdt = specialPositions[i].startDate,
+                        edt = specialPositions[i].endDate,
+                        sd = <span class="hljs-string">''</span>,
+                        ed = <span class="hljs-string">''</span>;
+                    <span class="hljs-keyword">if</span> (sdt &amp;&amp; moment(sdt).isValid()) {
+                        sd = moment(sdt).format(<span class="hljs-string">'MM/DD/YYYY'</span>);
+                    }
+                    <span class="hljs-keyword">if</span> (edt &amp;&amp; moment(edt).isValid()) {
+                        ed = moment(edt).format(<span class="hljs-string">'MM/DD/YYYY'</span>);
+                    }
+                    <span class="hljs-keyword">var</span> displayStatus = <span class="hljs-string">""</span>;
+                    <span class="hljs-keyword">var</span> action = <span class="hljs-string">""</span>;
+                    <span class="hljs-keyword">var</span> isActive = <span class="hljs-literal">false</span>;
+                    
+                    <span class="hljs-keyword">var</span> startDate = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(sdt);
+                    <span class="hljs-keyword">var</span> endDate = <span class="hljs-literal">null</span>;
+                    <span class="hljs-keyword">if</span>(edt != <span class="hljs-literal">null</span>)
+                        endDate = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(edt);
+                    
+                    <span class="hljs-keyword">var</span> start = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+                    <span class="hljs-keyword">var</span> end = <span class="hljs-literal">null</span>;
+                    <span class="hljs-keyword">if</span>(endDate != <span class="hljs-literal">null</span>)
+                        end = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+                    <span class="hljs-keyword">var</span> editable=<span class="hljs-literal">true</span>;
+                    
+                   <span class="hljs-keyword">if</span> (specialPositions[i].status == <span class="hljs-string">'R'</span>)
+                     action = <span class="hljs-string">"Removed"</span>;
+                   <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (specialPositions[i].replaces)
+                     action = <span class="hljs-string">"Updated"</span>;
+                   <span class="hljs-keyword">else</span> 
+                     action = <span class="hljs-string">"Added"</span>;
+                  
+                    <span class="hljs-keyword">var</span> displayStatus = <span class="hljs-string">""</span>;
+                    <span class="hljs-keyword">if</span> (specialPositions[i].replacedBy)
+                        displayStatus = <span class="hljs-string">""</span>;
+                    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (specialPositions[i].status == <span class="hljs-string">'R'</span>)
+                        displayStatus = <span class="hljs-string">"Deleted"</span>;
+                    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (start.getTime() &gt; boardDateDt.getTime())
+                        displayStatus = <span class="hljs-string">'Future'</span>;
+                     <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (endDate != <span class="hljs-literal">null</span> &amp;&amp; boardDateDt.getTime() &gt; end.getTime())
+                         displayStatus = <span class="hljs-string">'Completed'</span>;
+                     <span class="hljs-keyword">else</span> 
+                         displayStatus = <span class="hljs-string">'Active'</span>;
+                
+                    <span class="hljs-keyword">if</span>(specialPositions[i].status!=<span class="hljs-string">'A'</span>|| displayStatus==<span class="hljs-string">'Completed'</span>)
+                        editable=<span class="hljs-literal">false</span>;
+    
+                    formattedSpecialPositions.push({
+                        code: specialPositions[i].code,
+                        description : specialPositions[i].description,
+                        startDate: sd,
+                        endDate: ed,
+                        action: action,
+                        isActive: isActive,
+                        id: specialPositions[i].id,
+                        status: specialPositions[i].status,
+                        dispStatus: displayStatus,
+                        comments: specialPositions[i].comments,
+                        reasonForChange : specialPositions[i].reasonForChange,
+                        editable:editable
+                    })
+                }
+
+                <span class="hljs-keyword">return</span> formattedSpecialPositions;
+            },
+            
+            getSortedSpecialPositionsHistory: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+                <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.specialPositionsHistory.sort(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(me, that)</span> </span>{
+                    
+                    <span class="hljs-keyword">if</span> (that == <span class="hljs-literal">null</span>)
+                        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Now sort by start date</p></div></div><div class="code"><div class="wrapper">                    <span class="hljs-keyword">if</span> (me.startDate == <span class="hljs-literal">null</span> &amp;&amp; that.startDate != <span class="hljs-literal">null</span>)
+                        <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+                    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (me.startDate != <span class="hljs-literal">null</span> &amp;&amp; that.startDate == <span class="hljs-literal">null</span>)
+                        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+                    
+                    <span class="hljs-keyword">if</span> (me.startDate != <span class="hljs-literal">null</span> &amp;&amp; that.startDate != <span class="hljs-literal">null</span>) {
+                        <span class="hljs-keyword">if</span> (me.startDate &lt; that.startDate)
+                            <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+                        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (me.startDate &gt; that.startDate)
+                            <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+                    }
+                    </div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Handle infinite Special Position period</p></div></div><div class="code"><div class="wrapper">                    <span class="hljs-keyword">if</span> (me.endDate == <span class="hljs-literal">null</span> &amp;&amp; that.endDate != <span class="hljs-literal">null</span>)
+                        <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+                    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (me.endDate != <span class="hljs-literal">null</span> &amp;&amp; that.endDate == <span class="hljs-literal">null</span>)
+                        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+                    
+                    <span class="hljs-comment">//Handle change type (same day)</span>
+                    <span class="hljs-keyword">if</span>(me.lastModifiedSystem&lt;that.lastModifiedSystem)
+                        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+                    <span class="hljs-keyword">else</span>
+                        <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;                    
+                    
+                   }
+                )
+            },
+
+            getFormattedDetachmentHistory: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+                <span class="hljs-keyword">var</span> detachments = [];
+                <span class="hljs-comment">//Amanda</span>
+                <span class="hljs-keyword">var</span> now = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>();
+                <span class="hljs-keyword">var</span> pathElements = <span class="hljs-built_in">window</span>.location.pathname.split(<span class="hljs-string">'/'</span>);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><pre><code>           pathElements = pathElements[1].split(&#39;/&#39;);</code></pre></div></div><div class="code"><div class="wrapper">                <span class="hljs-keyword">var</span> boardDate = pathElements[<span class="hljs-number">2</span>];
+                <span class="hljs-keyword">var</span> year = boardDate.substring(<span class="hljs-number">0</span>,<span class="hljs-number">4</span>);
+                <span class="hljs-keyword">var</span> month = boardDate.substring(<span class="hljs-number">4</span>,<span class="hljs-number">6</span>);
+                <span class="hljs-keyword">var</span> date = boardDate.substring(<span class="hljs-number">6</span>,<span class="hljs-number">8</span>);
+                <span class="hljs-keyword">var</span> boardDateDt = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(year, month-<span class="hljs-number">1</span>, date, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>);
+                               
+                             
+                <span class="hljs-keyword">if</span> (!<span class="hljs-keyword">this</span>.detachmentHistory || <span class="hljs-keyword">this</span>.detachmentHistory.length &lt;= <span class="hljs-number">0</span>)
+                    <span class="hljs-keyword">return</span> detachments;
+                <span class="hljs-keyword">var</span> detachmentHist = <span class="hljs-keyword">this</span>.getSortedDetachmentHistory();
+                <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; detachmentHist.length; i++) {
+                    <span class="hljs-keyword">var</span> sdt = detachmentHist[i].startDate,
+                        edt = detachmentHist[i].endDate,
+                        sd,
+                        ed;
+
+                    <span class="hljs-keyword">if</span> (sdt &amp;&amp; moment(sdt).isValid()) 
+                        sd = moment(sdt).format(<span class="hljs-string">'MM/DD/YYYY'</span>);
+
+                    <span class="hljs-keyword">if</span> (edt &amp;&amp; moment(edt).isValid())
+                        ed = moment(edt).format(<span class="hljs-string">'MM/DD/YYYY'</span>);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>var boardDate = new Date($scope.board.displayDate);</p></div></div><div class="code"><div class="wrapper">                    
+                    <span class="hljs-keyword">var</span> hist= {
+                            action:<span class="hljs-string">"Detach"</span>,
+                            code: detachmentHist[i].code,
+                            from: detachmentHist[i].from,
+                            to: detachmentHist[i].to,
+                            start: sd,
+                            end: ed,
+                            shift: detachmentHist[i].shiftId,
+                            comments: detachmentHist[i].comments
+                            
+                    }
+                    
+                    
+                    <span class="hljs-keyword">var</span> startDate = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(sdt);
+                   
+                    <span class="hljs-keyword">var</span> endDate =<span class="hljs-literal">null</span>;
+                    <span class="hljs-keyword">var</span> endDate=<span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(edt);
+                    
+                    <span class="hljs-keyword">var</span> start = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+                    <span class="hljs-keyword">var</span> end =<span class="hljs-literal">null</span>;
+                    <span class="hljs-keyword">var</span> end=<span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+                    
+                    <span class="hljs-keyword">if</span>(start.getTime()&gt;boardDateDt.getTime())
+                        hist.status=<span class="hljs-string">'Future'</span>;
+                    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(edt != <span class="hljs-literal">null</span> &amp;&amp; boardDateDt.getTime()&gt;end.getTime())
+                        hist.status=<span class="hljs-string">'Completed'</span>;
+                    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(boardDateDt.getTime()&gt;=start.getTime() &amp;&amp; (edt == <span class="hljs-literal">null</span> || boardDateDt.getTime()&lt;=end.getTime()))
+                        hist.status=<span class="hljs-string">'Active'</span>;
+                    
+                    
+                    
+                    
+
+                    detachments.push(hist);
+                }
+
+                <span class="hljs-keyword">return</span> detachments;
+            },
+
+            getHomeAddress: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(info)</span> </span>{
+                <span class="hljs-keyword">if</span> (!<span class="hljs-keyword">this</span>.addresses || <span class="hljs-keyword">this</span>.addresses.length &lt;= <span class="hljs-number">0</span>) <span class="hljs-keyword">return</span> <span class="hljs-string">''</span>;
+                <span class="hljs-keyword">var</span> addrArr = <span class="hljs-keyword">this</span>.addresses;
+                <span class="hljs-keyword">if</span> (!info) info = <span class="hljs-string">'address1'</span>;
+                <span class="hljs-keyword">if</span> (info === <span class="hljs-string">'full'</span> &amp;&amp; addrArr[<span class="hljs-number">0</span>]) {
+                    <span class="hljs-keyword">return</span> addrArr[<span class="hljs-number">0</span>].address1 + <span class="hljs-string">', '</span> + addrArr[<span class="hljs-number">0</span>].city + <span class="hljs-string">', '</span> + addrArr[<span class="hljs-number">0</span>].state;
+                }
+                <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; addrArr.length; i++) {
+                    <span class="hljs-keyword">if</span> (addrArr[i] &amp;&amp; addrArr[i].type &amp;&amp; addrArr[i].type.toLowerCase() === <span class="hljs-string">'home'</span>) {
+                        <span class="hljs-keyword">if</span> (addrArr[i][info]) <span class="hljs-keyword">return</span> addrArr[i][info];
+                    }
+                }
+                <span class="hljs-keyword">return</span> <span class="hljs-string">''</span>;
+            },
+
+            getFormattedMdaStatus: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+                <span class="hljs-keyword">var</span> mdaStatusRecords = [];
+                <span class="hljs-keyword">var</span> action = <span class="hljs-string">""</span>;
+                <span class="hljs-keyword">var</span> now = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>();
+                <span class="hljs-keyword">var</span> pathElements = <span class="hljs-built_in">window</span>.location.pathname.split(<span class="hljs-string">'/'</span>);</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><pre><code>           pathElements = pathElements[1].split(&#39;/&#39;);</code></pre></div></div><div class="code"><div class="wrapper">                <span class="hljs-keyword">var</span> boardDate = pathElements[<span class="hljs-number">2</span>];
+                <span class="hljs-keyword">var</span> year = boardDate.substring(<span class="hljs-number">0</span>,<span class="hljs-number">4</span>);
+                <span class="hljs-keyword">var</span> month = boardDate.substring(<span class="hljs-number">4</span>,<span class="hljs-number">6</span>);
+                <span class="hljs-keyword">var</span> date = boardDate.substring(<span class="hljs-number">6</span>,<span class="hljs-number">8</span>);
+                <span class="hljs-keyword">var</span> boardDateDt = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(year, month-<span class="hljs-number">1</span>, date, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>);
+                
+                <span class="hljs-keyword">if</span> (!<span class="hljs-keyword">this</span>.mdaStatusHistory || <span class="hljs-keyword">this</span>.mdaStatusHistory.length &lt;= <span class="hljs-number">0</span>)
+                    <span class="hljs-keyword">return</span> mdaStatusRecords;
+                <span class="hljs-keyword">var</span> mdaRecords = <span class="hljs-keyword">this</span>.getSortedmdaHistory();
+                <span class="hljs-keyword">for</span>(<span class="hljs-keyword">var</span> i=<span class="hljs-number">0</span>; i &lt; mdaRecords.length; i++){
+                     <span class="hljs-keyword">var</span> mdaRecord = mdaRecords[i];
+                     <span class="hljs-keyword">if</span> (mdaRecord &amp;&amp; mdaRecord.type === <span class="hljs-string">'MDA'</span>) {
+                         <span class="hljs-keyword">var</span> sdt = mdaRecord.startDate,
+                         edt = mdaRecord.endDate,
+                         hadt = mdaRecord.appointmentDate,
+                         status = mdaRecord.status,
+                         sd = <span class="hljs-string">''</span>,
+                         ed = <span class="hljs-string">''</span>,
+                         et = <span class="hljs-string">''</span>,
+                         haptd = <span class="hljs-string">''</span>,
+                         mdas = <span class="hljs-string">''</span>;
+                         <span class="hljs-keyword">if</span> (sdt &amp;&amp; moment(sdt).isValid()) {
+                         sd = moment(sdt).format(<span class="hljs-string">'MM/DD/YYYY'</span>);
+                        }
+                     <span class="hljs-keyword">if</span> (edt &amp;&amp; moment(edt).isValid()) {
+                         ed = moment(edt).format(<span class="hljs-string">'MM/DD/YYYY'</span>);
+                         et = moment(edt).format(<span class="hljs-string">'HH:mm'</span>);
+                         
+                     }
+                     <span class="hljs-keyword">if</span> (hadt &amp;&amp; moment(hadt).isValid()) {
+                         haptd = moment(hadt).format(<span class="hljs-string">'MM/DD/YYYY'</span>);
+                         
+                     }
+                     <span class="hljs-keyword">if</span>(status != <span class="hljs-literal">undefined</span>){
+                         mdas = mdaRecord.status;
+                     }
+                     
+                     <span class="hljs-keyword">var</span> startDate = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(sdt);
+                     <span class="hljs-keyword">var</span> endDate = <span class="hljs-literal">null</span>;
+                     <span class="hljs-keyword">if</span>(edt != <span class="hljs-literal">null</span>)
+                        endDate = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(edt);
+                     
+                     <span class="hljs-keyword">var</span> start = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+                     <span class="hljs-keyword">var</span> end = <span class="hljs-literal">null</span>;
+                     <span class="hljs-keyword">if</span>(endDate != <span class="hljs-literal">null</span>)
+                        end = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+                     <span class="hljs-keyword">var</span> editable=<span class="hljs-literal">true</span>;
+                     
+                     <span class="hljs-keyword">if</span> (mdaRecord.status == <span class="hljs-string">'R'</span>)
+                         action = <span class="hljs-string">"Removed"</span>;
+                     <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (mdaRecord.replaces)
+                         action = <span class="hljs-string">"Updated"</span>;
+                     <span class="hljs-keyword">else</span> 
+                         action = <span class="hljs-string">"Added"</span>;
+
+                     <span class="hljs-keyword">var</span> displayStatus = <span class="hljs-string">""</span>;
+                     <span class="hljs-keyword">if</span> (mdaRecord.replacedBy) {
+                         displayStatus = <span class="hljs-string">""</span>; 
+                     } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (mdaRecord.status == <span class="hljs-string">'R'</span>) {
+                         displayStatus = <span class="hljs-string">"Deleted"</span>;
+                     } <span class="hljs-keyword">else</span> {
+                         <span class="hljs-keyword">if</span> (start.getTime() &gt; boardDateDt.getTime())
+                            displayStatus = <span class="hljs-string">'Future'</span>;
+                         <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (endDate != <span class="hljs-literal">null</span> &amp;&amp; (boardDateDt.getTime() &gt; end.getTime() || now.getTime() &gt; endDate.getTime()))
+                             displayStatus = <span class="hljs-string">'Completed'</span>;
+                         <span class="hljs-keyword">else</span> 
+                             displayStatus = <span class="hljs-string">'Active'</span>;
+                     }
+                     
+                     <span class="hljs-keyword">if</span> (mdaRecord.status != <span class="hljs-string">'A'</span>|| displayStatus == <span class="hljs-string">'Completed'</span>)
+                         editable=<span class="hljs-literal">false</span>;
+
+                 
+                     
+                     <span class="hljs-keyword">var</span> hist={
+                             subType: mdaRecord.subType,
+                             startDate: sd,
+                             endDate: ed,
+                             endTime: et,
+                             appointmentDate: haptd,
+                             <span class="hljs-comment">//changed from sorid to id</span>
+                             id: mdaRecord.id,
+                             dispStatus: displayStatus,
+                             comments: mdaRecord.comments,
+                             reasonForChange : mdaRecord.reasonForChange,
+                             action:action,
+                             status:status,
+                             editable:editable
+                         };
+                     
+                     
+                     
+                     
+                     
+                     
+                     <span class="hljs-comment">/*var startDate = new Date(sdt);
+                    
+                     var endDate =null;
+                     var endDate=new Date(edt);
+                     
+                     var start = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+                     var end =null;
+                     var end=new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+                     
+                     if(hist.dispStatus=='Removed')
+                         hist.statusTime='Deleted';
+                     else if(edt == null)
+                        hist.statusTime='Active';
+                     else if(start.getTime()&gt;boardDateDt.getTime())
+                        hist.statusTime='Future';
+                     else if(boardDateDt.getTime()&gt;end.getTime())
+                        hist.statusTime='Completed';
+                                  
+                     else if(boardDateDt.getTime()&gt;=start.getTime() &amp;&amp; boardDateDt.getTime()&lt;=end.getTime())
+                        hist.statusTime='Active';*/</span>
+                     
+                     
+                     
+                     mdaStatusRecords.push(hist);
+                     } 
+                }
+                <span class="hljs-keyword">return</span> mdaStatusRecords;
+            },
+
+            getPhone: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(type)</span> </span>{
+                <span class="hljs-keyword">if</span> (!<span class="hljs-keyword">this</span>.phones || <span class="hljs-keyword">this</span>.phones.length &lt;= <span class="hljs-number">0</span>) <span class="hljs-keyword">return</span> <span class="hljs-string">''</span>;
+                <span class="hljs-keyword">var</span> phones = <span class="hljs-keyword">this</span>.phones;
+                <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; phones.length; i++) {
+                    <span class="hljs-keyword">if</span> (phones[i] &amp;&amp; phones[i].type &amp;&amp; phones[i].type.toLowerCase() === type) {
+                        <span class="hljs-keyword">if</span> (!phones[i].phone) <span class="hljs-keyword">return</span> <span class="hljs-string">''</span>;
+                        <span class="hljs-keyword">var</span> formattedPhone = phones[i].phone.replace(<span class="hljs-regexp">/[\D]+/g</span>, <span class="hljs-string">''</span>)
+                            .replace(<span class="hljs-regexp">/(\d{3})(\d{3})(\d{4})/</span>, <span class="hljs-string">'($1) $2-$3'</span>);
+                        <span class="hljs-keyword">return</span> formattedPhone;
+                    }
+                }
+                <span class="hljs-keyword">return</span> <span class="hljs-string">''</span>;
+            },
+
+            getProbationEndDate: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>superintendents and supervisors have a one year probation date from their promotion
+sani workers have 18 months from their title entry</p></div></div><div class="code"><div class="wrapper">                <span class="hljs-keyword">var</span> result = {};
+                <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.civilServiceTitle === <span class="hljs-string">'SUP'</span> || <span class="hljs-keyword">this</span>.civilServiceTitle === <span class="hljs-string">'SI'</span>) {
+                    result.endDate = <span class="hljs-keyword">this</span>.promotionDate &amp;&amp; moment(<span class="hljs-keyword">this</span>.promotionDate).add(<span class="hljs-number">1</span>, <span class="hljs-string">'y'</span>);
+                } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.civilServiceTitle === <span class="hljs-string">'SW'</span>) {
+                    result.endDate = <span class="hljs-keyword">this</span>.promotionDate &amp;&amp; moment(<span class="hljs-keyword">this</span>.promotionDate).add(<span class="hljs-number">18</span>, <span class="hljs-string">'M'</span>);
+                }
+                <span class="hljs-keyword">if</span> (!result.endDate) <span class="hljs-keyword">return</span>;</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>compare end date to now</p></div></div><div class="code"><div class="wrapper">                result.active = result.endDate.isAfter(<span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>());
+                result.endDate = result.endDate.valueOf();
+                <span class="hljs-keyword">return</span> result;
+            },
+
+            getEmergencyContactInformation: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+                <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.emergencyContacts
+            },</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>sort grounding history by start date</p></div></div><div class="code"><div class="wrapper">            getFormattedGroundedHistory: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+                <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.groundingHistory.sort(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(a, b)</span> </span>{
+                    <span class="hljs-keyword">return</span> a.startDate &lt; b.startDate;
+                });
+            },
+            
+            getSortedDetachmentHistory: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+                <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.detachmentHistory.sort(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(me, that)</span> </span>{
+                    
+                    <span class="hljs-keyword">if</span> (that == <span class="hljs-literal">null</span>)
+                        <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Handle permanent detachments</p></div></div><div class="code"><div class="wrapper">                    <span class="hljs-keyword">if</span> (me.endDate == <span class="hljs-literal">null</span> &amp;&amp; that.endDate != <span class="hljs-literal">null</span>)
+                        <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+                    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (me.endDate != <span class="hljs-literal">null</span> &amp;&amp; that.endDate == <span class="hljs-literal">null</span>)
+                        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+                    <span class="hljs-keyword">if</span> (me.endDate != <span class="hljs-literal">null</span> &amp;&amp; that.endDate != <span class="hljs-literal">null</span>) {
+                        <span class="hljs-keyword">if</span> (me.endDate &lt; that.endDate)
+                            <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+                        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (me.endDate &gt; that.endDate)
+                            <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+                    }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Now sort by start date</p></div></div><div class="code"><div class="wrapper">                    <span class="hljs-keyword">if</span> (me.startDate == <span class="hljs-literal">null</span> &amp;&amp; that.startDate != <span class="hljs-literal">null</span>)
+                        <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+                    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (me.startDate != <span class="hljs-literal">null</span> &amp;&amp; that.startDate == <span class="hljs-literal">null</span>)
+                        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+                    <span class="hljs-keyword">if</span> (me.startDate != <span class="hljs-literal">null</span> &amp;&amp; that.startDate != <span class="hljs-literal">null</span>) {
+                        <span class="hljs-keyword">if</span> (me.startDate &lt; that.startDate)
+                            <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+                        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (me.startDate &gt; that.startDate)
+                            <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+                    }
+                    </div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Now check time detachment was created</p></div></div><div class="code"><div class="wrapper">                    <span class="hljs-keyword">if</span> (me.lastModifiedSystem == <span class="hljs-literal">null</span> &amp;&amp; that.lastModifiedSystem != <span class="hljs-literal">null</span>)
+                        <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+                    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (me.lastModifiedSystem != <span class="hljs-literal">null</span> &amp;&amp; that.lastModifiedSystem == <span class="hljs-literal">null</span>)
+                        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+                    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (me.lastModifiedSystem == <span class="hljs-literal">null</span> &amp;&amp; that.lastModifiedSystem == <span class="hljs-literal">null</span>)
+                        <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;       
+
+                    <span class="hljs-keyword">if</span> (me.lastModifiedSystem &lt; that.lastModifiedSystem)
+                        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+                    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (me.lastModifiedSystem &gt; that.lastModifiedSystem)
+                        <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+                    <span class="hljs-keyword">else</span>
+                        <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+                   }
+                )
+                
+            },
+            getSortedUnavailabilityHistory: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+                <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.unavailabilityHistory.sort(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(me, that)</span> </span>{
+                    
+                    <span class="hljs-keyword">if</span> (that == <span class="hljs-literal">null</span>)
+                        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Now sort by start date</p></div></div><div class="code"><div class="wrapper">                    <span class="hljs-keyword">if</span> (me.start == <span class="hljs-literal">null</span> &amp;&amp; that.start != <span class="hljs-literal">null</span>)
+                        <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+                    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (me.start != <span class="hljs-literal">null</span> &amp;&amp; that.start == <span class="hljs-literal">null</span>)
+                        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+                    
+                    <span class="hljs-keyword">if</span> (me.start != <span class="hljs-literal">null</span> &amp;&amp; that.start != <span class="hljs-literal">null</span>) {
+                        <span class="hljs-keyword">if</span> (me.start &lt; that.start)
+                            <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+                        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (me.start &gt; that.start)
+                            <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+                    }
+                                        </div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Now sort by start time</p></div></div><div class="code"><div class="wrapper">                    <span class="hljs-keyword">if</span> (me.startTime == <span class="hljs-literal">null</span> &amp;&amp; that.startTime != <span class="hljs-literal">null</span>)
+                        <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+                    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (me.startTime != <span class="hljs-literal">null</span> &amp;&amp; that.startTime == <span class="hljs-literal">null</span>)
+                        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+                    
+                    <span class="hljs-keyword">if</span> (me.startTime != <span class="hljs-literal">null</span> &amp;&amp; that.startTime != <span class="hljs-literal">null</span>) {
+                        <span class="hljs-keyword">if</span> (me.startTime &lt; that.startTime)
+                            <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+                        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (me.startTime &gt; that.startTime)
+                            <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+                    }
+                    </div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Handle infinite unavailability period
+                   if (me.end == null &amp;&amp; that.end != null)
+                        return -1;
+                    else if (me.end != null &amp;&amp; that.end == null)
+                        return 1;</p></div></div><div class="code"><div class="wrapper">                    
+                    <span class="hljs-comment">//Handle change type (same day)</span>
+                    <span class="hljs-keyword">if</span>(me.lastModifiedSystem&lt;that.lastModifiedSystem)
+                        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+                    <span class="hljs-keyword">else</span>
+                        <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;                  
+
+                   }
+                )
+            },
+            
+            getSortedmdaHistory: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+                <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.mdaStatusHistory.sort(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(me, that)</span> </span>{
+                    
+                    <span class="hljs-keyword">if</span> (that == <span class="hljs-literal">null</span>)
+                        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Now sort by start Date</p></div></div><div class="code"><div class="wrapper">                    <span class="hljs-keyword">if</span> (me.startDate == <span class="hljs-literal">null</span> &amp;&amp; that.startDate != <span class="hljs-literal">null</span>)
+                        <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+                    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (me.startDate != <span class="hljs-literal">null</span> &amp;&amp; that.startDate == <span class="hljs-literal">null</span>)
+                        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+                    
+                    <span class="hljs-keyword">if</span> (me.startDate != <span class="hljs-literal">null</span> &amp;&amp; that.startDate != <span class="hljs-literal">null</span>) {
+                        <span class="hljs-keyword">if</span> (me.startDate &lt; that.startDate)
+                            <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+                        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (me.startDate &gt; that.startDate)
+                            <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+                    }
+                                        </div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Handle no end date</p></div></div><div class="code"><div class="wrapper">                    <span class="hljs-keyword">if</span> (me.endDate == <span class="hljs-literal">null</span> &amp;&amp; that.endDate != <span class="hljs-literal">null</span>)
+                        <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+                    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (me.endDate != <span class="hljs-literal">null</span> &amp;&amp; that.endDate == <span class="hljs-literal">null</span>)
+                        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;   
+                    
+                    <span class="hljs-comment">//Handle change type (same day)</span>
+                    <span class="hljs-keyword">if</span>(me.lastModifiedSystem&lt;that.lastModifiedSystem)
+                        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+                    <span class="hljs-keyword">else</span>
+                        <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>;
+                
+                }
+                )
+            },
+            
+            isPartiallyAvailable: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+            
+                <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.state == states.personnel.partiallyAvailable || <span class="hljs-keyword">this</span>.partialMdaAvailability()) 
+                {
+                    <span class="hljs-keyword">this</span>.partialAvailability = <span class="hljs-literal">true</span>;
+                }
+                <span class="hljs-keyword">else</span>
+                {
+                    <span class="hljs-keyword">this</span>.partialAvailability = <span class="hljs-literal">false</span>;   
+                }
+                
+                <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.partialAvailability;                
+            },
+
+            partialMdaAvailability:<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{
+                <span class="hljs-keyword">var</span> result=<span class="hljs-literal">false</span>;
+                <span class="hljs-keyword">if</span>(<span class="hljs-keyword">this</span>.activeMdaCodes.length&gt;<span class="hljs-number">0</span>){
+                    <span class="hljs-keyword">var</span> now=<span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>();
+                    <span class="hljs-keyword">for</span>(<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-keyword">this</span>.activeMdaCodes.length; i++){
+                        <span class="hljs-keyword">if</span>(moment(<span class="hljs-keyword">this</span>.activeMdaCodes[i].endDate).diff(now, <span class="hljs-string">'days'</span>) == <span class="hljs-number">0</span> &amp;&amp; moment(<span class="hljs-keyword">this</span>.activeMdaCodes[i].endDate).diff(now, <span class="hljs-string">'minutes'</span>) &lt;= <span class="hljs-number">0</span>){
+                            result=<span class="hljs-literal">true</span>;
+                        }
+                    }
+                }
+                <span class="hljs-keyword">return</span> result;
+            },
+            isActiveMDA: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+                <span class="hljs-keyword">if</span>(<span class="hljs-keyword">this</span>.civilServiceTitle &amp;&amp; <span class="hljs-keyword">this</span>.civilServiceTitle === groups.personnel.civilians){
+                    <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+                }
+                <span class="hljs-keyword">var</span> now = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>();
+                <span class="hljs-comment">//var pathElements = window.location.pathname.split('/');</span>
+                <span class="hljs-keyword">var</span> pathElements = <span class="hljs-built_in">window</span>.location.pathname.split(<span class="hljs-string">'/'</span>),
+                pathStart = <span class="hljs-string">'/'</span> + pathElements[<span class="hljs-number">1</span>];</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><pre><code>           pathElements = pathElements[1].split(&#39;/&#39;);</code></pre></div></div><div class="code"><div class="wrapper">                <span class="hljs-keyword">var</span> boardLocation = pathElements[<span class="hljs-number">2</span>],
+                boardDate = pathElements[<span class="hljs-number">3</span>];
+                <span class="hljs-keyword">var</span> year = boardDate.substring(<span class="hljs-number">0</span>,<span class="hljs-number">4</span>);
+                <span class="hljs-keyword">var</span> month = boardDate.substring(<span class="hljs-number">4</span>,<span class="hljs-number">6</span>);
+                <span class="hljs-keyword">var</span> date = boardDate.substring(<span class="hljs-number">6</span>,<span class="hljs-number">8</span>);
+                <span class="hljs-keyword">var</span> boardDateDt = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(year, month-<span class="hljs-number">1</span>, date, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>);
+                <span class="hljs-keyword">var</span> boardStart = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(boardDateDt.getHours()-<span class="hljs-number">2</span>);
+                
+                 <span class="hljs-keyword">if</span>(<span class="hljs-keyword">this</span>.activeMdaCodes &amp;&amp; <span class="hljs-keyword">this</span>.activeMdaCodes.length &gt; <span class="hljs-number">0</span> ){
+                        <span class="hljs-keyword">var</span> show = <span class="hljs-literal">true</span>;
+                        <span class="hljs-keyword">var</span> activeMdaCodes = <span class="hljs-keyword">this</span>.activeMdaCodes;
+                        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; activeMdaCodes.length; i++) {
+                            <span class="hljs-keyword">if</span>(now.getTime() &gt; boardDateDt.getTime()) {<span class="hljs-comment">// Exclude future boards</span>
+                            <span class="hljs-keyword">if</span> (activeMdaCodes[i].status == <span class="hljs-string">"A"</span> &amp;&amp; (activeMdaCodes[i].startDate == <span class="hljs-literal">null</span> || 
+                                (moment(activeMdaCodes[i].startDate).diff(now, <span class="hljs-string">'days'</span>) &lt;= <span class="hljs-number">0</span> &amp;&amp; moment(activeMdaCodes[i].startDate).diff(now, <span class="hljs-string">'minutes'</span>) &lt;= <span class="hljs-number">0</span>))) {</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>record start date &lt;= now</p></div></div><div class="code"><div class="wrapper">                                <span class="hljs-keyword">if</span> (activeMdaCodes[i].endDate == <span class="hljs-literal">null</span> || 
+                                    (moment(activeMdaCodes[i].endDate).diff(now, <span class="hljs-string">'days'</span>) &gt;= <span class="hljs-number">0</span> &amp;&amp; moment(activeMdaCodes[i].endDate).diff(now, <span class="hljs-string">'minutes'</span>) &gt; <span class="hljs-number">0</span>)) {</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>record end date &gt; now</p></div></div><div class="code"><div class="wrapper">                                    show = <span class="hljs-literal">false</span>;
+                                    <span class="hljs-keyword">break</span>;
+                                }
+                            }
+                            }<span class="hljs-keyword">else</span>{ <span class="hljs-comment">// For future boards</span>
+                                
+                                <span class="hljs-keyword">if</span> (activeMdaCodes[i].status == <span class="hljs-string">"A"</span> &amp;&amp; (activeMdaCodes[i].startDate == <span class="hljs-literal">null</span> || 
+                                        (moment(activeMdaCodes[i].startDate).diff(boardDateDt, <span class="hljs-string">'days'</span>) &lt;= <span class="hljs-number">0</span> &amp;&amp; moment(activeMdaCodes[i].startDate).diff(boardDateDt, <span class="hljs-string">'minutes'</span>) &lt;= <span class="hljs-number">0</span>))) {</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>record start date &lt;= board date</p></div></div><div class="code"><div class="wrapper">                                        <span class="hljs-keyword">if</span> (activeMdaCodes[i].endDate == <span class="hljs-literal">null</span> || 
+                                            (moment(activeMdaCodes[i].endDate).diff(boardDateDt, <span class="hljs-string">'days'</span>) &gt;= <span class="hljs-number">0</span> &amp;&amp; moment(activeMdaCodes[i].endDate).diff(boardDateDt, <span class="hljs-string">'minutes'</span>) &gt; <span class="hljs-number">0</span>)) {</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>record end date &gt; board date</p></div></div><div class="code"><div class="wrapper">                                            show = <span class="hljs-literal">false</span>;
+                                            <span class="hljs-keyword">break</span>;
+                                        }
+                                        <span class="hljs-keyword">if</span> (activeMdaCodes[i].endDate == <span class="hljs-literal">null</span> || 
+                                                (moment(activeMdaCodes[i].endDate).diff(boardStart, <span class="hljs-string">'minutes'</span>) &gt;= <span class="hljs-number">0</span> &amp;&amp; moment(activeMdaCodes[i].endDate).diff(boardStart, <span class="hljs-string">'minutes'</span>) &gt; <span class="hljs-number">0</span>)) {</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>record end date &gt; board date</p></div></div><div class="code"><div class="wrapper">                                                show = <span class="hljs-literal">false</span>;
+                                                <span class="hljs-keyword">break</span>;
+                                            }
+                                    }
+                            }
+                        }
+                        
+                      <span class="hljs-keyword">return</span> show;
+                }
+                
+                <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+            }
+        }
+    });</div></div></div></div></body></html>

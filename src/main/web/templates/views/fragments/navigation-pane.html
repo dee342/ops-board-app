@@ -1,0 +1,122 @@
+<!--/* Thymeleaf fragment to display the Navigation Pane. */-->
+
+<div th:fragment="navigation-pane">
+    <div id="nav" ng-controller="NavCtrl" ng-class="{online: connected, offline: !connected}" ng-style="{'height': layout.screen1.height}">
+        <div class="header online" style="padding-bottom: 10px;">
+            <h1>{{::board.realDate | date : 'EEEE'}}</h1>
+            <h5>Ops-Board</h5>
+            <!--<h5 ng-if="board.boardView === 'current'">Active Board</h5>
+            <h5 ng-if="board.boardView === 'past'">Past Board</h5>
+            <h5 ng-if="board.boardView === 'future'">Future Board</h5>-->
+        </div>
+        <div class="body-wrapper">
+            <div class="body">
+
+                <div class="menu-item active" ng-class="{active : panes.calendar.active}">
+                    <div class="icon"><i class="fa fa-calendar fa-2x"></i></div>
+                    <div class="text onlineText">{{::board.realDate | date : 'mediumDate'}}</div>
+                     <span class="btn-group-xs dropdown calendarButtonSpan">
+                        <span type="button" class="right dropdown-toggle calendarButton">
+                            <i class="fa fa-external-link"></i> <span class="sr-only"></span>
+                        </span>
+                        <span class="dropdown-menu left-aligned dropdown-toggle disabled" role="menu">
+                            <datepicker ng-model="dt" class="datepicker" ng-change="changeDate(dt)" show-weeks="false"></datepicker>
+                        </span>
+                    </span>
+                </div>
+
+                <div class="menu-item" ng-class="{active : panes.equipment.active}" ng-click="toggleEquipmentPane(); $event.preventDefault()">
+                    <div class="icon"><i class="fa fa-truck fa-2x"></i></div>
+                    <div class="text nav-pane-link-selenium">Equipment</div>
+                </div>
+
+                <div class="menu-item" ng-class="{active : panes.personnel.active}" ng-click="togglePersonnelPane(); $event.preventDefault()">
+                    <div class="icon"><i class="fa fa-male fa-2x"></i></div>
+                    <div class="text nav-pane-link-selenium">Personnel</div>
+                </div>
+
+
+                <div class="menu-item" ng-class="{active : panes.tasks.active}" ng-click="toggleTasksPane(); $event.preventDefault()">
+                    <div class="icon"><i class="fa fa-tasks fa-2x"></i></div>
+                    <div class="text nav-pane-link-selenium">Tasks</div>
+                </div>
+
+                <div class="menu-item" ng-hide="isLockedMenu" ng-class="{active : panes.taskSettings.active}" ng-click="toggleTaskSettingsPane(); $event.preventDefault()">
+                    <div class="icon"><i class="fa fa-gear fa-2x"></i></div>
+                    <div class="text nav-pane-link-selenium">Task Settings</div>
+                </div>
+
+
+                <div class="menu-item" ng-class="{active : panes.boro.active}" ng-click="toggleBoroPane(); $event.preventDefault()" ng-show="board.boroBoard">
+                    <div class="icon"><i class="fa fa-tasks fa-2x"></i></div>
+                    <div class="text nav-pane-link-selenium">Tasks - District</div>
+                </div>
+
+                <div class="menu-item" ng-click="copyBoard(); $event.preventDefault()">
+                    <div class="icon"><i class="fa fa-copy fa-2x"></i></div>
+                    <div class="text nav-pane-link-selenium">Copy Board</div>
+                </div>
+
+                <div class="menu-item" ng-click="displayBoard(); $event.preventDefault()">
+                    <div class="icon"><i class="fa fa-share-square fa-2x"></i></div>
+                    <div class="text nav-pane-link-selenium">Display Board</div>
+                </div>
+                
+                <div class="menu-item" ng-click="publishBoard(); $event.preventDefault()">
+                    <div class="icon"><i class="fa fa-share-square fa-2x"></i></div>
+                    <div class="text nav-pane-link-selenium">Publish Board</div>
+                </div>
+
+                <div class="menu-item" ng-class="{active : panes.reports.active}" ng-click="toggleReportsPane(); $event.preventDefault()">
+                    <div class="icon">
+                        <i class="fa fa-file-text fa-2x"></i>
+                    </div>
+                    <div class="text nav-pane-link-selenium">Reports</div>
+                </div>
+
+                 <div class="menu-item dropdown dropdown-toggle" ng-class="{active : panes.charts.active}">
+                    <div class="icon">
+                        <i class="fa fa-file-text fa-2x"></i>
+                    </div>
+                    <div class="text nav-pane-link-selenium">Mass Update
+                      <i class="fa fa-caret-right"></i>
+                    </div>
+                    <ul class="dropdown-menu" role="menu" aria-labelledby="split-button">
+                        <li role="menuitem" class="menu-item" ng-class="{active : panes.charts.active}" ng-click="toggleChartsPane(); $event.preventDefault()">
+                            <div class="submenu-icon">
+                                <i class="fa fa-file-text fa-2x"></i>
+                            </div>
+                            <div class="text">Chart</div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="menu-item" ng-class="{active : panes.recentActivity.active}" ng-click="toggleRecentActivityPane(); $event.preventDefault()">
+                    <div class="icon"><i class="fa fa-history fa-2x"></i></div>
+                    <div class="text nav-pane-link-selenium">Recent Activity</div>
+                </div>
+
+                <div class="menu-item" ng-click="helpPage(); $event.preventDefault()"><div class="icon">
+                <i class="fa fa-book fa-2x"></i></div>
+                    <div class="text nav-pane-link-selenium">Manuals                                
+                   </div>                   
+                </div>           
+
+                <div class="menu-item" ng-click="logout(); $event.preventDefault()">
+                    <div class="icon"><i class="fa fa-power-off fa-2x"></i></div>
+                    <div class="text nav-pane-link-selenium">Logout</div>
+                </div>
+            </div>
+            <div class="logo">
+                <div class="locationDiv">
+                    <span class="title">{{::board.location}}</span>
+                </div>
+                <img th:src="@{/images/logo.png}" alt="SMART Operations Board" />
+                <div ng-click="showReleaseNotes($event)">
+                    <h3>SMART</h3>
+                    <h4>Operations Board</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

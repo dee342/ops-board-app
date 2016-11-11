@@ -1,0 +1,76 @@
+<!--/* Thymeleaf fragment to display the Tasks Pane. */-->
+<div th:fragment="tasks-pane">
+    <div ng-controller="TasksCtrl" class="noSelect" ng-show="layout.screen2.visible &amp;&amp; panes.tasks.active">
+        <div id="tasks" class="pane" ng-show="layout.screen2.visible &amp;&amp; panes.boro.active === false">
+            <div class="header">
+              <div class="row" style="margin:0px;">
+                <div class="col-md-12" style="text-align: center; padding: 0px;">
+                  <span style="float: left; padding: 5px 0px 3px 10px;" class="paneTitle tasks-pane-selenium">
+                      Tasks
+                  </span>
+                  <span style="border-left: 1px solid #000; width: 38px; float:right; padding: 9px 12px;">
+                      <i class="fa fa-times fa-lg" ng-click="toggleTasksPane()"></i>
+                  </span>
+                  <div class="clear"></div>
+                </div>
+              </div>
+            </div>
+            <perfect-scrollbar class="scroller" ng-style="{'height': layout.scrollpanel.height}" min-scrollbar-length="40" max-scrollbar-length="40" suppress-scroll-y="true" wide-scrollbar="true" use-both-wheel-axes="true">
+                    <div class="scrollerpaddingtasks" ng-style="{'width': taskPaneWidth}">
+                        <div ng-repeat="location in locationtasks track by $index" class="location" data-itemtype="{{ item.type }}" ng-show="board.boroBoard === false || ((board.boroBoard === true &amp;&amp; panes.boro.active === false &amp;&amp; location.locationId === board.location) || (board.boroBoard === true &amp;&amp; panes.boro.active === true &amp;&amp; location.locationId !== board.location))">
+                        <div class="headingdiv" ng-show="location.locationcount &gt; 1">
+                            <div class="locationtitle {{ location.locationId }}">
+                                {{ location.locationId }}
+                            </div>
+                        </div>
+
+                        <div class="items" ng-style="{'height': layout.taskpanel.height}">
+                            <div ng-repeat="col in location.cols | orderBy: 'col' track by $index" class="col">
+                                <div ng-repeat="item in col.taskcells track by $index" class="item {{ item.type }} item-wide" data-itemtype="{{ item.type }}">
+                                    <task-item item="item" layout="layout" panes="panes" col="col" section="section" locationId="locationId"></task-item>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+             </perfect-scrollbar>
+        </div>
+
+        <div id="tasks-district" class="pane task-district" ng-if="board.boroBoard === true" ng-show="panes.boro.active === true">
+            <div class="header">
+                <div class="row" style="margin:0px;">
+                    <div class="col-md-12" style="text-align: center; padding: 0px;">
+              <span style="float: left; padding: 5px 0px 3px 10px;" class="paneTitle">
+                  Tasks - District
+              </span>
+              <span style="border-left: 1px solid #000; width: 38px; float:right; padding: 9px 12px;">
+                  <i class="fa fa-times fa-lg" ng-click="toggleBoroPane()"></i>
+              </span>
+                        <div class="clear"></div>
+                    </div>
+                </div>
+            </div>
+
+            <perfect-scrollbar class="scroller" ng-style="{'height': layout.scrollpanel.height}" min-scrollbar-length="40" max-scrollbar-length="40" suppress-scroll-y="true" wide-scrollbar="true" ps-mouse-over="" use-both-wheel-axes="true">
+                <div class="scrollerpaddingtasks" ng-style="{'width': taskPaneWidthDistrict}">
+                    <div ng-repeat="location in locationtasksdistrict" class="location" data-itemtype="{{ item.type }}" ng-show="board.boroBoard === false || ((board.boroBoard === true &amp;&amp; panes.boro.active === false &amp;&amp; location.locationId === board.location) || (board.boroBoard === true &amp;&amp; panes.boro.active === true &amp;&amp; location.locationId !== board.location))">
+                        <div class="headingdiv headingdiv-d" ng-show="location.locationcount &gt; 1">
+                            <div class="locationtitle locationtitle-d {{ location.locationId }}">
+                                <span ng-click="districtBoard(location.locationId)" style="cursor: pointer;">{{ location.locationId }} &nbsp;&nbsp; <i class="fa fa-external-link"></i></span>
+                                <span style="float: right; margin-right:5px;" class="pointer"><i class="fa fa-refresh" ng-click="renderDistrict(location.locationId)"></i></span>
+                            </div>
+                        </div>
+                        <div class="items" ng-style="{'height': layout.taskpanel.height}" id="isotopeContainer">
+                            <div ng-repeat="col in location.cols track by $index" class="col-d" ng-class="{colpadding: $index &gt; 0}">
+                                <div ng-show="location.failedToLoad">Failed to load</div>
+                                <div ng-repeat="item in col.taskcells track by $index" class="item {{ item.type }} district-col-item" data-itemtype="{{ item.type }}">
+                                    <task-item-district item="item" layout="layout" panes="panes" col="col" section="section" locationId="locationId"></task-item-district>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </perfect-scrollbar>
+        </div>
+    </div>
+</div>

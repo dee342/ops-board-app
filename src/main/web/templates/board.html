@@ -1,0 +1,374 @@
+<!--
+- HTML file to construct the Operations Board as an Angular Single Page Application (SPA).
+-
+- This file defines a single Angular with dependencies, routes and constants application.  It also defines It also links all the CSS,
+- Font, Image and JavaScript dependencies.
+-->
+
+<!DOCTYPE html>
+<html ng-app="OpsBoard" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>SMART Operations Board</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/images/favicon.png')}}" />
+  <link rel="shortcut icon" type="image/x-icon" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/images/favicon.ico')}}" />
+
+<link rel="stylesheet" type="text/css" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/bootstrap-3.1.1.min.css')}}"></link>
+<link rel="stylesheet" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/bootstrap-glyphicons-3.1.1.css')}}" />
+<link rel="stylesheet" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/font-awesome.min.css')}}" />
+<link rel="stylesheet" type="text/css" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/select2-3.4.8.css')}}"></link>
+<link rel="stylesheet" type="text/css" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/select2-bootstrap3.css')}}"></link>
+<link rel="stylesheet" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/perfect-scrollbar/min/perfect-scrollbar.min.css')}}" />
+
+<link rel="stylesheet/less" type="text/css" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/loader/loading-bar.css')}}"/>
+<link rel="stylesheet/less" type="text/css" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/multiselect/multiselect.css')}}"/>
+<link class="recent-activity" rel="stylesheet" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/recent-activity-export.css')}}"/>
+
+<!--  Used for development only...switch to pre-compiler for PROD -->
+<link rel="stylesheet/less" type="text/css" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/less/constants.less')}}" />
+<link rel="stylesheet/less" type="text/css" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/less/fonts.less')}}" />
+<link rel="stylesheet/less" type="text/css" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/less/ops-board.less')}}" />
+<link rel="stylesheet/less" type="text/css" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/less/flexbox-splitter.less')}}" />
+<link rel="stylesheet/less" type="text/css" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/less/board.less')}}" />
+<link rel="stylesheet/less" type="text/css" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/less/core.less')}}" />
+<link rel="stylesheet/less" type="text/css" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/less/panes.less')}}" />
+<link rel="stylesheet/less" type="text/css" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/less/recent-activity.less')}}" />
+<link rel="stylesheet/less" type="text/css" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/less/task-panel.less')}}" />
+<link rel="stylesheet/less" type="text/css" th:href="@{${beans.mvcResourceUrlProvider.getForLookupPath('/styles/less/nav.less')}}" />
+
+  <script>
+    less = {
+      async: true
+    };
+  </script>
+
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/less.min.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/async-0.9.2.js')}}"></script>
+
+</head>
+<body>
+
+  <div id="loading-bar-spinner">
+  	<div th:include="views/fragments/spinner" th:remove="tag"></div>
+  </div>
+
+  <div class="page" ng-view="" context-menu=""></div>
+
+  <!-- TODO - get rid of -->
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/sizeof.compressed.js')}}"></script>
+  
+  <!-- Libraries -->
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/jquery-2.1.0.min.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/angular-1.3.3.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/moment-2.7.0.min.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/underscore-1.6.0.min.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/angular-resource-1.3.3.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/angular-cookies-1.3.3.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/angular-sanitize-1.3.3.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/angular-route-1.3.3.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/ui-bootstrap-tpls-0.11.0.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/select2-3.4.8.min.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/sockjs-0.3.4.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/stomp.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/multiselect/multiselect.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/perfect-scrollbar/src/perfect-scrollbar.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/perfect-scrollbar/src/angular-perfect-scrollbar.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/libs/uuid.js')}}"></script>
+
+
+  <!-- Directives -->
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/directives/angular-flex-splitter.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/directives/lvl-uuid.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/directives/lvl-drag-drop.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/directives/modal-directive.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/directives/modal-directives.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/directives/uiSelect2.js')}}"></script>
+
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/modules/dsny-center-modal.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/modules/about-us.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/modules/exception-override.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/modules/error-stack.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/modules/work-units-information.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/modules/ng-order-object-by.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/directives/center-modal.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/directives/angular-ui-dropdown-button.js')}}"></script>
+
+  <!-- Filters -->
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/filters/boroBoardFilters.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/filters/equipment-filters.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/filters/personnel-filters.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/filters/location-filters.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/filters/tasks-filters.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/filters/ops-board-filters.js')}}"></script>
+
+  <!--  Application -->
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/app.js')}}"></script>
+
+  <!--  Board Value Services -->
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/board/board-value-service.js')}}"></script>
+
+  
+  <script th:inline="javascript">
+  /*<![CDATA[*/
+
+       // Global variable for paths relative to application path
+    var appPathStart =   "/" + window.location.pathname.split('/')[1];
+    var appVersion = [[${appversion}]];
+    var environment = [[${environment}]];
+
+    // Set browser tab title to reflect board
+    //TODO put this back in
+    window.document.title = window.location.pathname.split('/')[2] + ' ' + moment(window.location.pathname.split('/')[3],"YYYYMMDD").format("ddd MM/DD/YY");
+    
+    // get rid of this once sign off date gets sign off
+    var signOffTime = moment(window.location.pathname.split('/')[3],"YYYYMMDD").toDate();
+    signOffTime.setHours(6,00);
+
+      // Angular application module
+    angular.module('OpsBoard')
+      .constant('states', {
+        equipment : {
+                      available: 'Available',
+                      down: 'Down',
+                      hidden: 'Hidden',
+                      pendingLoad: 'Pending Load',
+                      pendingDetach: 'Pending Detach',
+                      pendingAttach: 'Pending Attach',
+                      detached: 'Detached',
+                      onLocation: ['Available', 'Down', 'Pending Load']
+        },
+        personnel : {
+                      assigned: 'Assigned',
+                      available: 'Available',
+                      detached: 'Detached',
+                      hidden: 'Hidden',
+                      partiallyAvailable: 'PartiallyAvailable',
+                      unavailable: 'Unavailable'
+        }
+      })
+      .constant('groups', {
+        equipment : {
+                      rearLoader: 'Rear Loaders',
+                      dualBins: 'Dual Bins',
+                      alleyTruck: 'Alley Trucks',
+                      hoistFittedChassis: 'Hoist-Fitted Chassis',
+                      mechanicalBrooms: 'Mechanical Brooms',
+                      roRo: 'RO-ROs',
+                      ezPacks: 'E-Z Packs',
+                      miscellaneous: 'Miscellaneous',
+                      snow: 'Snow'
+        },
+        personnel : {
+        	  commissioners: ['COMM','DYCOMM'],
+              chiefs : ['GS V', 'GS IV', 'GS III', 'GS II'],
+              superintendents : 'GS I',
+              supervisors : 'SUP',
+              sanitationWorkers : 'SW',
+              civilians : 'Civilian'
+      }
+      })
+      .constant('officerMdaCodes',['7','7A'])
+      .constant('unsupportedMdaCodes', ['8'])
+       .constant('titles', {
+    	     'comm:' : 'COMM',
+    	     'dycomm' : 'DYCOMM',
+             'gsI' : 'GS I',
+             'gsII' : 'GS II',
+             'gsIII' : 'GS III',
+          'sup' : 'SUP',
+          'sw' : 'SW',
+          'civilian' : 'Civilian'
+       })
+      .constant('titleHierarchy', ['COMM', 'DYCOMM', 'GS V', 'GS IV', 'GS III','GS II', 'GS I', 'SUP', 'SW', 'Civilian'])
+      .constant('departmentTypeHierarchy', ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10', 'S11', 'S12', 'S13', 'S14', 'A', 'G', 'B', 'D', 'M'])
+      .constant('binStatus', {
+        equipment : {
+          relay: 'RELAY',
+          rollover: 'ROLLOVER'
+        }
+      })
+      .constant('materialGroups', {
+        equipment : {
+          collection: 'COLLECTION',
+          recycling: 'RECYCLING',
+          miscellaneous: 'MISCELLANEOUS',
+          snow: 'SNOW',
+        }
+      })
+      .constant('detachmentHistory', {
+        equipment : {
+          'A': 'Accepted',
+          'P': 'Initiated Detach',
+          'C': 'Canceled'
+        }
+      })
+      .constant('materialSubGroups', {
+        equipment : {
+          organics: 'ORGANICS',
+          mgp: 'MGP',
+          paper: 'PAPER',
+          recyclingMisc: 'RECYCLING MISC'
+        }
+      })
+      .constant('plowTypes', {
+            'NO_PLOW': 'None',
+            'REGULAR_PLOW' : 'Regular',
+            'MINI_V_PLOW' : 'Mini V',
+            'LARGE_V_PLOW' : 'Large V'
+          
+        })
+      .constant('loads', {'NONE' : 'Not Loaded', 'SALT' : 'Salt', 'SAND' : 'Sand'}  )
+      .constant('plowDirections', ['Right','Left','Straight','Straight w/ Wings'])
+      .constant('signOffTime', signOffTime)
+      .constant('equipmentStatuses', ['Empty', 'Relay', 'Rollover'])
+      .constant('user', {"username" : [[${#httpServletRequest.remoteUser}]]})
+      .constant('urls', {logout: '/logout'})
+      .constant('boardtypes', {
+    	  district: 'D',
+    	  boro: 'B',
+    	  broomDepot: 'M',
+    	  lotCleaning: 'L',
+    	  splinter: 'S',
+    	  hybrid: 'H'
+      })
+      .constant('links', {
+        manuals: 'https://citypoint.csc.nycnet/sites/dsny/MANUAL/Shared Documents/Forms/AllItems.aspx?RootFolder=/sites/dsny/MANUAL/Shared Documents/SMART Documents and Training Manuals&FolderCTID=&View={68C0D9C0-F54A-4E82-896D-55027879A570}'
+      })
+      .constant('itemsPerPage', 5)
+      .constant('durations', [{
+            duration: 1,
+            label: '1/8'
+          }, {
+            duration: 2,
+            label: '1/4'
+          }, {
+            duration: 3,
+            label: '3/8'
+          }, {
+            duration: 4,
+            label: '1/2'
+          }, {
+            duration: 5,
+            label: '5/8'
+          }, {
+            duration: 6,
+            label: '3/4'
+          }, {
+            duration: 7,
+            label: '7/8'
+        }]
+      )
+      .constant('serverConfig', {
+    	  templateUrl: /*[[@{/views/main}]]*/,
+    	  appVersion: appVersion,
+    	  environment: environment
+      });
+
+    // jQuery creates it's own event object, and it doesn't have a
+      // dataTransfer property yet. This adds dataTransfer to the event object
+      // Required for drag and drop.
+      jQuery.event.props.push('dataTransfer');
+
+  /*]]>*/
+  </script>
+	
+  <!-- Factories -->
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/factories/client-side-error.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/factories/modal-position.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/factories/exception-handler.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/factories/filter-runner.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/factories/async-wrapper.js')}}"></script>
+
+  <!--  Models -->
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/models/equipment-model.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/models/person-model.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/models/task-model.js')}}"></script>
+
+  <!-- Mocks -->
+  
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/mocks/categories.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/mocks/shifts.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/directives/recent-activity-pane.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/directives/modal-edit-partial-tasks.js')}}"></script>
+
+  <!-- Services -->
+
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/common/reference-data-service.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/cache/shift-data-service.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/cache/category-data-service.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/cache/down-codes-service.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/cache/material-service.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/cache/personnel-status-service.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/cache/repair-location-service.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/cache/special-position-service.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/cache/unavailability-code-service.js')}}"></script>
+
+
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/common/uuid-generator.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/taskSetting/task-settings-service.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/task/task-helper-service.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/task/task-indicator-service.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/common/recent-activity-logging-service.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/equipment/equipment-helper-service.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/personnel/personnel-helper-service.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/common/info-service.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/board/board-helper-service.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/common/ops-board-interval.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/common/work-units.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/common/utility-service.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/common/reports-service.js')}}"></script>
+
+
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/common/web-socket-service.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/common/district-service.js')}}"></script>
+
+
+  <!--  Controllers -->
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/modal-controller.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/navigation-controller.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/navigation-modal-controller.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/main-functions/drag-and-drop.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/main-sub-controllers/equipment/equipment-down-controller.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/main-sub-controllers/equipment/equipment-up-controller.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/main-sub-controllers/equipment/equipment-detach-controller.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/main-sub-controllers/equipment/equipment-attach-controller.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/main-sub-controllers/equipment/equipment-cancel-detach-controller.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/main-sub-controllers/equipment/equipment-load-status-controller.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/main-sub-controllers/equipment/equipment-update-readiness-controller.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/main-sub-controllers/equipment/equipment-plow-removal-controller.js')}}"></script> 
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/main-sub-controllers/personnel/personnel-detach-controller.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/main-sub-controllers/personnel/personnel-unavailable-status-controller.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/main-sub-controllers/personnel/personnel-unavailable-cancel-controller.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/main-sub-controllers/personnel/personnel-unavailable-cancel-reverse-controller.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/main-sub-controllers/personnel/personnel-mda-status-controller.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/main-sub-controllers/personnel/personnel-add-special-position-controller.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/main-sub-controllers/personnel/personnel-update-special-position-controller.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/main-sub-controllers/personnel/personnel-remove-confirm-controller.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/main-sub-controllers/task/add-shift-controller.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/main-sub-controllers/task/add-multi-routes-controller.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/main-sub-controllers/task/clear-all-locations-controller.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/main-controller.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/copy-board-controller.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/reload-board-controller.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/actions-controller.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/equipment-controller.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/equipment-details.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/personnel-controller.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/person-details.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/task-controller.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/tasks-controller.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/tasks-settings-controller.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/reports-controller.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/controllers/maintenance-mode-controller.js')}}"></script>
+
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/directives/task-item.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/directives/task-item-district.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/directives/charts-pane.js')}}"></script>
+<script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/board/board-data-service.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/services/ops-board-repository.js')}}"></script>
+  <script th:src="@{${beans.mvcResourceUrlProvider.getForLookupPath('/scripts/directives/context-menu.js')}}"></script>
+
+</body>
+</html>

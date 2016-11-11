@@ -1,0 +1,25 @@
+<!--/* Modal window view for removing unavailable readson of personnel*/-->
+
+<form id="modal" name="modal" class="form-horizontal container-fluid" novalidate="true" centered-modal="true">
+  <div th:include="views/modals/fragments/modal-header :: header" th:remove="tag"></div>
+  <div class="modal-body" ng-show="showContent">
+   <div class="row">
+			<label class="col-md-3 text-left">Reason for removal<i class="fa fa-asterisk"></i>:</label>
+			<div class="col-md-9 text-left">
+			<input type="textbox" id="reasonForChange" name="reasonForChange" class="form-control" ng-model="opData.reasonForChange" ng-maxlength="{{::remarksMaxLength}}" maxlength="{{::remarksMaxLength}}" ng-required="{submitted: 'submitted'}"/>
+			</div>
+		</div>
+			<div class="row">
+      			<div th:include="views/modals/fragments/modal-client-errors :: client-errors" th:remove="tag"></div>
+    		</div>
+    		 <div class="row">
+      			<div th:include="views/modals/fragments/modal-server-errors :: server-errors" th:remove="tag"></div>
+      		</div>
+    		<div class="spacer10"></div>
+	   
+	  
+  </div>
+  <div th:include="views/modals/fragments/modal-footer :: footer" th:remove="tag"></div>
+   <div th:include="views/modals/fragments/modal-exceptions :: exceptions" th:remove="tag"></div>
+  <div th:include="views/modals/fragments/modal-processing :: processing" th:remove="tag"></div>
+</form>

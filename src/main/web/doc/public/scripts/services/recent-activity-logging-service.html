@@ -1,0 +1,73 @@
+<!DOCTYPE html><html lang="en"><head><title>public\scripts\services\recent-activity-logging-service</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../../"><meta name="groc-document-path" content="public\scripts\services\recent-activity-logging-service"><meta name="groc-project-path" content="public\scripts\services\recent-activity-logging-service.js"><link rel="stylesheet" type="text/css" media="all" href="../../../assets/style.css"><script type="text/javascript" src="../../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">public\scripts\services\recent-activity-logging-service.js</div></div><div id="document"><div class="segment"><div class="code"><div class="wrapper"><span class="hljs-pi">'use strict'</span>;
+
+angular.module(<span class="hljs-string">'OpsBoard'</span>)
+  .service(
+    <span class="hljs-string">'RecentActivityLoggingService'</span>,
+    <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+
+      <span class="hljs-keyword">var</span> _logAction = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(actions, user, action, entityType, entityId, entityName, direction, task, commandDate)</span> </span>{
+        actions[actions.length] = {
+          <span class="hljs-string">'user'</span>: user,
+          <span class="hljs-string">'action'</span>: action,
+          <span class="hljs-string">'entity'</span>: {
+            <span class="hljs-string">'type'</span>: entityType,
+            <span class="hljs-string">'id'</span>: entityId,
+            <span class="hljs-string">'name'</span>: entityName
+          },
+          <span class="hljs-string">'direction'</span>: direction,
+          <span class="hljs-string">'task'</span>: task,
+          <span class="hljs-string">'date'</span>: moment(commandDate).format(<span class="hljs-string">'MM/DD/YYYY HH:mm'</span>),
+          <span class="hljs-string">'day'</span>: moment(commandDate).format(<span class="hljs-string">'MM/DD/YYYY'</span>),
+          <span class="hljs-string">'time'</span>: moment(commandDate).format(<span class="hljs-string">'HH:mm'</span>)
+        }
+      }
+
+      <span class="hljs-keyword">return</span> {
+
+        logAction: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(actions, user, action, entityType, entityId, entityName, direction, task, commandDate)</span> </span>{
+          _logAction(actions, user, action, entityType, entityId, entityName, direction, task, commandDate)
+        },
+
+        getTaskFromTaskCommand: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(command)</span> </span>{
+          <span class="hljs-keyword">return</span> command.commandContent.commandHistoryMessage.actionTaken;
+        },
+        
+        getTaskNameFromTaskCommand: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(command)</span> </span>{
+            <span class="hljs-keyword">return</span> command.commandContent.commandHistoryMessage.actionInfo;
+          },
+
+        formattedHist: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(commandHist)</span> </span>{
+          <span class="hljs-keyword">var</span> messages = [];
+          angular.forEach(commandHist, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(command, key)</span> </span>{
+            <span class="hljs-keyword">if</span> (command.commandContent.commandHistoryMessage)
+              _logAction(messages, command.commandContent.commandHistoryMessage.userName, command.commandContent.commandHistoryMessage.actionTaken, command.commandContent.commandHistoryMessage.entityType, command.commandContent.commandHistoryMessage.entityId, command.commandContent.commandHistoryMessage.entityName, command.commandContent.commandHistoryMessage.direction, command.commandContent.commandHistoryMessage.actionInfo.replace(command.commandContent.shiftId, <span class="hljs-string">''</span>), command.commandContent.systemDateTime);
+          });
+          <span class="hljs-keyword">return</span> messages
+        },
+
+        processAddOnlineUser: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(onlineUsers, command)</span> </span>{
+          <span class="hljs-keyword">var</span> value = command.commandContent.session;
+          <span class="hljs-keyword">if</span> (onlineUsers[value.httpSessionId]) {
+            onlineUsers[value.httpSessionId].sessions = <span class="hljs-built_in">Number</span>(onlineUsers[value.httpSessionId].sessions) + <span class="hljs-number">1</span>;
+          } <span class="hljs-keyword">else</span> {
+            <span class="hljs-keyword">if</span> (value.httpSessionId)
+              onlineUsers[value.httpSessionId] = {
+                userId: value.loggedUserId,
+                remoteAddr: value.remoteAddr,
+                sessions: <span class="hljs-string">'1'</span>
+              }
+          }
+        },
+
+        processRemoveOnlineUser: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(onlineUsers, command)</span> </span>{
+          <span class="hljs-keyword">var</span> value = command.commandContent;
+          <span class="hljs-keyword">if</span> (onlineUsers[value.httpSessionId]) {
+            <span class="hljs-keyword">if</span> (<span class="hljs-built_in">Number</span>(onlineUsers[value.httpSessionId].sessions) - <span class="hljs-number">1</span> &lt;= <span class="hljs-number">0</span>)
+              <span class="hljs-keyword">delete</span> onlineUsers[value.httpSessionId]
+            <span class="hljs-keyword">else</span>
+              onlineUsers[value.httpSessionId].sessions = <span class="hljs-built_in">Number</span>(onlineUsers[value.httpSessionId].sessions) - <span class="hljs-number">1</span>;
+          }
+        }
+      }
+
+    })</div></div></div></div></body></html>
